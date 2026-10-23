@@ -12,7 +12,9 @@ import com.r2h.sirr.core.*
 
 @Composable
 internal fun ExperienceScreen(group: Boolean) {
-    val count = if (group) 12 else 10
+    var roundCount by remember(group) { mutableIntStateOf(if (group) 12 else 10) }
+    var variety by remember { mutableStateOf(ChallengeVariety.ONE_LEVEL) }
+    var avoidRepeat by remember { mutableStateOf(true) }
     var seats by remember { mutableIntStateOf(2) }
     var intensity by remember { mutableStateOf(Intensity.SOFT) }
     val names = remember { mutableStateListOf("المشارك ١", "المشارك ٢", "المشارك ٣", "المشارك ٤") }
@@ -22,16 +24,30 @@ internal fun ExperienceScreen(group: Boolean) {
     val context = LocalContext.current
     val vault = remember { LocalVault(context.applicationContext) }
     val storageName = if (group) "custom-party" else "custom-couple"
+    val historyName = if (group) "recent-party" else "recent-couple"
     var customText by remember(group) { mutableStateOf(vault.readPrivate(storageName).orEmpty()) }
     var customStatus by remember { mutableStateOf("") }
     val customEntries = remember(customText) { customText.lineSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList() }
     val customValid = customEntries.size <= 60 && customEntries.all { it.length in 6..200 } &&
         customEntries.distinct().size == customEntries.size
-    Page(if (group) "تحديات المجموعة" else "تحديات الشريكين", "${count} جولات محلية. يستطيع كل مشارك الرفض أو الإنهاء في أي وقت.") {
+    Page(if (group) "تحديات المجموعة" else "تحديات الشريكين", "${roundCount} جولات محلية. يستطيع كل مشارك الرفض أو الإنهاء في أي وقت.") {
         if (game == null) {
             if (group) {
                 Text("عدد المقاعد: $seats")
                 Slider(value = seats.toFloat(), onValueChange = { seats = it.toInt().coerceIn(2,4) }, valueRange = 2f..4f, steps = 1)
+            }
+            Text("عدد الجولات", fontWeight = FontWeight.Bold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(6,10,12,18).forEach { count ->
+                    FilterChip(roundCount==count,{roundCount=count},label={Text("$count")})
+                }
+            }
+            Text("تنويع التحديات", fontWeight = FontWeight.Bold)
+            ChallengeVariety.entries.forEach { option ->
+                FilterChip(variety==option,{variety=option},label={Text(option.arabic)})
+            }
+            Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
+                Checkbox(avoidRepeat,{avoidRepeat=it});Text("تجنب تحديات الجلسة السابقة إذا توفر بديل")
             }
             Text("اختيار مستوى التحديات", fontWeight = FontWeight.Bold)
             Intensity.entries.forEach { level ->
@@ -65,8 +81,14 @@ internal fun ExperienceScreen(group: Boolean) {
                 }
             }
             Button(onClick = {
+                val recent = if(avoidRepeat) vault.readPrivate(historyName)
+                    ?.lineSequence()?.filter { it.isNotBlank() }?.toSet().orEmpty() else emptySet()
                 game = SessionFactory.create(names.take(seats), intensity, group,
-                    customPrompts = if(intensity==Intensity.CUSTOM)customEntries else emptyList())
+                    customPrompts = if(intensity==Intensity.CUSTOM)customEntries else emptyList(),
+                    roundCount=roundCount, variety=variety, recentlySeen=recent)
+                runCatching {
+                    vault.writePrivate(historyName, game!!.turns.joinToString("\n") { it.prompt.text })
+                }
                 reply = ""
             }, enabled = (intensity != Intensity.CUSTOM || customValid) && (0 until seats).all { consent[it] && names[it].isNotBlank() }, modifier = Modifier.fillMaxWidth()) { Text("بدء الجلسة المحلية") }
             Text("المشاركة من هاتفين مختلفين موجودة في شاشة الجلسات عبر الإنترنت وتتطلب خادمًا خاصًا.", color = Color.LightGray)
@@ -74,7 +96,11 @@ internal fun ExperienceScreen(group: Boolean) {
             val current = game!!
             if (!current.finished) {
                 val turn = current.turns[current.round]
-                Text("الجولة ${current.round + 1} / $count", color = MaterialTheme.colorScheme.primary)
+                LinearProgressIndicator(
+                    progress = { current.round.toFloat() / current.turns.size },
+                    modifier=Modifier.fillMaxWidth()
+                )
+                Text("الجولة ${current.round + 1} / ${current.turns.size}", color = MaterialTheme.colorScheme.primary)
                 Text("دور: ${current.playerNames[turn.actorIndex]}", style = MaterialTheme.typography.titleMedium)
                 Card(Modifier.fillMaxWidth()) { Text(turn.prompt.text, Modifier.padding(20.dp), style = MaterialTheme.typography.titleLarge) }
                 OutlinedTextField(reply, { reply = it.take(1000) }, label = { Text("رد نصي اختياري (يبقى داخل الجلسة)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)

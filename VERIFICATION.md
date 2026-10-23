@@ -1,3 +1,16 @@
+# M7 — Current verification (24 October 2026)
+
+- `python tools/generate_content_v2.py --check`: PASS, version 3, 230 challenges and 175 questions.
+- `node --test backend/test/*.test.mjs`: PASS **20/20**, including M6 chunk storage and M7 content/quiz aggregation.
+- `kotlinc` standalone core and `tools/ContentSmokeTest.kt`: PASS, 175 original Arabic questions, session fairness.
+- `kotlinc` standalone core and `tools/M7SmokeTest.kt`: PASS, 6/10/12/18 round counts, difficulty mix, recent history avoidance, descriptive response aggregation.
+- `node --check` for backend, web and test JavaScript: PASS.
+- Android/Compose/OkHttp full compile: **NOT PERFORMED** (user requested no build).
+- Device/browser live E2E, deployed relay HTTPS/WSS, content-version rejection over actual WebSocket: **NOT VERIFIED**.
+- No independent security audit or production readiness acceptance.
+
+---
+
 # M4 — Verification report (source-only)
 
 Date: 2026-10-23. Baseline: M3 copied unchanged first, then extended.

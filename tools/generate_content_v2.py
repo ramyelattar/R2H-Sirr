@@ -8,8 +8,8 @@ ROOT=Path(__file__).resolve().parents[1]
 K=ROOT/'app/src/main/java/com/r2h/sirr/core'
 challenge=json.loads((ROOT/'content/challenges_ar_v2.json').read_text())
 addition=json.loads((ROOT/'content/additional_quizzes_ar_v2.json').read_text())
-assert challenge['version']==addition['version']==2
-assert len(addition['extra'])==7 and all(len(x)==12 for x in addition['extra'])
+assert challenge['version']==addition['version']==3
+assert len(addition['extra'])==7 and all(len(x)==17 for x in addition['extra'])
 for scope in ('couple','party'):
     assert set(challenge[scope])==set(('SOFT','NORMAL','SEXY','HOT','HARD'))
     for level,prompts in challenge[scope].items():
@@ -33,7 +33,7 @@ for i,(name,content) in enumerate(blocks):
         qs.append({'text':x[1],'choices':list(x.groups()[1:])})
     qs += [{'text':r[0], 'choices':list(r[1:])} for r in base_extra[i*5:(i+1)*5]]
     qs += addition['extra'][i]
-    assert len(qs)==20,(i,len(qs))
+    assert len(qs)==25,(i,len(qs))
     assert len(set(q['text'] for q in qs))==len(qs)
     assert all(len(q['choices'])==3 and all(len(t)>0 for t in q['choices']) for q in qs)
     quizzes.append({'id':f'quiz_{i+1:02}','name':name,'questions':qs})
@@ -58,7 +58,7 @@ for group in addition['extra']:
     q_lines.append('        ),')
 q_lines += ['    )','}','']
 output[K/'MoreQuizzesV2.kt']='\n'.join(q_lines)
-output[ROOT/'backend/public/quizzes.json']=json.dumps({'version':2,'packs':quizzes},ensure_ascii=False,indent=2)+'\n'
+output[ROOT/'backend/public/quizzes.json']=json.dumps({'version':3,'packs':quizzes},ensure_ascii=False,indent=2)+'\n'
 output[ROOT/'backend/public/challenges.json']=json.dumps(challenge,ensure_ascii=False,indent=2)+'\n'
 errors=[]
 for path,content in output.items():
@@ -66,4 +66,4 @@ for path,content in output.items():
         if not path.exists() or path.read_text()!=content:errors.append(str(path.relative_to(ROOT)))
     else:path.write_text(content)
 if errors:raise SystemExit('out-of-date generated content: '+', '.join(errors))
-print(f'Content v2: {len(all_prompts)} unique prompts; {sum(len(x["questions"]) for x in quizzes)} unique quizzes; '+('verified' if '--check' in sys.argv else 'generated'))
+print(f'Content v{challenge["version"]}: {len(all_prompts)} unique prompts; {sum(len(x["questions"]) for x in quizzes)} unique quizzes; '+('verified' if '--check' in sys.argv else 'generated'))

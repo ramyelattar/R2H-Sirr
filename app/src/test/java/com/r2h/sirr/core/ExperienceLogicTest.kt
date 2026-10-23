@@ -34,10 +34,10 @@ class ExperienceLogicTest {
         assertEquals(10,g.turns.size)
         assertTrue(g.leave().finished)
     }
-    @Test fun quizBankHas140DistinctQuestions() {
+    @Test fun quizBankHas175DistinctQuestions() {
         assertEquals(7,ExpandedQuizzes.packs.size)
-        assertEquals(140,ExpandedQuizzes.packs.sumOf { it.questions.size })
-        assertEquals(140,ExpandedQuizzes.packs.flatMap { it.questions }.map { it.text }.toSet().size)
+        assertEquals(175,ExpandedQuizzes.packs.sumOf { it.questions.size })
+        assertEquals(175,ExpandedQuizzes.packs.flatMap { it.questions }.map { it.text }.toSet().size)
     }
     @Test fun customChallengePromptsAreValidAndAlwaysIncluded() {
         val extras = listOf("اختر موضوعًا خاصًا لكن لطيفًا", "اقترح موعدًا مختلفًا عن المعتاد")
