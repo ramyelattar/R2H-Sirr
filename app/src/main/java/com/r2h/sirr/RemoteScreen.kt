@@ -107,7 +107,7 @@ private class RemoteTransport(private val client:OkHttpClient) {
         val address=id.server.replaceFirst("https://","wss://")+"/ws"
         ws=client.newWebSocket(Request.Builder().url(address).build(),object:WebSocketListener(){
             override fun onOpen(webSocket:WebSocket,response:Response){
-                webSocket.send(JSONObject().put("type","authenticate").put("roomId",id.roomId).put("auth",id.auth).toString())
+                webSocket.send(JSONObject().put("type","authenticate").put("roomId",id.roomId).put("auth",id.auth).put("contentVersion",3).toString())
             }
             override fun onMessage(webSocket:WebSocket,text:String){
                 val data=runCatching{JSONObject(text)}.getOrNull()?:return
@@ -126,7 +126,7 @@ private class RemoteTransport(private val client:OkHttpClient) {
     }
     private fun retry(seq:Int,code:Int){
         if(disconnected||seq!=generation)return
-        if(code==4000||code==4003){onStatus?.invoke("الجلسة منتهية أو الدخول مرفوض");return}
+        if(code==4000||code==4003||code==4009){onStatus?.invoke(if(code==4009) "إصدار المحتوى لا يطابق الخادم، يلزم تحديث التطبيق" else "الجلسة منتهية أو الدخول مرفوض");return}
         val delay=min(30_000L,1000L*(1 shl min(reconnectAttempt++,5)))
         onStatus?.invoke("انقطع الاتصال — إعادة المحاولة تلقائيًا")
         reconnectTask=Runnable{open()}.also{main.postDelayed(it,delay)}
@@ -416,12 +416,16 @@ private fun RemoteQuizPanel(snapshot:JSONObject,id:RemoteIdentity,transport:Remo
         if(mine?.optBoolean("host")==true)TextButton(onClick={transport.action("quiz_close")}){Text("إغلاق الاختبار")}
         val result=quiz.optJSONObject("result")
         if(result!=null){
-            val scores=result.getJSONArray("scores")
-            repeat(scores.length()){i->val score=scores.getJSONObject(i)
-                val name=(0 until members.length()).map{members.getJSONObject(it)}.find{it.optString("id")==score.optString("id")}
-                Text("${name?.optString("name")?:"مشارك"}: ${score.optInt("score")}/16")
+            val distributions=result.optJSONArray("counts")
+            if(distributions!=null) repeat(distributions.length()) { i ->
+                val distribution=distributions.getJSONObject(i)
+                val name=(0 until members.length()).map{members.getJSONObject(it)}
+                    .find{it.optString("id")==distribution.optString("id")}
+                val values=distribution.getJSONArray("values")
+                Text("${name?.optString("name")?:"مشارك"}: " +
+                    (0 until 3).joinToString("، ") { index -> "الخيار ${index+1}: ${values.getInt(index)}" })
             }
-            Text("تطابقت ${result.optInt("agreement")} إجابات من أصل ٨")
+            Text("اتفاق الإجابات: ${result.optInt("agreement")} من ${result.optInt("questions")} — مؤشر وصفي لا يقيس التوافق النفسي")
         }else if(quiz.getJSONArray("submitted").let{array->(0 until array.length()).any{array.getString(it)==id.participantId}}){
             Text("وصلت إجاباتك. ننتظر المشارك الآخر.")
         }else if(answers.size<8){

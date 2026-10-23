@@ -48,27 +48,52 @@ data class LocalGame(
     fun leave() = copy(ended = true)
 }
 
+enum class ChallengeVariety(val arabic: String) {
+    ONE_LEVEL("مستوى واحد"), MIX_WITH_LOWER("تنويع مع المستوى الأقل")
+}
+
 object SessionFactory {
+    /** No duplicates within a session. Recent challenges are avoided where enough alternatives exist. */
     fun create(names: List<String>, level: Intensity, group: Boolean,
-        random: Random = Random.Default, customPrompts: List<String> = emptyList()): LocalGame {
+        random: Random = Random.Default, customPrompts: List<String> = emptyList(),
+        roundCount: Int = if (group) 12 else 10,
+        variety: ChallengeVariety = ChallengeVariety.ONE_LEVEL,
+        recentlySeen: Set<String> = emptySet()): LocalGame {
         require(names.size in 2..4 && (group || names.size == 2))
         require(names.all { it.isNotBlank() && it.length <= 32 })
-        val count = if (group) 12 else 10
+        require(roundCount in 6..18)
         require(customPrompts.size <= 60 && customPrompts.all { it.trim().length in 6..200 })
         require(customPrompts.map { it.trim() }.distinct().size == customPrompts.size)
         require(level == Intensity.CUSTOM || customPrompts.isEmpty())
-        val defaults = Challenges.deck(level, group).shuffled(random)
-        val custom = customPrompts.shuffled(random).take(count).mapIndexed { i, prompt ->
+        val levels = listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY, Intensity.HOT, Intensity.HARD)
+        val customs = customPrompts.mapIndexed { i, prompt ->
             Challenge("custom-${i + 1}", Intensity.CUSTOM, prompt.trim())
         }
-        val deck = (custom + defaults.filter { default -> custom.none { it.text == default.text } }
-            .take(count - custom.size)).shuffled(random)
-        require(deck.size == count)
-        val start = random.nextInt(names.size)
-        // Rotate participants fairly; prevents chance monopolization in short sessions.
-        val turns = deck.mapIndexed { i, prompt ->
-            Turn(i, (start + i) % names.size, prompt)
+        fun prioritize(items: List<Challenge>): List<Challenge> {
+            val unique = items.distinctBy { it.text }
+            return unique.filterNot { it.id in recentlySeen || it.text in recentlySeen }.shuffled(random) +
+                unique.filter { it.id in recentlySeen || it.text in recentlySeen }.shuffled(random)
         }
+        val selection = when {
+            level == Intensity.CUSTOM -> (customs.shuffled(random) +
+                prioritize(Challenges.deck(level, group)).filterNot { c -> customs.any { it.text == c.text } })
+                .distinctBy { it.text }.take(roundCount)
+            variety == ChallengeVariety.ONE_LEVEL -> prioritize(Challenges.deck(level, group)).take(roundCount)
+            else -> {
+                val primary = prioritize(Challenges.deck(level, group))
+                val index = levels.indexOf(level)
+                val lower = prioritize(Challenges.deck(levels[(index - 1).coerceAtLeast(0)], group))
+                    .filterNot { alt -> primary.any { it.text == alt.text } }
+                val required = (roundCount + 1) / 2
+                val top = primary.take(required)
+                val remainder = (lower + primary.drop(required)).distinctBy { it.text }
+                (top + remainder.take(roundCount - required))
+            }
+        }
+        require(selection.size == roundCount) { "لا توجد تحديات كافية لجلسة بلا تكرار" }
+        val deck = selection.shuffled(random)
+        val start = random.nextInt(names.size)
+        val turns = deck.mapIndexed { i, prompt -> Turn(i, (start + i) % names.size, prompt) }
         return LocalGame(names, level, group, turns)
     }
 }

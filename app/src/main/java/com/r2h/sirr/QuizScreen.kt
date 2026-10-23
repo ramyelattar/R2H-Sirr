@@ -38,7 +38,7 @@ internal fun QuizScreenV2() {
                 Row { Checkbox(pairing, { pairing = it }); Text("مقارنة اختيارية بين شخصين على جهاز واحد") }
                 Text("عدد الأسئلة")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(8,12,20).forEach { n ->
+                    listOf(8,12,20,25).forEach { n ->
                         FilterChip(questionCount == n, onClick={questionCount=n}, label={Text("$n")})
                     }
                 }
@@ -59,16 +59,19 @@ internal fun QuizScreenV2() {
                     }, modifier = Modifier.fillMaxWidth()) { Text(answer) }
                 }
             } else if (phase == 4) {
-                val max = selectedIndices.size * 2
-                val scoreA = GameLogic.score(answersA)
-                Text("نتيجة المشارك الأول: $scoreA / $max", style = MaterialTheme.typography.titleMedium)
-                Text(GameLogic.interpretation(scoreA, max))
+                val first = QuizInsights.summary(answersA)
+                Text("ملخص اختيارات المشارك الأول",style=MaterialTheme.typography.titleMedium)
+                first.counts.forEachIndexed { option, count ->
+                    Text("الاختيار ${option+1}: $count من ${first.total} (${first.percentage(option)}٪)")
+                }
                 if (pairing) {
-                    val scoreB = GameLogic.score(answersB)
-                    Text("نتيجة المشارك الثاني: $scoreB / $max", style = MaterialTheme.typography.titleMedium)
-                    Text(GameLogic.interpretation(scoreB, max))
-                    val matches = answersA.zip(answersB).count { (a, b) -> a == b }
-                    Text("اتفق الاختيار في $matches من ${selectedIndices.size} أسئلة. لا يُكشف أي رد منفرد دون إذن صاحبه.")
+                    val comparison = QuizInsights.compare(answersA, answersB)
+                    Text("ملخص اختيارات المشارك الثاني",style=MaterialTheme.typography.titleMedium)
+                    comparison.second.counts.forEachIndexed { option, count ->
+                        Text("الاختيار ${option+1}: $count من ${comparison.questions} (${comparison.second.percentage(option)}٪)")
+                    }
+                    Text("اتفاق الإجابات: ${comparison.agreement} من ${comparison.questions} (${comparison.agreementPercent}٪)")
+                    Text("هذه نسبة اتفاق وصفيّة وليست مقياس توافق نفسي أو عاطفي.")
                 }
                 Text("هذا ترفيه للحوار فقط وليس تشخيصًا أو مقياس توافق علميًا.", color = Color.LightGray)
                 Button(onClick = { phase = 0; step = 0; answersA.clear(); answersB.clear(); acceptedB = false; selectedIndices = emptyList() }) { Text("إعادة الاختبار") }

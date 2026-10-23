@@ -2,7 +2,7 @@ import {randomBytes, randomUUID, randomInt} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 const challengeCatalog=JSON.parse(readFileSync(new URL('./public/challenges.json',import.meta.url),'utf8'));
 const quizCatalog=JSON.parse(readFileSync(new URL('./public/quizzes.json',import.meta.url),'utf8'));
-if(challengeCatalog.version!==2 || quizCatalog.version!==2) throw Error('Content version mismatch');
+if(challengeCatalog.version!==3 || quizCatalog.version!==3) throw Error('Content version mismatch');
 
 export const now = () => Date.now();
 export const token = () => randomBytes(32).toString('base64url');
@@ -41,7 +41,7 @@ export function publicState(room, clock=now()) {
     prompt:room.prompt, seq:room.seq, expiresAt:room.expiresAt, serverNow:clock,
     participants:room.participants.map(p=>({id:p.id, name:p.name, consent:p.consent, score:p.score, skips:p.skips, connected:p.connected,host:p.host})),
     messages:room.messages.map(m=>({author:m.author, body:m.body, round:m.round})),
-    contentVersion:2,
+    contentVersion:3,
     quiz: room.quiz ? {id:room.quiz.id,pack:room.quiz.pack,indices:room.quiz.indices,
       submitted:room.quiz.submissions.map(x=>x.id),result:room.quiz.result} : null,
     media:room.media.filter(item=>item.expiresAt>clock).map(({id,kind,authorId,round,size,expiresAt,transfer})=>({id,kind,authorId,round,size,expiresAt,transfer:transfer||"single"}))
@@ -105,6 +105,8 @@ export function applyAction(room, member, command, clock=now()) {
         const [a,b]=q.submissions;
         q.result={scores:[{id:a.id,score:a.answers.reduce((s,x)=>s+x,0)},
                           {id:b.id,score:b.answers.reduce((s,x)=>s+x,0)}],
+                  counts:[{id:a.id,values:[0,1,2].map(option=>a.answers.filter(x=>x===option).length)},
+                          {id:b.id,values:[0,1,2].map(option=>b.answers.filter(x=>x===option).length)}],
                   agreement:a.answers.filter((x,i)=>x===b.answers[i]).length,questions:8};
         // Never store individual answers after computing agreed aggregate.
         q.submissions=q.submissions.map(s=>({id:s.id}));

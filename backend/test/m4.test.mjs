@@ -12,11 +12,11 @@ function prepared(mode='couple') {
  const guest=join(room,room.invite,'الشريك',1010);guest.connected=true;act(room,guest,'consent',{value:true});act(room,host,'start');
  return {room,host,guest};
 }
-test('content v2: 170 original Arabic prompts, unique per scope and level, 140 varied questions',()=>{
- assert.equal(quizzes.version,2);assert.equal(catalog.version,2);
- assert.equal(quizzes.packs.length,7);assert.ok(quizzes.packs.every(p=>p.questions.length===20));
+test('content v3: 230 original Arabic prompts, unique per scope and level, 175 varied questions',()=>{
+ assert.equal(quizzes.version,3);assert.equal(catalog.version,3);
+ assert.equal(quizzes.packs.length,7);assert.ok(quizzes.packs.every(p=>p.questions.length===25));
  const qtexts=quizzes.packs.flatMap(p=>p.questions.map(q=>q.text));
- assert.equal(qtexts.length,140);assert.equal(new Set(qtexts).size,140);
+ assert.equal(qtexts.length,175);assert.equal(new Set(qtexts).size,175);
  for(const q of quizzes.packs.flatMap(p=>p.questions)){
    assert.equal(q.choices.length,3);
    assert.ok(q.text.length>=15 && q.choices.every(c=>c.length>=2));
@@ -26,16 +26,16 @@ test('content v2: 170 original Arabic prompts, unique per scope and level, 140 v
    const list=deck(level,mode);assert.ok(list.length>=12);assert.equal(new Set(list).size,list.length);
    prompts.push(...list);
  }
- assert.equal(prompts.length,170);assert.equal(new Set(prompts).size,170);
+ assert.equal(prompts.length,230);assert.equal(new Set(prompts).size,230);
 });
 test('remote eight-question choices are unique, valid and included in public room state',()=>{
  const values=selectQuizIndices(3,()=>0);
  assert.equal(values.length,8);assert.equal(new Set(values).size,8);
- assert.ok(values.every(i=>i>=0&&i<20));
+ assert.ok(values.every(i=>i>=0&&i<25));
  assert.throws(()=>selectQuizIndices(7));assert.throws(()=>selectQuizIndices(1,()=>200));
  const {room,host}=prepared();act(room,host,'quiz_open',{pack:5});
  assert.deepEqual(publicState(room).quiz.indices,room.quiz.indices);
- assert.equal(room.quiz.indices.length,8);assert.ok(room.quiz.indices.every(i=>i>=0&&i<20));
+ assert.equal(room.quiz.indices.length,8);assert.ok(room.quiz.indices.every(i=>i>=0&&i<25));
 });
 test('room never repeats a prompt within 10 rounds for couple or 12 for party',()=>{
  for(const mode of ['couple','party']){

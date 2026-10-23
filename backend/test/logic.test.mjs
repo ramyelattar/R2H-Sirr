@@ -54,5 +54,5 @@ test('revocation and expiry prevent actions',()=>{
   assert.throws(()=>join(x,x.invite,'ب',1000+60*60*1000));
 });
 test('prompts remain stable and nonempty in all five levels',()=>{
-  for(const level of ['SOFT','NORMAL','SEXY','HOT','HARD']) assert.equal(deck(level).length,20);
+  for(const level of ['SOFT','NORMAL','SEXY','HOT','HARD']) assert.equal(deck(level).length,26);
 });

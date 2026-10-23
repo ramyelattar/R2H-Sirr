@@ -14,7 +14,7 @@
  function b64(bytes){return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
  function un64(value){const x=value.replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(x+'='.repeat((4-x.length%4)%4)),c=>c.charCodeAt(0));}
  async function key(){if(!identity?.key)throw Error('لا يوجد مفتاح تشفير من رابط الدعوة');return crypto.subtle.importKey('raw',un64(identity.key),{name:'AES-GCM'},false,['encrypt','decrypt']);}
- async function loadQuizzes(){try{const r=await fetch('/quizzes.json',{cache:'no-store'});const x=await r.json();if(x.version!==2||x.packs.length!==7)throw Error('incompatible quizzes');packs=x.packs;if(lastState)renderQuiz(lastState);}catch{notice('تعذر تحميل بنك الأسئلة العربي');}}
+ async function loadQuizzes(){try{const r=await fetch('/quizzes.json',{cache:'no-store'});const x=await r.json();if(x.version!==3||x.packs.length!==7)throw Error('incompatible quizzes');packs=x.packs;if(lastState)renderQuiz(lastState);}catch{notice('تعذر تحميل بنك الأسئلة العربي');}}
  function action(type,extra={}){
   if(!authenticated||socket?.readyState!==WebSocket.OPEN)return notice('لا يوجد اتصال آمن حالي');
   socket.send(JSON.stringify({type,eventId:id(),...extra}));
@@ -24,7 +24,7 @@
   $('gate').hidden=true;$('game').hidden=false;
   const u=new URL('/ws',location.origin);u.protocol=u.protocol==='https:'?'wss:':'ws:';
   socket=new WebSocket(u);
-  socket.addEventListener('open',()=>socket.send(JSON.stringify({type:'authenticate',roomId,auth:identity.auth})));
+  socket.addEventListener('open',()=>socket.send(JSON.stringify({type:'authenticate',roomId,auth:identity.auth,contentVersion:3})));
   socket.addEventListener('message',evt=>{
    let x;try{x=JSON.parse(evt.data);}catch{return;}
    if(x.type==='authenticated'){
@@ -35,7 +35,7 @@
   });
   socket.addEventListener('close',event=>{
    authenticated=false;$('connect').textContent='غير متصل';
-   if([4000,4003].includes(event.code)){deliberatelyLeft=true;sessionStorage.removeItem(storeKey);notice('الجلسة انتهت أو لم يعد الدخول مسموحًا');return;}
+   if([4000,4003,4009].includes(event.code)){deliberatelyLeft=true;sessionStorage.removeItem(storeKey);notice(event.code===4009?'نسخة المحتوى قديمة؛ افتح الرابط من جديد بعد تحديث التطبيق':'الجلسة انتهت أو لم يعد الدخول مسموحًا');return;}
    if(!deliberatelyLeft){const wait=Math.min(30000,1000*2**Math.min(retries++,5));notice('انقطع الاتصال؛ ستتم إعادة المحاولة.');clearTimeout(retryTimer);retryTimer=setTimeout(connect,wait);}
   });
  }
@@ -71,7 +71,15 @@
   if(q.id!==currentQuizId){currentQuizId=q.id;answers=[];}
   const heading=document.createElement('h2');heading.textContent=`اختبار مشترك: ${packs[q.pack].name}`;panel.append(heading);
   if(mine?.host){const close=document.createElement('button');close.className='secondary';close.textContent='إغلاق الاختبار';close.onclick=()=>action('quiz_close');panel.append(close);}
-  if(q.result){const p=document.createElement('p');p.textContent=`النتيجة: ${q.result.scores.map(v=>`${s.participants.find(m=>m.id===v.id)?.name||'مشارك'} ${v.score}/16`).join('، ')} — اتفقت الإجابات في ${q.result.agreement}/8 أسئلة.`;panel.append(p);return;}
+  if(q.result){
+   for(const v of q.result.counts||[]){
+    const p=document.createElement('p');const name=s.participants.find(m=>m.id===v.id)?.name||'مشارك';
+    p.textContent=`${name}: `+v.values.map((n,i)=>`الخيار ${i+1}: ${n}`).join('، ');panel.append(p);
+   }
+   const p=document.createElement('p');
+   p.textContent=`تطابقت ${q.result.agreement} من ${q.result.questions} إجابات. هذه مقارنة وصفية لا تقيس التوافق النفسي.`;
+   panel.append(p);return;
+  }
   if(q.submitted.includes(identity.participantId)){const p=document.createElement('p');p.textContent='وصلت إجاباتك، ننتظر المشارك الثاني. لا تُعرض إجابات منفردة.';panel.append(p);return;}
   const step=answers.length;
   if(step>=8){const done=document.createElement('button');done.textContent='إرسال النتيجة للمقارنة';done.onclick=()=>action('quiz_submit',{quizId:q.id,answers:answers.slice()});panel.append(done);return;}
