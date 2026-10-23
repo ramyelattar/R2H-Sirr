@@ -439,21 +439,31 @@ private fun RemoteQuizPanel(snapshot:JSONObject,id:RemoteIdentity,transport:Remo
 }
 
 @Composable
-private fun MediaResultPreview(result:Pair<String,ByteArray>,clear:()->Unit){
+private fun MediaResultPreview(result:Pair<String,ByteArray>,clear:()->Unit,
+                               onFetch:(String,String,(Result<Pair<String,ByteArray>>)->Unit)->Unit){
     val context=LocalContext.current
     val mime=result.first
     val buffer=result.second
     if(mime=="application/vnd.sirr.card+json") {
         val content=remember(result){runCatching {
             val json=JSONObject(String(buffer,Charsets.UTF_8))
-            require(json.getInt("version")==1 && json.getString("type") in listOf("whispers","scratch"))
+            require(json.getInt("version") in listOf(1,2) && json.getString("type") in listOf("whispers","scratch"))
             val lines=json.getJSONArray("lines")
             require(lines.length() in 1..3 &&
                 (json.getString("type")!="whispers" || lines.length()==3))
-            json.getString("type") to (0 until lines.length()).map{lines.getString(it)}.also{all->
+            val messageLines=(0 until lines.length()).map{lines.getString(it)}.also{all->
                 require(all.all{it.isNotBlank()&&it.length<=350})}
+            val attachments=json.optJSONObject("attachments")?:JSONObject()
+            val ids=mutableMapOf<String,String>();val keys=attachments.keys()
+            while(keys.hasNext()){val key=keys.next()
+                require(key in setOf("imageId","audioId"))
+                val value=attachments.getString(key)
+                require(value.matches(Regex("[0-9a-f-]{36}")))
+                ids[key]=value
+            }
+            Triple(json.getString("type"),messageLines,ids)
         }.getOrNull()}
-        if(content!=null) RemoteCardViewer(content.first,content.second,clear)
+        if(content!=null) RemoteCardViewer(content.first,content.second,content.third,clear,onFetch)
         else Text("تعذر قراءة البطاقة المشفرة",color=MaterialTheme.colorScheme.error)
         return
     }
@@ -492,9 +502,12 @@ private fun MediaResultPreview(result:Pair<String,ByteArray>,clear:()->Unit){
 
 /** No remote read receipt is implied: ciphertext is removed at first authenticated download. */
 @Composable
-private fun RemoteCardViewer(type:String,lines:List<String>,clear:()->Unit) {
+private fun RemoteCardViewer(type:String,lines:List<String>,attachments:Map<String,String>,
+                             clear:()->Unit,onFetch:(String,String,(Result<Pair<String,ByteArray>>)->Unit)->Unit) {
     var index by remember(type,lines){mutableIntStateOf(0)}
     var revealed by remember(type,lines){mutableStateOf(false)}
+    var media by remember(type,lines){mutableStateOf<Pair<String,ByteArray>?>(null)}
+    var error by remember(type,lines){mutableStateOf("")}
     Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text(if(type=="whispers") "همسات خاصة" else "بطاقة كشف خاصة",style=MaterialTheme.typography.titleLarge)
         if(index<lines.size) {
@@ -503,7 +516,17 @@ private fun RemoteCardViewer(type:String,lines:List<String>,clear:()->Unit) {
                 key(index) { ScratchPanel(lines[index],onRevealed={revealed=true}) }
             } else Text(lines[index],style=MaterialTheme.typography.titleMedium)
             Button(enabled=type!="scratch" || revealed,onClick={index++;revealed=false}){Text(if(index==lines.lastIndex) "إنهاء العرض" else "التالي")}
-        } else Text("انتهى العرض. لا يمكن استرجاع البطاقة من الخادم.")
+        } else {
+            Text("انتهى العرض. لا يمكن استرجاع البطاقة من الخادم.")
+            attachments["imageId"]?.let{ref->OutlinedButton(onClick={
+                onFetch(ref,"image"){result->result.onSuccess{media=it}.onFailure{error=it.message?:"تعذر فتح الصورة"}}
+            }){Text("عرض الصورة الختامية")}}
+            attachments["audioId"]?.let{ref->OutlinedButton(onClick={
+                onFetch(ref,"audio"){result->result.onSuccess{media=it}.onFailure{error=it.message?:"تعذر فتح الصوت"}}
+            }){Text("تشغيل الصوت المرفق")}}
+            if(error.isNotEmpty())Text(error,color=MaterialTheme.colorScheme.error)
+            media?.let{MediaResultPreview(it,clear={media=null},onFetch=onFetch)}
+        }
         TextButton(onClick=clear){Text("إغلاق البطاقة")}
     } }
 }
