@@ -23,7 +23,7 @@ const headers={
 };
 function respond(res,status,data) {res.writeHead(status,{...headers,'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));}
 function bad(res,msg,status=400) {respond(res,status,{error:msg});}
-function limit(ip) {const t=now(),x=rate.get(ip)||{start:t,count:0};if(t-x.start>60_000){x.start=t;x.count=0;}x.count++;rate.set(ip,x);return x.count<=100;}
+function limit(ip,kind='normal') {const key=kind+':'+ip,t=now(),x=rate.get(key)||{start:t,count:0};if(t-x.start>60_000){x.start=t;x.count=0;}x.count++;rate.set(key,x);return x.count<=(kind==='chunk'?500:100);}
 async function body(req,max=16384) {
  let size=0;const parts=[];for await(const chunk of req){size+=chunk.length;if(size>max) throw Error('too large');parts.push(chunk);}
  return Buffer.concat(parts);
@@ -37,7 +37,9 @@ function getMember(req,room) {
  return match && participantByToken(room,match[1]);
 }
 const http=createServer(async (req,res)=>{
- const ip=req.socket.remoteAddress||'unknown';if(!limit(ip))return bad(res,'too many requests',429);
+ const ip=req.socket.remoteAddress||'unknown';
+ const chunkRequest=/^\/api\/rooms\/[0-9a-f-]{36}\/(?:uploads|media)\/[0-9a-f-]{36}\/chunks\/[0-9]+$/.test(req.url.split('?')[0]);
+ if(!limit(ip,chunkRequest?'chunk':'normal'))return bad(res,'too many requests',429);
  const url=new URL(req.url,base);
  if(req.method==='POST'&&url.pathname==='/api/rooms') {
   try {const json=JSON.parse((await body(req)).toString('utf8'));
