@@ -93,24 +93,30 @@
  async function upload(file){
   if(!file)return;
   const kind=file.type.startsWith('image/')?'image':file.type.startsWith('audio/')?'audio':file.type.startsWith('video/')?'video':null;
-  if(!kind||file.size>8*1024*1024-16)throw Error('الملف يجب أن يكون صورة أو صوتًا أو فيديو حتى ٨ ميجابايت');
+  if(!kind)throw Error('الملف يجب أن يكون صورة أو صوتًا أو فيديو');
   const iv=crypto.getRandomValues(new Uint8Array(12));
   const types=new Set(['image/jpeg','image/png','image/webp','audio/mpeg','audio/ogg','audio/mp4','video/mp4','video/webm']);
   if(!types.has(file.type))throw Error('هذه الصيغة غير مدعومة');
+  if(file.size>8*1024*1024-512)return SirrM6.upload(file,{roomId,auth:identity.auth,kind,key:await key(),progress:notice});
   const bytes=new Uint8Array(await file.arrayBuffer()),name=new TextEncoder().encode(file.type);
   const plaintext=new Uint8Array(1+name.length+bytes.length);plaintext[0]=name.length;plaintext.set(name,1);plaintext.set(bytes,1+name.length);
   const encrypted=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:new TextEncoder().encode(`${roomId}:${kind}`)},await key(),plaintext);
   const res=await fetch(`/api/rooms/${roomId}/media`,{method:'POST',headers:{Authorization:`Bearer ${identity.auth}`,'Content-Type':'application/octet-stream','X-Encrypted-Iv':b64(iv),'X-Media-Kind':kind},body:encrypted});
   if(!res.ok)throw Error('فشل رفع الملف المشفر؛ تحقق من حجم الملف ودورك في الجولة');
-  notice('تم إرسال الملف مشفرًا. ينتهي توفره خلال ١٥ دقيقة أو عند إغلاق الجلسة.');
+  const saved=await res.json();notice('تم إرسال الملف مشفرًا. ينتهي توفره خلال ١٥ دقيقة أو عند إغلاق الجلسة.');return saved.id;
  }
  async function download(item){
   try{
-   const res=await fetch(`/api/rooms/${roomId}/media/${item.id}`,{headers:{Authorization:`Bearer ${identity.auth}`}});
-   if(!res.ok)throw Error('الملف منتهي الصلاحية أو غير متاح');
-   const iv=un64(res.headers.get('X-Encrypted-Iv')||'');if(iv.length!==12)throw Error('مفتاح تشفير غير صالح');
-   const kind=res.headers.get('X-Media-Kind');if(kind!==item.kind)throw Error('نوع الملف غير مطابق');
-   const data=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv,additionalData:new TextEncoder().encode(`${roomId}:${kind}`)},await key(),await res.arrayBuffer()));
+   let kind=item.kind,data;
+   if(item.transfer==='chunked'){
+    data=await SirrM6.download(item,{roomId,auth:identity.auth,key:await key(),progress:notice});
+   }else{
+    const res=await fetch(`/api/rooms/${roomId}/media/${item.id}`,{headers:{Authorization:`Bearer ${identity.auth}`}});
+    if(!res.ok)throw Error('الملف منتهي الصلاحية أو غير متاح');
+    const iv=un64(res.headers.get('X-Encrypted-Iv')||'');if(iv.length!==12)throw Error('مفتاح تشفير غير صالح');
+    kind=res.headers.get('X-Media-Kind');if(kind!==item.kind)throw Error('نوع الملف غير مطابق');
+    data=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv,additionalData:new TextEncoder().encode(`${roomId}:${kind}`)},await key(),await res.arrayBuffer()));
+   }
    const len=data[0];if(len<1||len>64)throw Error('تنسيق ملف غير صالح');
    const mime=new TextDecoder().decode(data.slice(1,len+1));
    const supported=new Set(['image/jpeg','image/png','image/webp','audio/mpeg','audio/ogg','audio/mp4','video/mp4','video/webm']);
@@ -118,9 +124,10 @@
     if(mime!=='application/vnd.sirr.card+json')throw Error('بطاقة غير مدعومة');
     const dataText=new TextDecoder('utf-8',{fatal:true}).decode(data.slice(len+1));
     const card=JSON.parse(dataText);
-    if(card.version!==1||!['whispers','scratch'].includes(card.type)||!Array.isArray(card.lines)||
+    if(![1,2].includes(card.version)||!['whispers','scratch'].includes(card.type)||!Array.isArray(card.lines)||
        card.lines.length<1||card.lines.length>3||(card.type==='whispers'&&card.lines.length!==3)||
        card.lines.some(s=>typeof s!=='string'||!s.trim()||[...s].length>350)) throw Error('محتوى البطاقة غير صالح');
+    if(card.version===2){const a=card.attachments||{};if(Object.keys(a).some(k=>!['imageId','audioId'].includes(k))||Object.values(a).some(v=>typeof v!=='string'||!/^[0-9a-f-]{36}$/.test(v)))throw Error('مرفقات غير صالحة');}
     showCard(card);return;
    }
    if(!supported.has(mime)||!mime.startsWith(`${kind}/`))throw Error('ملف بامتداد غير مدعوم');
@@ -137,7 +144,10 @@
   const panel=$('viewer');panel.replaceChildren();let index=0;
   function show(){
    panel.replaceChildren();
-   if(index>=card.lines.length){const end=document.createElement('p');end.textContent='انتهى عرض البطاقة.';panel.append(end);return;}
+   if(index>=card.lines.length){const end=document.createElement('p');end.textContent='انتهى عرض البطاقة.';panel.append(end);
+    for(const [id,kind,label] of [[card.attachments?.imageId,'image','عرض الصورة الختامية'],[card.attachments?.audioId,'audio','تشغيل الصوت المرفق']])if(id){
+     const b=document.createElement('button');b.textContent=label;b.onclick=()=>download({id,kind});panel.append(b);}
+    return;}
    const title=document.createElement('h3');title.textContent=`${card.type==='whispers'?'همسة':'طبقة كشف'} ${index+1}/${card.lines.length}`;panel.append(title);
    const content=document.createElement('article');content.className='challenge';content.textContent=card.lines[index];
    panel.append(content);
@@ -177,7 +187,12 @@
   const controls=[$('cardOne'),$('cardTwo'),$('cardThree')].slice(0,type==='whispers'?3:2);
   const lines=controls.map(c=>c.value.trim());
   if(!lines.every(s=>s.length>0&&[...s].length<=350))throw Error('أكمل الرسائل، بحد ٣٥٠ حرفًا لكل رسالة');
-  const bytes=new TextEncoder().encode(JSON.stringify({version:1,type,lines}));
+  const attachments={};
+  if($('cardImage').files?.[0]){if($('cardImage').files[0].size>8*1024*1024-512)throw Error('الصورة الختامية لا تتجاوز ٨ ميجابايت');
+   attachments.imageId=await upload($('cardImage').files[0]);}
+  if($('cardAudio').files?.[0]){if($('cardAudio').files[0].size>8*1024*1024-512)throw Error('الصوت المرفق لا يتجاوز ٨ ميجابايت');
+   attachments.audioId=await upload($('cardAudio').files[0]);}
+  const bytes=new TextEncoder().encode(JSON.stringify({version:2,type,lines,attachments}));
   if(bytes.length>12*1024)throw Error('البطاقة طويلة جدًا');
   const mime='application/vnd.sirr.card+json',name=new TextEncoder().encode(mime);
   const plaintext=new Uint8Array(1+name.length+bytes.length);plaintext[0]=name.length;
@@ -187,7 +202,7 @@
   const result=await fetch(`/api/rooms/${roomId}/media`,{method:'POST',headers:{Authorization:`Bearer ${identity.auth}`,
    'Content-Type':'application/octet-stream','X-Encrypted-Iv':b64(iv),'X-Media-Kind':'card'},body:ciphertext});
   if(!result.ok)throw Error('تعذر إرسال البطاقة المشفرة');
-  controls.forEach(c=>c.value='');notice('تم إرسال البطاقة المشفرة للمستلم. متاحة لأول فتح فقط.');
+  controls.forEach(c=>c.value='');$('cardImage').value='';$('cardAudio').value='';notice('تم إرسال البطاقة المشفرة للمستلم. متاحة لأول فتح فقط.');
  }
  $('cardType').onchange=()=>$('cardThirdLabel').hidden=$('cardType').value==='scratch';
  $('sendCard').onclick=async()=>{try{await sendCard();}catch(error){notice(error.message);}};
@@ -204,6 +219,8 @@
  $('complete').onclick=()=>action('complete');$('skip').onclick=()=>action('skip');
  $('send').onclick=()=>{const body=$('reply').value.trim();if(body){action('message',{body});$('reply').value='';}};
  $('file').onchange=async e=>{try{await upload(e.target.files?.[0]);}catch(err){notice(err.message);}finally{e.target.value='';}};
+ $('resumeUpload').onclick=async()=>{try{await SirrM6.resume({roomId,auth:identity.auth,key:await key(),progress:notice});}catch(e){notice(e.message);}};
+ $('cancelUpload').onclick=async()=>{await SirrM6.cancel({roomId,auth:identity.auth});notice('تم طلب إلغاء النقل');};
  $('leave').onclick=()=>{if(confirm('إنهاء الجلسة للجميع؟')){action('leave');deliberatelyLeft=true;sessionStorage.removeItem(storeKey);}};
  window.addEventListener('pagehide',()=>{if(activeMediaUrl)URL.revokeObjectURL(activeMediaUrl);clearTimeout(retryTimer);});
  loadQuizzes();if(identity)connect();
