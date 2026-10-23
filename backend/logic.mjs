@@ -44,7 +44,7 @@ export function publicState(room, clock=now()) {
     contentVersion:2,
     quiz: room.quiz ? {id:room.quiz.id,pack:room.quiz.pack,indices:room.quiz.indices,
       submitted:room.quiz.submissions.map(x=>x.id),result:room.quiz.result} : null,
-    media:room.media.filter(item=>item.expiresAt>clock).map(({id,kind,authorId,round,size,expiresAt})=>({id,kind,authorId,round,size,expiresAt}))
+    media:room.media.filter(item=>item.expiresAt>clock).map(({id,kind,authorId,round,size,expiresAt,transfer})=>({id,kind,authorId,round,size,expiresAt,transfer:transfer||"single"}))
   };
 }
 export function participantByToken(room, auth) { return room.participants.find(p=>p.auth===auth); }
