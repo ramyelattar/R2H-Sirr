@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#0b0d13"><title>سِرّ — انضمام خاص</title>
+<link rel="stylesheet" href="/style.css"></head>
+<body><main>
+<header><strong>سِرّ</strong><small>جلسة خاصة للبالغين +18</small></header>
+<section id="gate">
+  <h1>الانضمام للجلسة</h1>
+  <p>ستشارك مع أشخاص تعرفهم. يمكنك الامتناع أو الانسحاب في أي وقت.</p>
+  <label>الاسم داخل الجلسة <input id="nickname" maxlength="32" autocomplete="off" placeholder="اسم مستعار"></label>
+  <label class="check"><input type="checkbox" id="adult"> أؤكد أنني بالغ بعمر ١٨ سنة أو أكثر</label>
+  <label class="check"><input type="checkbox" id="consent"> أوافق على المشاركة ويمكنني التوقف في أي وقت</label>
+  <button id="join">الانضمام</button>
+</section>
+<section id="game" hidden>
+  <p id="connect">جارِ الاتصال…</p>
+  <h1 id="title">جلسة مشتركة</h1>
+  <p id="round"></p>
+  <article id="challenge" class="challenge"></article>
+  <ul id="participants"></ul>
+  <div id="actor" hidden>
+    <label>رد نصي اختياري <textarea id="reply" rows="2" maxlength="500" placeholder="لن يظهر الرد إلا للمشاركين في الجلسة"></textarea></label>
+    <button id="send">إرسال النص للمشاركين</button>
+    <button id="complete">تم التحدي</button>
+    <button class="secondary" id="skip">تخطي بلا عقوبة</button>
+    <section id="cards" hidden>
+      <h2>بطاقة خاصة مشفرة للشريك</h2>
+      <label>نوع البطاقة
+        <select id="cardType"><option value="whispers">ثلاث همسات</option><option value="scratch">كشف تدريجي</option></select>
+      </label>
+      <label>الرسالة الأولى<textarea id="cardOne" maxlength="350" rows="2"></textarea></label>
+      <label>الرسالة الثانية<textarea id="cardTwo" maxlength="350" rows="2"></textarea></label>
+      <label id="cardThirdLabel">الرسالة الثالثة<textarea id="cardThree" maxlength="350" rows="2"></textarea></label>
+      <button id="sendCard" class="secondary">إرسال البطاقة المشفرة</button>
+      <small>تُحذف من الخادم بعد أول استلام، أو عند انتهاء الصلاحية. لا يمكن إلغاء أي نسخة احتفظ بها المستلم.</small>
+    </section>
+  </div>
+  <div id="messages"></div>
+  <section id="mediaUpload" hidden>
+    <label>إرسال ملف مشفر في دورك الحالي (صورة أو صوت أو فيديو، بحد أقصى ٨ ميجابايت)
+      <input id="file" type="file" accept="image/*,audio/*,video/*">
+    </label>
+  </section>
+  <h2>الوسائط المشتركة المشفرة</h2>
+  <div id="mediaList"></div><div id="viewer"></div>
+  <section id="quiz" aria-label="الاختبار المشترك"></section>
+  <button class="secondary" id="leave">إنهاء مشاركتي والجلسة</button>
+</section>
+<p role="alert" id="notice"></p>
+<footer>يُحذف سجل الجلسة من ذاكرة الخادم بعد انتهاء الصلاحية. ملفات الوسائط مشفرة من جهاز إلى جهاز بمفتاح داخل رابط الدعوة؛ الرسائل وإجابات الاختبارات تعالج على الخادم وليست مشفرة طرفيًا. من يمتلك الرابط ومفتاحه يمكنه فك الملفات إذا انضم للجلسة. لا يمكن منع تسجيل الشاشة خارجيًا.</footer>
+</main><script src="/app.js" defer></script></body></html>
