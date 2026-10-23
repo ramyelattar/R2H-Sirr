@@ -9,7 +9,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.MediaType.Companion.toMediaType
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.SequenceInputStream
 
@@ -117,7 +116,7 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
         require(meta.getString("kind")==kind)
         val total=meta.getInt("totalBytes");val count=meta.getInt("count")
         require(total in 1..MAX_SIZE && count==(total+CHUNK_SIZE-1)/CHUNK_SIZE)
-        val output=ByteArrayOutputStream(total)
+        val content=ByteArray(total);var copied=0
         for(index in 0 until count){
             val url="$path/chunks/$index"
             val req=Request.Builder().url(url).header("Authorization","Bearer ${id.auth}").get().build()
@@ -128,11 +127,12 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
                 val decoded=RemoteCrypto.decryptChunk(id.roomId,id.sessionKey,mediaId,index,kind,iv,payload)
                 val expected=if(index==count-1)total-index*CHUNK_SIZE else CHUNK_SIZE
                 require(decoded.size==expected){"حجم الجزء غير مطابق"}
-                output.write(decoded)
+                System.arraycopy(decoded,0,content,copied,decoded.size);copied+=decoded.size
             }
             progress("تنزيل ${index+1}/$count أجزاء مشفرة")
         }
-        val content=output.toByteArray();val nameSize=content[0].toInt() and 255
+        require(copied==total)
+        val nameSize=content[0].toInt() and 255
         require(nameSize in 1..64 && content.size>nameSize)
         val mime=RemoteCrypto.mime(String(content,1,nameSize,Charsets.UTF_8))
         require(RemoteCrypto.kind(mime)==kind)
