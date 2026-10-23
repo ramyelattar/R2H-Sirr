@@ -223,6 +223,11 @@ private class RemoteTransport(private val client:OkHttpClient) {
         reconnectTask?.let(main::removeCallbacks);reconnectTask=null}
 }
 
+private fun transportFileSize(context:android.content.Context,uri:Uri):Long? =
+    runCatching{context.contentResolver.query(uri,arrayOf(android.provider.OpenableColumns.SIZE),null,null,null)?.use{cursor->
+        if(cursor.moveToFirst())cursor.getLong(0).takeIf{it>=0} else null
+    }}.getOrNull()
+
 @Composable
 internal fun RemoteScreen(){
     val context=LocalContext.current
@@ -239,6 +244,8 @@ internal fun RemoteScreen(){
     var draft by remember{mutableStateOf("")}
     var cardMode by remember{mutableStateOf("whispers")}
     val cardTexts=remember{mutableStateListOf("","","")}
+    var cardImageId by remember(identity){mutableStateOf<String?>(null)}
+    var cardAudioId by remember(identity){mutableStateOf<String?>(null)}
     DisposableEffect(Unit){onDispose{transport.close()}}
     LaunchedEffect(Unit){
         remoteStore.restore()?.let { saved ->
@@ -250,7 +257,23 @@ internal fun RemoteScreen(){
         }
     }
     val filePicker=rememberLauncherForActivityResult(ActivityResultContracts.GetContent()){uri->
-        if(uri!=null)transport.upload(context.applicationContext,uri){status=it}
+        if(uri!=null)transport.upload(context.applicationContext,uri,{status=it})
+    }
+    val cardImagePicker=rememberLauncherForActivityResult(ActivityResultContracts.GetContent()){uri->
+        cardImageId=null
+        if(uri!=null){
+            val length=transportFileSize(context.applicationContext,uri)
+            if(length==null||length>8*1024*1024-512)status="صورة البطاقة يجب أن تكون أصغر من ٨ ميجابايت"
+            else transport.upload(context.applicationContext,uri,{status=it}){cardImageId=it}
+        }
+    }
+    val cardAudioPicker=rememberLauncherForActivityResult(ActivityResultContracts.GetContent()){uri->
+        cardAudioId=null
+        if(uri!=null){
+            val length=transportFileSize(context.applicationContext,uri)
+            if(length==null||length>8*1024*1024-512)status="صوت البطاقة يجب أن يكون أصغر من ٨ ميجابايت"
+            else transport.upload(context.applicationContext,uri,{status=it}){cardAudioId=it}
+        }
     }
     fun received(result:Result<RemoteIdentity>){busy=false;result.onSuccess{
         identity=it;state=null;status="جارِ الاتصال"
@@ -309,7 +332,9 @@ internal fun RemoteScreen(){
                     if(snapshot.optString("actorId")==id.participantId){
                         OutlinedTextField(draft,{draft=it.take(500)},label={Text("رد نصي للمشاركين — ليس مشفرًا طرفيًا")},modifier=Modifier.fillMaxWidth())
                         OutlinedButton(enabled=draft.isNotBlank(),onClick={transport.action("message",JSONObject().put("body",draft));draft=""}){Text("إرسال رد")}
-                        OutlinedButton(onClick={filePicker.launch("*/*")}){Text("إرسال صورة أو صوت أو فيديو مشفر (حتى ٨MB)")}
+                        OutlinedButton(onClick={filePicker.launch("*/*")}){Text("إرسال صورة أو صوت أو فيديو مشفر (حتى ٤٨MB)")}
+                        OutlinedButton(onClick={transport.resumeUpload(context.applicationContext){status=it}}){Text("استئناف ملف كبير متوقف")}
+                        OutlinedButton(onClick={transport.cancelUpload();status="تم طلب إلغاء الرفع"}){Text("إلغاء رفع ملف كبير")}
                         HorizontalDivider()
                         Text("بطاقة خاصة مشفرة (للشريكين فقط)", style=MaterialTheme.typography.titleMedium)
                         if(snapshot.optString("mode")=="couple") {
@@ -323,9 +348,17 @@ internal fun RemoteScreen(){
                                 OutlinedTextField(cardTexts[index],{cardTexts[index]=it.take(350)},
                                     label={Text("الرسالة ${index+1}")},modifier=Modifier.fillMaxWidth())
                             }
+                            OutlinedButton(onClick={cardImagePicker.launch("image/*")}){Text("اختيار صورة ختامية مشفرة (اختياري)")}
+                            if(cardImageId!=null)Text("تم رفع الصورة الختامية")
+                            OutlinedButton(onClick={cardAudioPicker.launch("audio/*")}){Text("اختيار موسيقى أو صوت (اختياري)")}
+                            if(cardAudioId!=null)Text("تم رفع الصوت")
                             OutlinedButton(enabled=cardTexts.take(required).all{it.isNotBlank()},onClick={
-                                transport.uploadCard(cardMode,cardTexts.take(required).toList()){msg->status=msg}
+                                val attachments=JSONObject()
+                                cardImageId?.let{attachments.put("imageId",it)}
+                                cardAudioId?.let{attachments.put("audioId",it)}
+                                transport.uploadCard(cardMode,cardTexts.take(required).toList(),attachments){msg->status=msg}
                                 for(i in cardTexts.indices)cardTexts[i]=""
+                                cardImageId=null;cardAudioId=null
                             }){Text("إرسال البطاقة مشفرة")}
                             Text("يتسلمها الشريك مرة واحدة. لا تُحفظ نسخة قابلة للفتح مجددًا على الخادم.",
                                 style=MaterialTheme.typography.bodySmall,color=Color.LightGray)
@@ -342,7 +375,7 @@ internal fun RemoteScreen(){
                         repeat(media.length()){index->
                             val m=media.getJSONObject(index)
                             OutlinedButton(enabled=m.optString("kind")!="card" || m.optString("authorId")!=id.participantId,
-                                onClick={transport.download(m.getString("id"),m.getString("kind")){result->
+                                onClick={transport.download(m.getString("id"),m.getString("kind"),m.optString("transfer","single")){result->
                                 result.onSuccess{preview=it;status="تم فك التشفير على هذا الجهاز"}
                                     .onFailure{status=it.message?:"تعذر عرض الوسيط"}
                             }}){Text("عرض ${when(m.optString("kind")){"image"->"صورة";"audio"->"صوت";"card"->"بطاقة خاصة";else->"فيديو"}} مشفر")}
@@ -355,7 +388,9 @@ internal fun RemoteScreen(){
                     if(mine?.optBoolean("host")==true)TextButton(onClick={transport.action("revoke")}){Text("إلغاء الدعوة")}
                 }
             }
-            preview?.let{MediaResultPreview(it,clear={preview=null})}
+            preview?.let{MediaResultPreview(it,clear={preview=null},onFetch={mediaId,kind,done->
+                transport.download(mediaId,kind,"single",done)
+            })}
             TextButton(onClick={transport.close();remoteStore.clear();identity=null;state=null;preview=null}){Text("إغلاق الشاشة على هذا الهاتف")}
         }
     }
