@@ -117,7 +117,8 @@ const http=createServer(async (req,res)=>{
   const data=await readFile(join(assetsDir,'index.html'));
   res.writeHead(200,{...headers,'Content-Type':'text/html; charset=utf-8'});return res.end(data);
  }
- const staticFiles={'/app.js':['app.js','text/javascript; charset=utf-8'],
+ const staticFiles={'/m6-transfer.js':['m6-transfer.js','text/javascript; charset=utf-8'],
+  '/app.js':['app.js','text/javascript; charset=utf-8'],
   '/style.css':['style.css','text/css; charset=utf-8'],
   '/quizzes.json':['quizzes.json','application/json; charset=utf-8']};
  if(req.method==='GET'&&staticFiles[url.pathname]) {
