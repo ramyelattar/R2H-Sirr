@@ -163,7 +163,7 @@ private class RemoteTransport(private val client:OkHttpClient) {
                 .onFailure{status(it.message?:"تعذر إرسال الملف")} }
         }.start()
     }
-    fun cancelUpload(){current?.let(chunks::cancel)}
+    fun cancelUpload(){current?.let{id->Thread{chunks.cancel(id)}.start()}}
     fun resumeUpload(context:android.content.Context,status:(String)->Unit){
         val uri=chunks.pending?.uri
         if(uri==null){status("لا يوجد ملف موقوف لاستئنافه");return}
