@@ -5,6 +5,7 @@ import {dirname,join} from 'node:path';
 import {WebSocket,WebSocketServer} from 'ws';
 import {newRoom,join as joinRoom,participantByToken,publicState,applyAction,now} from './logic.mjs';
 import {CipherMediaStore} from './media.mjs';
+import {CipherChunkStore,CHUNK_SIZE} from './chunks.mjs';
 
 const port=Number(process.env.PORT||8787);
 const origin=(process.env.PUBLIC_ORIGIN||'').replace(/\/$/,'');
@@ -12,6 +13,7 @@ if(process.env.NODE_ENV==='production' && !origin.startsWith('https://')) throw 
 const base=origin || `http://localhost:${port}`;
 const rooms=new Map(),sockets=new Map(),rate=new Map();
 const cipherStore=new CipherMediaStore();
+const chunkStore=new CipherChunkStore();
 const assetsDir=join(dirname(fileURLToPath(import.meta.url)),'public');
 const wss=new WebSocketServer({noServer:true,maxPayload:8192,perMessageDeflate:false});
 const headers={
@@ -52,6 +54,42 @@ const http=createServer(async (req,res)=>{
   try{const json=JSON.parse((await body(req)).toString('utf8'));const p=joinRoom(room,json.invite,json.nickname);broadcast(room);
    return respond(res,200,{roomId:room.id,participantId:p.id,auth:p.auth,expiresAt:room.expiresAt});
   }catch{return bad(res,'invalid invitation',403);}
+ }
+ // M6: resumable opaque chunk uploads; every encrypted chunk is authenticated by the clients.
+ const uploadMatch=/^\/api\/rooms\/([0-9a-f-]{36})\/uploads(?:\/([0-9a-f-]{36})(?:\/(chunks\/([0-9]+)|complete))?)?$/.exec(url.pathname);
+ if(uploadMatch){
+  const room=rooms.get(uploadMatch[1]),member=room&&getMember(req,room);
+  if(!room||!member||room.expiresAt<=now())return bad(res,'not authorized',403);
+  const id=uploadMatch[2],action=uploadMatch[3],index=uploadMatch[4];
+  try{
+   if(req.method==='POST'&&!id){const data=JSON.parse((await body(req,2048)).toString('utf8'));
+    return respond(res,201,chunkStore.create(room,member,data));}
+   if(!id)return bad(res,'method not allowed',405);
+   if(req.method==='GET'&&!action)return respond(res,200,chunkStore.snapshot(chunkStore.owned(room,member,id)));
+   if(req.method==='DELETE'&&!action){chunkStore.cancel(room,member,id);return respond(res,200,{cancelled:true});}
+   if(req.method==='PUT'&&index!==undefined){
+    if(Number(req.headers['content-length'])>CHUNK_SIZE+16)return bad(res,'chunk too large',413);
+    const encrypted=await body(req,CHUNK_SIZE+16);
+    return respond(res,200,chunkStore.put(room,member,id,Number(index),req.headers['x-encrypted-iv'],encrypted));
+   }
+   if(req.method==='POST'&&action==='complete'){
+    const result=chunkStore.complete(room,member,id);room.seq++;broadcast(room);return respond(res,201,result);}
+  }catch{return bad(res,'chunk operation rejected',400);}
+  return bad(res,'method not allowed',405);
+ }
+ const chunkDownload=/^\/api\/rooms\/([0-9a-f-]{36})\/media\/([0-9a-f-]{36})\/(manifest|chunks\/([0-9]+))$/.exec(url.pathname);
+ if(req.method==='GET'&&chunkDownload){
+  const room=rooms.get(chunkDownload[1]),member=room&&getMember(req,room);
+  if(!room||!member||room.expiresAt<=now())return bad(res,'not authorized',403);
+  if(chunkDownload[3]==='manifest'){
+   const manifest=chunkStore.manifest(room,member,chunkDownload[2]);
+   return manifest?respond(res,200,manifest):bad(res,'media not available',404);
+  }
+  const part=chunkStore.chunk(room,member,chunkDownload[2],Number(chunkDownload[4]));
+  if(!part)return bad(res,'media not available',404);
+  res.writeHead(200,{...headers,'Content-Type':'application/octet-stream',
+   'Content-Length':part.data.length,'X-Encrypted-Iv':part.iv,'X-Media-Kind':part.kind});
+  return res.end(part.data);
  }
  const mediaMatch=/^\/api\/rooms\/([0-9a-f-]{36})\/media(?:\/([0-9a-f-]{36}))?$/.exec(url.pathname);
  if(mediaMatch && ['POST','GET'].includes(req.method)) {
@@ -115,7 +153,7 @@ http.on('upgrade',(req,socket,head)=>{
    const t=now();if(t-ws.actionsAt>60_000){ws.actionsAt=t;ws.actions=0;}
    if(++ws.actions>90)return ws.close(4008,'rate limited');
    try {const updated=applyAction(room,member,data);
-    if(updated){if(['ENDED','REVOKED'].includes(room.status))cipherStore.removeRoom(room.id);broadcast(room);}
+    if(updated){if(['ENDED','REVOKED'].includes(room.status)){cipherStore.removeRoom(room.id);chunkStore.removeRoom(room.id);}broadcast(room);}
     else ws.send(JSON.stringify({type:'ack',eventId:data.eventId,duplicate:true}));
    }catch{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'error',message:'تعذر تنفيذ الأمر أو انتهت الجلسة'}));}
   });
@@ -130,13 +168,13 @@ http.on('upgrade',(req,socket,head)=>{
  });
 });
 const cleanup=setInterval(()=>{
- const t=now();cipherStore.prune(t);
+ const t=now();cipherStore.prune(t);chunkStore.prune(t);
  for(const [id,room] of rooms){
   if(room.expiresAt<=t){room.status='EXPIRED';room.media=[];room.quiz=null;
-   cipherStore.removeRoom(id);broadcast(room);
+   cipherStore.removeRoom(id);chunkStore.removeRoom(id);broadcast(room);
    for(const s of sockets.get(id)||[])s.close(4000,'expired');sockets.delete(id);rooms.delete(id);
   }else if(['ENDED','REVOKED'].includes(room.status)&&(room.closedAt||room.createdAt)+5*60_000<t){
-   cipherStore.removeRoom(id);sockets.delete(id);rooms.delete(id);
+   cipherStore.removeRoom(id);chunkStore.removeRoom(id);sockets.delete(id);rooms.delete(id);
   }
  }
  for(const [ip,x] of rate)if(t-x.start>120_000)rate.delete(ip);
