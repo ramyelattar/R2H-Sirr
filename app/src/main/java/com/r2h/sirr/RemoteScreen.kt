@@ -39,6 +39,7 @@ internal data class RemoteIdentity(
 
 /** HTTPS/WSS only. Authentication is the first WS message, never a query parameter. */
 private class RemoteTransport(private val client:OkHttpClient) {
+    private val chunks=RemoteChunkTransfer(client)
     private val main=Handler(Looper.getMainLooper())
     private var ws:WebSocket?=null
     private var disconnected=false
@@ -136,31 +137,51 @@ private class RemoteTransport(private val client:OkHttpClient) {
         val keys=extra.keys();while(keys.hasNext()){val key=keys.next();data.put(key,extra.get(key))}
         ws?.send(data.toString())
     }
-    fun upload(context:android.content.Context,uri:Uri,status:(String)->Unit){
+    fun upload(context:android.content.Context,uri:Uri,status:(String)->Unit,
+               onUploaded:(String)->Unit={}){
         val id=current?:return
-        Thread{
-            val result=runCatching{
-                val (mime,data)=RemoteCrypto.load(context,uri)
-                val (iv,cipher)=RemoteCrypto.encrypt(id.roomId,id.sessionKey,mime,data)
-                val req=Request.Builder().url("${id.server}/api/rooms/${id.roomId}/media")
-                    .header("Authorization","Bearer ${id.auth}")
-                    .header("X-Media-Kind",RemoteCrypto.kind(mime))
-                    .header("X-Encrypted-Iv",iv)
-                    .post(cipher.toRequestBody("application/octet-stream".toMediaType())).build()
-                client.newCall(req).execute().use{if(!it.isSuccessful)error("الخادم رفض الوسيط (${it.code})")}
+        Thread {
+            val result=runCatching {
+                val length=chunks.size(context,uri)
+                if(length!=null && length>RemoteCrypto.MAX_PLAINTEXT-128L) {
+                    chunks.upload(id,context,uri){message->main.post{status(message)}}
+                } else {
+                    val (mime,data)=RemoteCrypto.load(context,uri)
+                    val (iv,cipher)=RemoteCrypto.encrypt(id.roomId,id.sessionKey,mime,data)
+                    val req=Request.Builder().url("${id.server}/api/rooms/${id.roomId}/media")
+                        .header("Authorization","Bearer ${id.auth}")
+                        .header("X-Media-Kind",RemoteCrypto.kind(mime))
+                        .header("X-Encrypted-Iv",iv)
+                        .post(cipher.toRequestBody("application/octet-stream".toMediaType())).build()
+                    client.newCall(req).execute().use {
+                        if(!it.isSuccessful)error("الخادم رفض الوسيط (${it.code})")
+                        JSONObject(it.body?.string().orEmpty()).getString("id")
+                    }
+                }
             }
-            main.post{status(result.fold({"تم إرسال الملف مشفرًا. إتاحته مؤقتة."},{it.message?:"تعذر إرسال الملف"}))}
+            main.post { result.onSuccess{mediaId->status("تم إرسال الملف مشفرًا");onUploaded(mediaId)}
+                .onFailure{status(it.message?:"تعذر إرسال الملف")} }
         }.start()
     }
+    fun cancelUpload(){current?.let(chunks::cancel)}
+    fun resumeUpload(context:android.content.Context,status:(String)->Unit){
+        val uri=chunks.pending?.uri
+        if(uri==null){status("لا يوجد ملف موقوف لاستئنافه");return}
+        upload(context,uri,status)
+    }
     /** Share a minimal, E2EE Arabic whisper/reveal card, not plaintext server chat. */
-    fun uploadCard(type:String,lines:List<String>,status:(String)->Unit){
+    fun uploadCard(type:String,lines:List<String>,attachments:JSONObject,status:(String)->Unit){
         val id=current?:return
         Thread {
             val result=runCatching {
                 require(type in listOf("whispers","scratch") && lines.size in 1..3 &&
                     (type!="whispers" || lines.size==3) && lines.all{it.isNotBlank()&&it.length<=350})
-                val payload=JSONObject().put("version",1).put("type",type)
-                    .put("lines",JSONArray(lines)).toString().toByteArray(Charsets.UTF_8)
+                val validId=Regex("[0-9a-f-]{36}")
+                val keys=attachments.keys();while(keys.hasNext()){
+                    val key=keys.next();require(key in setOf("imageId","audioId")&&attachments.getString(key).matches(validId))
+                }
+                val payload=JSONObject().put("version",2).put("type",type)
+                    .put("lines",JSONArray(lines)).put("attachments",attachments).toString().toByteArray(Charsets.UTF_8)
                 require(payload.size<=12*1024)
                 val (iv,cipher)=RemoteCrypto.encrypt(id.roomId,id.sessionKey,"application/vnd.sirr.card+json",payload)
                 val req=Request.Builder().url("${id.server}/api/rooms/${id.roomId}/media")
@@ -173,11 +194,18 @@ private class RemoteTransport(private val client:OkHttpClient) {
                 {it.message?:"تعذر إرسال البطاقة"})) }
         }.start()
     }
-    fun download(mediaId:String,kind:String,done:(Result<Pair<String,ByteArray>>)->Unit){
+    fun download(mediaId:String,kind:String,transfer:String="single",
+                 done:(Result<Pair<String,ByteArray>>)->Unit){
         val id=current?:return
+        if(transfer=="chunked") {
+            Thread {
+                val result=runCatching{chunks.download(id,mediaId,kind){message->main.post{onStatus?.invoke(message)}}}
+                main.post {done(result)}
+            }.start();return
+        }
         val request=Request.Builder().url("${id.server}/api/rooms/${id.roomId}/media/$mediaId")
             .header("Authorization","Bearer ${id.auth}").get().build()
-        client.newCall(request).enqueue(object:Callback{
+        client.newCall(request).enqueue(object:Callback {
             override fun onFailure(call:Call,e:IOException){main.post{done(Result.failure(e))}}
             override fun onResponse(call:Call,response:Response){
                 val result=runCatching{response.use{
