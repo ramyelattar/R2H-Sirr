@@ -14,6 +14,8 @@ scratch = source("ScratchScreenV2.kt")
 dice = source("DiceScreen.kt")
 visuals = source("SirrVisuals.kt")
 logic = source("core/ExperienceLogic.kt")
+artwork = source("SirrDiscovery.kt")
+sound = source("GameEffects.kt")
 experience = source("ExperienceScreen.kt")
 whispers = source("WhispersScreen.kt")
 
@@ -42,5 +44,24 @@ assert 'شغّل موسيقى المفاجأة' in whispers
 assert 'effects.cue(GameCue.REVEAL)' in scratch
 assert 'Modifier.fillMaxWidth().heightIn(min = 184.dp)' in main
 assert 'محتاج سيرفر آمن خاص' in main
+
+assert 'DiscoveryTile(' in main and 'DiscoveryMotif.DICE' in main
+assert 'DiscoveryMotif.WHISPER' in main and 'Canvas(' in artwork
+assert 'SoundPool.Builder()' in sound
+assert 'ToneGenerator' not in sound and 'ToneGenerator' not in dice
+assert 'EnterTransition.None' in experience, "Reduced motion must disable reveal transition"
+assert 'AnimatedVisibility(' in experience
+assert 'playSample(cue, p)' in sound, "Cues must honor opt-in preferences"
+
+# Validate each original bundled cue as a short playable RIFF/PCM WAV.
+import wave
+sounds_dir = ROOT / "app/src/main/res/raw"
+for event in ("round", "reveal", "success", "skip", "complete"):
+    cue_file = sounds_dir / f"sirr_{event}.wav"
+    assert cue_file.is_file(), f"Missing audio cue {cue_file.name}"
+    with wave.open(str(cue_file), "rb") as cue:
+        assert cue.getnchannels() == 1 and cue.getsampwidth() == 2
+        assert cue.getframerate() == 16000
+        assert .12 <= cue.getnframes() / cue.getframerate() <= 1.3
 
 print("M8 UI source regression guards PASS (static checks only, NOT Android build)")
