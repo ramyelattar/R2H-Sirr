@@ -155,6 +155,7 @@ internal fun ExperienceScreen(group: Boolean) {
             val current = game!!
             if (!current.finished) {
                 val turn = current.turns[current.round]
+                var isRevealed by remember(current.round) { mutableStateOf(false) }
                 LaunchedEffect(current.round) { effects.cue(GameCue.ROUND) }
                 LinearProgressIndicator(
                     progress = { current.round.toFloat() / current.turns.size },
@@ -163,22 +164,31 @@ internal fun ExperienceScreen(group: Boolean) {
                 RoundChapter(current.round,current.turns.size)
                 Text("الدور على ${current.playerNames[turn.actorIndex]}",
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                CinematicChallenge(turn.prompt.text, effects)
-                OutlinedButton(
-                    onClick = { mediaOpen = !mediaOpen },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text(if (mediaOpen) "اقفل الإضافات" else "عايز تكتب رد أو تضيف صورة؟") }
-                if (mediaOpen) {
-                    OutlinedTextField(reply, { reply = it.take(1000) },
-                        label = { Text("رد خاص… لو حابب") },
-                        modifier = Modifier.fillMaxWidth(), minLines = 2)
-                    LocalResponseMedia(current.round)
+                if (!isRevealed) {
+                    SealedChallengeCard(onReveal = {
+                        isRevealed = true
+                        effects.cue(GameCue.REVEAL)
+                    })
+                } else {
+                    CinematicChallenge(turn.prompt.text, effects)
+                    OutlinedButton(
+                        onClick = { mediaOpen = !mediaOpen },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(if (mediaOpen) "اقفل الإضافات" else "عايز تكتب رد أو تضيف صورة؟") }
+                    if (mediaOpen) {
+                        OutlinedTextField(reply, { reply = it.take(1000) },
+                            label = { Text("رد خاص… لو حابب") },
+                            modifier = Modifier.fillMaxWidth(), minLines = 2)
+                        LocalResponseMedia(current.round)
+                    }
                 }
-                Button(
-                    onClick = { effects.cue(GameCue.SUCCESS); game = current.resolve(completed = true); reply = ""; mediaOpen = false },
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                    shape = RoundedCornerShape(17.dp)
-                ) { Text("خلصت التحدي ✦", fontWeight = FontWeight.Bold) }
+                if (isRevealed) {
+                    Button(
+                        onClick = { effects.cue(GameCue.SUCCESS); game = current.resolve(completed = true); reply = ""; mediaOpen = false },
+                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        shape = RoundedCornerShape(17.dp)
+                    ) { Text("خلصت التحدي ✦", fontWeight = FontWeight.Bold) }
+                }
                 OutlinedButton(
                     onClick = { effects.cue(GameCue.SKIP); game = current.resolve(completed = false); reply = ""; mediaOpen = false },
                     modifier = Modifier.fillMaxWidth()
