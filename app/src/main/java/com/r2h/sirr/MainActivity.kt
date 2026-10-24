@@ -82,7 +82,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun SirrApp() {
     val context = LocalContext.current
-    var confirmedAdult by remember { mutableStateOf(false) }
+    val vault = remember(context) { LocalVault(context.applicationContext) }
+    // A self-declared adult opt-in is remembered only in encrypted local storage.
+    // This is not identity or age verification.
+    var confirmedAdult by remember { mutableStateOf(
+        runCatching { vault.readPrivate("adult-consent-v1") == "accepted" }.getOrDefault(false)
+    ) }
     var route by remember { mutableStateOf("home") }
     var sessionVersion by remember { mutableIntStateOf(0) }
     BackHandler(enabled = confirmedAdult && route != "home") { route = "home" }
@@ -90,7 +95,10 @@ private fun SirrApp() {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             Box(Modifier.fillMaxSize().background(Night)) {
                 if (!confirmedAdult) {
-                    AdultGate(onConfirm = { confirmedAdult = true })
+                    AdultGate(onConfirm = {
+                        runCatching { vault.writePrivate("adult-consent-v1", "accepted") }
+                        confirmedAdult = true
+                    })
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                     Row(
                         Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 8.dp, bottom = 4.dp),
