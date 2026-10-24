@@ -2,7 +2,7 @@ import {randomBytes, randomUUID, randomInt} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 const challengeCatalog=JSON.parse(readFileSync(new URL('./public/challenges.json',import.meta.url),'utf8'));
 const quizCatalog=JSON.parse(readFileSync(new URL('./public/quizzes.json',import.meta.url),'utf8'));
-if(challengeCatalog.version!==3 || quizCatalog.version!==3) throw Error('Content version mismatch');
+if(challengeCatalog.version!==4 || quizCatalog.version!==4) throw Error('Content version mismatch');
 
 export const now = () => Date.now();
 export const token = () => randomBytes(32).toString('base64url');
@@ -54,7 +54,7 @@ export function publicState(room, clock=now()) {
     prompt:room.prompt, promptSecret:room.promptSecret||null, customCount:room.sealedCustom.length, seq:room.seq, expiresAt:room.expiresAt, serverNow:clock,
     participants:room.participants.map(p=>({id:p.id, name:p.name, consent:p.consent, score:p.score, skips:p.skips, connected:p.connected,host:p.host})),
     messages:room.messages.map(({author,authorId,iv,cipher,round})=>({author,authorId,iv,cipher,round})),
-    contentVersion:3, protocolVersion:4,
+    contentVersion:4, protocolVersion:4,
     quiz: room.quiz ? {id:room.quiz.id,pack:room.quiz.pack,indices:room.quiz.indices,
       submitted:room.quiz.submissions.map(x=>x.id),result:room.quiz.result} : null,
     media:room.media.filter(item=>item.expiresAt>clock).map(({id,kind,authorId,round,size,expiresAt,transfer})=>({id,kind,authorId,round,size,expiresAt,transfer:transfer||"single"}))
