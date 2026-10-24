@@ -111,7 +111,7 @@ private class RemoteTransport(private val client:OkHttpClient) {
         val address=id.server.replaceFirst("https://","wss://")+"/ws"
         ws=client.newWebSocket(Request.Builder().url(address).build(),object:WebSocketListener(){
             override fun onOpen(webSocket:WebSocket,response:Response){
-                webSocket.send(JSONObject().put("type","authenticate").put("roomId",id.roomId).put("auth",id.auth).put("contentVersion",3).put("protocolVersion",4).toString())
+                webSocket.send(JSONObject().put("type","authenticate").put("roomId",id.roomId).put("auth",id.auth).put("contentVersion",4).put("protocolVersion",4).toString())
             }
             override fun onMessage(webSocket:WebSocket,text:String){
                 val data=runCatching{JSONObject(text)}.getOrNull()?:return
