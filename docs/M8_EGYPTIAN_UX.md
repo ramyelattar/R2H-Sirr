@@ -54,8 +54,19 @@ The Kotlin UI changes have **not yet been typechecked with Compose**; UI/runtime
 An actual device pass is still required for all layout sizes, RTL, transitions, scratch gestures, audio, privacy and saved-state behavior.
 This is not release-ready. The earlier M7 device build succeeds, but that result does not validate M8.
 
-### Further design work
-- Finish rewriting all remaining legacy challenge/question wording in authentic Egyptian colloquial style.
-- Replace faux-3D vector dice with a reviewed interactive 3D scene only if it can remain performant and accessible.
-- Test real phone screenshots before approving palette, type scale, tap targets and RTL presentation.
-- Improve media/remote multiuser experiences, typography assets and visual regression coverage.
+### Further design work (superseded by latest M8 catalog revision)
+- All 230 challenges and all 175 quiz questions have now been edited to everyday Egyptian Arabic and synchronized in the canonical v4 sources.
+- Both native Kotlin gameplay and browser/relay use the v4 catalog; old clients with contentVersion 3 are rejected.
+- The app still requires a new Android/Compose compile, visual phone acceptance, and real multiplayer tests.
+- Full 3D dice, polished tactile/audio assets, and a truly premium scratch-card scene require visual and device refinement.
+
+## Editorial closeout — 24 October 2026
+- Source-of-truth challenges: `content/challenges_ar_v2.json` (catalog version **4**, legacy filename).
+- Source-of-truth quizzes: `content/quizzes_ar_v4.json` (seven packs × 25 questions).
+- Native runtime now uses `EgyptianQuizCatalog.kt` via `ExpandedQuizzes.packs`; the generated Android Kotlin and web/backend JSON copies were checked for exact text consistency.
+- Challenges: **230/230** unique Egyptian prompts; quizzes **175/175**, three complete choices each.
+- Backend contract: `contentVersion=4`, `protocolVersion=4` with incompatible earlier clients rejected.
+- All remaining M7 corpus material is retained only in historical source/test files, not in active M8 quiz selection.
+- Tests amended for v4. Created `.github/workflows/m8-source-tests.yml` to run Python catalog checks and Node tests without Gradle.
+- **CI startup status:** the first run ended `startup_failure` with zero jobs. No passing tests or Kotlin build should be inferred from that.
+- **Screen validation:** updated Arabic type scale for Android, but no new Android build or user-device runtime check was run.
