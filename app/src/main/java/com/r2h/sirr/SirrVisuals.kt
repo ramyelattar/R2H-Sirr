@@ -65,13 +65,16 @@ internal fun MysteryHeader(eyebrow:String, headline:String, caption:String, symb
 /** Faux-3D dice illustration; selection and weights remain in DiceConfiguration. */
 @Composable
 internal fun MysteryDie(number:Int,spinning:Boolean,modifier:Modifier=Modifier) {
-    val transition=rememberInfiniteTransition(label="mystery-die")
-    val spin by transition.animateFloat(
-        initialValue=0f,targetValue=360f,
-        animationSpec=infiniteRepeatable(tween(850,easing=LinearEasing)),label="die-spin"
-    )
+    val spin=if(spinning){
+        val transition=rememberInfiniteTransition(label="mystery-die")
+        val current by transition.animateFloat(
+            initialValue=0f,targetValue=360f,
+            animationSpec=infiniteRepeatable(tween(850,easing=LinearEasing)),label="die-spin"
+        )
+        current
+    } else 0f
     Box(modifier.aspectRatio(1f).graphicsLayer {
-        rotationZ=if(spinning) spin else 0f
+        rotationZ=spin
         scaleX=if(spinning) .93f else 1f
         scaleY=if(spinning) .93f else 1f
     },contentAlignment=Alignment.Center){
