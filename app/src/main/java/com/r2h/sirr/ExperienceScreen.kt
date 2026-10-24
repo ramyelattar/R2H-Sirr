@@ -58,11 +58,11 @@ internal fun ExperienceScreen(group: Boolean) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(6, 10, 12, 18).forEach { count ->
                     FilterChip(selected = roundCount == count, onClick = { roundCount = count },
-                        label = { Text("\${count} جولات") })
+                        label = { Text("${count} جولات") })
                 }
             }
             if (group) {
-                Text("عدد اللي بيلعبوا: \${seats}", style = MaterialTheme.typography.titleMedium)
+                Text("عدد اللي بيلعبوا: ${seats}", style = MaterialTheme.typography.titleMedium)
                 Slider(value = seats.toFloat(), onValueChange = { seats = it.toInt().coerceIn(2,4) },
                     valueRange = 2f..4f, steps = 1)
             }
@@ -93,7 +93,7 @@ internal fun ExperienceScreen(group: Boolean) {
                         modifier = Modifier.fillMaxWidth(), minLines = 4, maxLines = 8,
                         label = { Text("كل تحدي في سطر") }
                     )
-                    Text("\${customEntries.size} تحدي — من 6 لـ 200 حرف لكل واحد",
+                    Text("${customEntries.size} تحدي — من 6 لـ 200 حرف لكل واحد",
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (!customValid) Text("في تحديات متكررة أو أطول من المسموح", color = MaterialTheme.colorScheme.error)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -112,7 +112,7 @@ internal fun ExperienceScreen(group: Boolean) {
                 repeat(seats) { i ->
                     OutlinedTextField(
                         value = names[i], onValueChange = { names[i] = it.take(32) },
-                        label = { Text("اللاعب \${i + 1}") },
+                        label = { Text("اللاعب ${i + 1}") },
                         singleLine = true, modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -125,7 +125,7 @@ internal fun ExperienceScreen(group: Boolean) {
             repeat(seats) { i ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = consent[i], onCheckedChange = { consent[i] = it })
-                    Text("\${names[i]} موافق يلعب", style = MaterialTheme.typography.bodyMedium)
+                    Text("${names[i]} موافق يلعب", style = MaterialTheme.typography.bodyMedium)
                 }
             }
             Button(
@@ -160,9 +160,9 @@ internal fun ExperienceScreen(group: Boolean) {
                     progress = { current.round.toFloat() / current.turns.size },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Text("جولة \${current.round + 1} من \${current.turns.size}",
+                Text("جولة ${current.round + 1} من ${current.turns.size}",
                     color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
-                Text("الدور على \${current.playerNames[turn.actorIndex]}",
+                Text("الدور على ${current.playerNames[turn.actorIndex]}",
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 CinematicChallenge(turn.prompt.text, effects)
                 OutlinedButton(
@@ -190,7 +190,7 @@ internal fun ExperienceScreen(group: Boolean) {
                     style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
                 Text("المهم إن الوقت كان على مزاجكم.", style = MaterialTheme.typography.bodyLarge)
                 current.playerNames.forEachIndexed { index, name ->
-                    Text("\${name} — \${current.scores[index]} تحدي اتعمل، \${current.skipped[index]} اتعدّى")
+                    Text("${name} — ${current.scores[index]} تحدي اتعمل، ${current.skipped[index]} اتعدّى")
                 }
                 Button(onClick = {
                     game = null
