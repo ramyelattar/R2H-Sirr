@@ -50,6 +50,13 @@ assert 'محتاج سيرفر آمن خاص' in main
 
 assert 'DiscoveryTile(' in main and 'DiscoveryMotif.DICE' in main
 assert 'QuizTopicTile(' in quiz and 'internal fun QuizTopicTile(' in artwork
+assert '"settings" -> GameSettingsScreen(' in main
+assert 'EffectPreferencesPanel(effects, initiallyExpanded = true)' in main
+assert 'FeatureRow("ظبّط التجربة على مزاجك"' in main
+assert 'assert' not in scratch[:200], "No dummy source assertions inside Compose"
+assert 'savedPoints' in scratch and 'strokes[strokes.lastIndex] = strokes.last() + p' in scratch
+assert 'Brush.linearGradient' in artwork and 'drawPath' in scratch
+
 assert 'DiscoveryMotif.WHISPER' in main and 'Canvas(' in artwork
 assert 'SoundPool.Builder()' in sound
 assert 'ToneGenerator' not in sound and 'ToneGenerator' not in dice
