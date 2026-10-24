@@ -84,7 +84,7 @@ internal fun QuizScreenV2() {
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth().height(54.dp)
                 ) { Text("يلا نكتشف", fontWeight = FontWeight.Bold) }
-            } else if (phase == 2 && pairing && !acceptedB) {
+            } else if (phase == 2 && pairing) {
                 Text("الدور على الشخص التاني", style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary)
                 Text("الإجابات الأولى مخفية. سلّم الموبايل للطرف التاني لما يبقى جاهز.")
