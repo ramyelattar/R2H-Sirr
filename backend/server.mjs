@@ -15,7 +15,8 @@ const rooms=new Map(),sockets=new Map(),rate=new Map();
 const cipherStore=new CipherMediaStore();
 const chunkStore=new CipherChunkStore();
 const assetsDir=join(dirname(fileURLToPath(import.meta.url)),'public');
-const wss=new WebSocketServer({noServer:true,maxPayload:8192,perMessageDeflate:false});
+// Encrypted Arabic 20-challenge configuration may exceed 8 KiB; keep a bounded 64 KiB frame cap.
+const wss=new WebSocketServer({noServer:true,maxPayload:64*1024,perMessageDeflate:false});
 const headers={
  'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',
  'X-Frame-Options':'DENY','Cross-Origin-Resource-Policy':'same-origin',
@@ -158,8 +159,9 @@ http.on('upgrade',(req,socket,head)=>{
    if(++ws.actions>90)return ws.close(4008,'rate limited');
    try {const updated=applyAction(room,member,data);
     if(updated){if(['ENDED','REVOKED'].includes(room.status)){cipherStore.removeRoom(room.id);chunkStore.removeRoom(room.id);}broadcast(room);}
-    else ws.send(JSON.stringify({type:'ack',eventId:data.eventId,duplicate:true}));
-   }catch{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'error',message:'تعذر تنفيذ الأمر أو انتهت الجلسة'}));}
+    // ACK every accepted command, including first delivery; eventId remains stable on retries.
+    if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'ack',eventId:data.eventId,duplicate:!updated}));
+   }catch{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'error',eventId:typeof data.eventId==='string'?data.eventId:null,message:'تعذر تنفيذ الأمر أو انتهت الجلسة'}));}
   });
   ws.on('close',()=>{
    clearTimeout(authTimeout);
