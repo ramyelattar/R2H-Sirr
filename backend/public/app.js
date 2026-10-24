@@ -8,6 +8,7 @@
  const storeKey=`sirr:${roomId}`;
  let identity=null,socket=null,authenticated=false,lastSeq=-1,deliberatelyLeft=false,retries=0,retryTimer=null;
  let packs=[],currentQuizId=null,answers=[],lastState=null,lastMediaIds='',activeMediaUrl=null;
+ let lastRoundKey='',settingsDraftDirty=false;
  try {const x=JSON.parse(sessionStorage.getItem(storeKey)||'null');if(x&&x.expiresAt>Date.now())identity=x;}catch{}
  function notice(message){$('notice').textContent=message;}
  function id(){const b=new Uint8Array(16);crypto.getRandomValues(b);return [...b].map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -44,7 +45,27 @@
   $('title').textContent=s.mode==='party'?'تحديات المجموعة':'تحديات الشريكين';
   const summary={WAITING:'في انتظار المشاركين',ACTIVE:'الجلسة جارية',ENDED:'انتهت الجلسة',EXPIRED:'انتهت الصلاحية',REVOKED:'أُلغيت الدعوة'};
   $('round').textContent=`${summary[s.status]||s.status} — الجولة ${Math.min(s.round+1,s.maxRounds)} من ${s.maxRounds}`;
-  $('challenge').textContent=s.prompt||'تبدأ الجولة بعد موافقة الجميع وبدء المضيف.';
+  const challenge=$('challenge');
+  challenge.textContent=s.prompt||'تبدأ الجولة بعد موافقة الجميع وبدء المضيف.';
+  const key=`${s.status}:${s.round}:${s.prompt||''}`;
+  if(lastRoundKey!==key){
+   lastRoundKey=key;
+   challenge.classList.remove('round-enter');
+   // Reflow is intentional: animate only when the server-authoritative round changes.
+   if($('effects').checked && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    void challenge.offsetWidth;challenge.classList.add('round-enter');
+   }
+  }
+  $('roundProgress').value=s.status==='ENDED'?100:Math.max(0,Math.min(100,(s.round/Math.max(1,s.maxRounds))*100));
+  const settings=s.settings||{rounds:s.maxRounds,variety:false,avoidRepeat:true,customPromptCount:0};
+  $('sessionSettings').textContent=`${settings.rounds} جولة · ${settings.variety?'تنويع المستويات':'مستوى ثابت'} · ${settings.avoidRepeat?'دون تكرار':'التكرار مسموح'} · ${settings.customPromptCount} تحدٍ مخصص`;
+  const myself=s.participants.find(p=>p.id===identity.participantId);
+  $('hostSettings').hidden=!(s.status==='WAITING'&&myself?.host);
+  if(!settingsDraftDirty && s.status==='WAITING'){
+   $('settingsRounds').value=String(settings.rounds);
+   $('settingsVariety').checked=!!settings.variety;
+   $('settingsRepeat').checked=!!settings.avoidRepeat;
+  }
   const list=$('participants');list.replaceChildren();
   for(const p of s.participants){const li=document.createElement('li');li.textContent=`${p.name} — ${p.score} نقطة — ${p.connected?'متصل':'غير متصل'} — ${p.consent?'موافق':'بانتظار الموافقة'}`;list.append(li);}
   const myTurn=s.status==='ACTIVE'&&s.actorId===identity.participantId;
@@ -214,6 +235,15 @@
  }
  $('cardType').onchange=()=>$('cardThirdLabel').hidden=$('cardType').value==='scratch';
  $('sendCard').onclick=async()=>{try{await sendCard();}catch(error){notice(error.message);}};
+ $('saveSettings').onclick=()=>{
+  const lines=$('settingsPrompts').value.split(/\r?\n/u).map(x=>x.trim()).filter(Boolean);
+  if(lines.length>30 || lines.some(x=>[...x].length<6||[...x].length>200))return notice('الحد 30 تحديًا، وكل تحدٍ من 6 إلى 200 حرف');
+  action('configure',{settings:{rounds:Number($('settingsRounds').value),variety:$('settingsVariety').checked,
+   avoidRepeat:$('settingsRepeat').checked,customPrompts:lines}});
+  settingsDraftDirty=false;notice('أُرسلت الإعدادات؛ يؤكدها تحديث الجلسة.');
+ };
+ ['settingsRounds','settingsVariety','settingsRepeat','settingsPrompts'].forEach(k=>
+  $(k).addEventListener('input',()=>{settingsDraftDirty=true;}));
  $('join').addEventListener('click',async()=>{
   const nickname=$('nickname').value.trim();
   if(!invite||!inviteKey||un64(inviteKey).length!==32)return notice('رابط الدعوة ناقص أو لا يحتوي مفتاح التشفير');

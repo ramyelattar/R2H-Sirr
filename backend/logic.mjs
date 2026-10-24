@@ -8,6 +8,28 @@ export const now = () => Date.now();
 export const token = () => randomBytes(32).toString('base64url');
 export const LEVELS = new Set(['SOFT','NORMAL','SEXY','HOT','HARD']);
 export const MODE = new Set(['couple','party']);
+export const ROUND_OPTIONS = Object.freeze([6,10,12,18]);
+const ORDER=['SOFT','NORMAL','SEXY','HOT','HARD'];
+/** Strictly validate remote settings and never accept arbitrary session keys. */
+export function settingsFor(mode, input={}) {
+  if(!input || typeof input!=='object' || Array.isArray(input)) throw Error('invalid settings');
+  const rounds=input.rounds===undefined?(mode==='couple'?10:12):input.rounds;
+  if(!ROUND_OPTIONS.includes(rounds)) throw Error('invalid round count');
+  const variety=input.variety===undefined?false:input.variety;
+  const avoidRepeat=input.avoidRepeat===undefined?true:input.avoidRepeat;
+  if(typeof variety!=='boolean' || typeof avoidRepeat!=='boolean')throw Error('invalid toggles');
+  const prompts=input.customPrompts===undefined?[]:input.customPrompts;
+  if(!Array.isArray(prompts)||prompts.length>30)throw Error('invalid custom prompts');
+  const cleaned=prompts.map(x=>{
+    if(typeof x!=='string')throw Error('invalid prompt');
+    const v=x.trim().replace(/\s+/gu,' ');
+    if([...v].length<6||[...v].length>200||/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/u.test(v))throw Error('invalid prompt');
+    return v;
+  });
+  if(new Set(cleaned.map(x=>x.normalize('NFC'))).size!==cleaned.length)throw Error('duplicate prompts');
+  return {rounds,variety,avoidRepeat,customPrompts:cleaned};
+}
+
 /** Use the same canonical v2 decks on Android and the remote server. */
 export function deck(level,mode='couple') {
   if (!LEVELS.has(level) || !MODE.has(mode)) throw Error('unknown catalog');
@@ -22,12 +44,13 @@ export function selectQuizIndices(pack, pick=(limit)=>randomInt(limit)) {
     [indices[i],indices[j]]=[indices[j],indices[i]];}
   return indices.slice(0,8);
 }
-export function newRoom(mode, level, nickname, clock=now()) {
+export function newRoom(mode, level, nickname, clock=now(), options={}) {
   if (!MODE.has(mode) || !LEVELS.has(level) || !validName(nickname)) throw Error('invalid room');
+  const settings=settingsFor(mode,options);
   const id = randomUUID(); const invite = token(); const hostAuth = token();
   return {
     id, mode, level, invite, status:'WAITING', createdAt:clock, expiresAt:clock + 60*60*1000,
-    seq:0, round:0, turnCount:mode==='couple'?10:12, actorId:null,
+    seq:0, round:0, turnCount:settings.rounds, settings, actorId:null,
     prompt:null, events:new Set(), messages:[],
     participants:[{id:randomUUID(),auth:hostAuth,name:nickname,consent:true,score:0,skips:0,connected:false,host:true}],
     seenChallenges:[], quiz:null, media:[],
@@ -38,6 +61,7 @@ export function publicState(room, clock=now()) {
   return {
     id:room.id, mode:room.mode, level:room.level, status:room.status,
     round:room.round, maxRounds:room.turnCount, actorId:room.actorId,
+    settings:{rounds:room.settings.rounds,variety:room.settings.variety,avoidRepeat:room.settings.avoidRepeat,customPromptCount:room.settings.customPrompts.length},
     prompt:room.prompt, seq:room.seq, expiresAt:room.expiresAt, serverNow:clock,
     participants:room.participants.map(p=>({id:p.id, name:p.name, consent:p.consent, score:p.score, skips:p.skips, connected:p.connected,host:p.host})),
     messages:room.messages.map(m=>({author:m.author, body:m.body, round:m.round})),
@@ -58,9 +82,18 @@ function rotate(room,clock) {
   if (room.round>=room.turnCount) {room.status='ENDED'; room.closedAt=clock; room.actorId=null; room.prompt=null; room.media=[]; room.quiz=null; room.messages=[];return;}
   const i=room.round % room.participants.length;
   room.actorId=room.participants[i].id;
-  const d=deck(room.level,room.mode); const available=d.filter(x=>!room.seenChallenges.includes(x));
-  const source=available.length?available:d;
-  room.prompt=source[Math.floor(Math.random()*source.length)];
+  const index=ORDER.indexOf(room.level);
+  const primary=deck(room.level,room.mode);
+  const mixed=room.settings.variety && index>0 ? deck(ORDER[index-1],room.mode) : [];
+  const catalog=[...new Set([...primary,...mixed])];
+  const custom=room.settings.customPrompts;
+  const allow=p=>!room.settings.avoidRepeat || !room.seenChallenges.includes(p);
+  const own=custom.filter(allow), generic=catalog.filter(allow);
+  // Balance user-authored and library prompts without making the deck deterministic.
+  const useCustom=own.length>0 && (room.round%2===0 || generic.length===0);
+  const preferred=useCustom?own:generic;
+  const fallback=preferred.length?preferred:(own.length?own:(generic.length?generic:[...custom,...catalog]));
+  room.prompt=fallback[randomInt(fallback.length)];
   room.seenChallenges.push(room.prompt);
 }
 /** Server-authoritative transitions; eventId deduplicates actor network retries. */
@@ -71,6 +104,12 @@ export function applyAction(room, member, command, clock=now()) {
   if (room.expiresAt<=clock || ['EXPIRED','REVOKED','ENDED'].includes(room.status)) throw Error('room unavailable');
   if (room.events.size>1000) room.events.clear();
   switch(type) {
+    case 'configure': {
+      if (!member.host || room.status!=='WAITING') throw Error('only host can configure waiting room');
+      const settings=settingsFor(room.mode,command.settings);
+      room.settings=settings;room.turnCount=settings.rounds;room.seenChallenges=[];
+      break;
+    }
     case 'consent':
       if (room.status!=='WAITING' || command.value!==true) throw Error('invalid consent');
       member.consent=true; break;

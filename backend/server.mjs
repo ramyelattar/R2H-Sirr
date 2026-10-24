@@ -15,7 +15,7 @@ const rooms=new Map(),sockets=new Map(),rate=new Map();
 const cipherStore=new CipherMediaStore();
 const chunkStore=new CipherChunkStore();
 const assetsDir=join(dirname(fileURLToPath(import.meta.url)),'public');
-const wss=new WebSocketServer({noServer:true,maxPayload:8192,perMessageDeflate:false});
+const wss=new WebSocketServer({noServer:true,maxPayload:32768,perMessageDeflate:false});
 const headers={
  'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',
  'X-Frame-Options':'DENY','Cross-Origin-Resource-Policy':'same-origin',
@@ -42,9 +42,9 @@ const http=createServer(async (req,res)=>{
  if(!limit(ip,chunkRequest?'chunk':'normal'))return bad(res,'too many requests',429);
  const url=new URL(req.url,base);
  if(req.method==='POST'&&url.pathname==='/api/rooms') {
-  try {const json=JSON.parse((await body(req)).toString('utf8'));
+  try {const json=JSON.parse((await body(req,32768)).toString('utf8'));
    if(rooms.size>=500)return bad(res,'server busy',503);
-   const room=newRoom(json.mode,json.level,json.nickname);rooms.set(room.id,room);
+   const room=newRoom(json.mode,json.level,json.nickname,now(),json.settings);rooms.set(room.id,room);
    const host=room.participants[0];
    return respond(res,201,{roomId:room.id,participantId:host.id,auth:host.auth,
     inviteUrl:`${base}/join/${room.id}#invite=${encodeURIComponent(room.invite)}`,expiresAt:room.expiresAt});

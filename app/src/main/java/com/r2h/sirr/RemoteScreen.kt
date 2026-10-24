@@ -10,6 +10,9 @@ import android.widget.MediaController
 import android.widget.VideoView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -69,9 +72,9 @@ private class RemoteTransport(private val client:OkHttpClient) {
     private fun jsonPost(url:String,data:JSONObject,done:(Result<JSONObject>)->Unit){
         request(Request.Builder().url(url).post(data.toString().toRequestBody("application/json; charset=utf-8".toMediaType())).build(),done)
     }
-    fun create(serverInput:String,name:String,mode:String,level:Intensity,done:(Result<RemoteIdentity>)->Unit){
+    fun create(serverInput:String,name:String,mode:String,level:Intensity,settings:JSONObject,done:(Result<RemoteIdentity>)->Unit){
         val base=runCatching{server(serverInput)}.getOrElse{done(Result.failure(it));return}
-        jsonPost("$base/api/rooms",JSONObject().put("nickname",name).put("mode",mode).put("level",level.name)){result->
+        jsonPost("$base/api/rooms",JSONObject().put("nickname",name).put("mode",mode).put("level",level.name).put("settings",settings)){result->
             done(result.map{data->
                 val key=RemoteCrypto.key()
                 // The symmetric key is in URL fragment, invisible to the relay HTTP server.
@@ -236,6 +239,19 @@ internal fun RemoteScreen(){
     var server by remember{mutableStateOf("")};var link by remember{mutableStateOf("")}
     var name by remember{mutableStateOf("")};var mode by remember{mutableStateOf("couple")}
     var level by remember{mutableStateOf(Intensity.SOFT)}
+    var rounds by remember{mutableIntStateOf(10)}
+    var variety by remember{mutableStateOf(false)}
+    var avoidRepeat by remember{mutableStateOf(true)}
+    var customPrompts by remember{mutableStateOf("")}
+    var effects by remember{mutableStateOf(true)}
+    val haptic=LocalHapticFeedback.current
+    fun settingsPayload():JSONObject {
+        val custom=customPrompts.lineSequence().map{it.trim()}.filter{it.isNotBlank()}.toList()
+        require(custom.size<=30 && custom.all{it.length in 6..200})
+        return JSONObject().put("rounds",rounds).put("variety",variety)
+            .put("avoidRepeat",avoidRepeat).put("customPrompts",JSONArray(custom))
+    }
+    val settingsValid=runCatching{settingsPayload()}.isSuccess
     var busy by remember{mutableStateOf(false)};var status by remember{mutableStateOf("")}
     val remoteStore=remember{RemoteSessionStorage(LocalVault(context.applicationContext))}
     var identity by remember{mutableStateOf<RemoteIdentity?>(null)}
@@ -290,13 +306,26 @@ internal fun RemoteScreen(){
             Text("أدخل عنوان خادم سِرّ الخاص بك. لا توجد خدمة عامة مفعلة.",color=Color.LightGray)
             OutlinedTextField(server,{server=it.take(180)},label={Text("عنوان HTTPS")},modifier=Modifier.fillMaxWidth())
             OutlinedTextField(name,{name=it.take(32)},label={Text("الاسم المستعار")},modifier=Modifier.fillMaxWidth())
-            Row{FilterChip(mode=="couple",{mode="couple"},label={Text("شريكان")});Spacer(Modifier.width(8.dp));
-                FilterChip(mode=="party",{mode="party"},label={Text("مجموعة")})}
+            Row{FilterChip(mode=="couple",{mode="couple";rounds=10},label={Text("شريكان")});Spacer(Modifier.width(8.dp));
+                FilterChip(mode=="party",{mode="party";rounds=12},label={Text("مجموعة")})}
+            Text("إعدادات الجلسة البعيدة",style=MaterialTheme.typography.titleMedium)
+            Row(horizontalArrangement=Arrangement.spacedBy(6.dp),modifier=Modifier.fillMaxWidth()) {
+                listOf(6,10,12,18).forEach{option->
+                    FilterChip(rounds==option,{rounds=option},label={Text("$option")})
+                }
+            }
+            Row { Checkbox(variety,{variety=it});Text("مزج المستوى الحالي بالمستوى الأقل") }
+            Row { Checkbox(avoidRepeat,{avoidRepeat=it});Text("منع تكرار التحديات داخل الجلسة") }
+            OutlinedTextField(customPrompts,{customPrompts=it.take(6500)},
+                label={Text("تحديات عربية خاصة (سطر لكل تحدٍ، حتى ٣٠)")},
+                modifier=Modifier.fillMaxWidth(),minLines=3,maxLines=6)
+            Text("التحديات الخاصة المرسلة إلى الجلسة ليست مشفرة طرفيًا.",
+                style=MaterialTheme.typography.bodySmall,color=Color.LightGray)
             Intensity.entries.filter{it!=Intensity.CUSTOM}.forEach{option->
                 FilterChip(level==option,{level=option},label={Text(option.arabic)})
             }
-            Button(enabled=name.isNotBlank()&&server.startsWith("https://")&&!busy,onClick={
-                busy=true;transport.create(server,name.trim(),mode,level,::received)
+            Button(enabled=name.isNotBlank()&&server.startsWith("https://")&&!busy&&settingsValid,onClick={
+                busy=true;transport.create(server,name.trim(),mode,level,settingsPayload(),::received)
             },modifier=Modifier.fillMaxWidth()){Text("إنشاء جلسة")}
             HorizontalDivider()
             OutlinedTextField(link,{link=it.take(1200)},label={Text("رابط الدعوة الكامل")},modifier=Modifier.fillMaxWidth())
@@ -322,13 +351,50 @@ internal fun RemoteScreen(){
                     "ENDED"->"انتهت الجلسة";"EXPIRED"->"انتهت صلاحيتها";"REVOKED"->"ملغاة";else->roomStatus},
                     style=MaterialTheme.typography.titleLarge)
                 members.forEach{Text("${it.optString("name")}: ${it.optInt("score")} نقطة — ${if(it.optBoolean("connected"))"متصل" else "غير متصل"} — ${if(it.optBoolean("consent"))"موافق" else "بانتظار الموافقة"}")}
+                val settings=snapshot.optJSONObject("settings")
+                settings?.let{
+                    Text("الجولات: ${it.optInt("rounds")} · ${if(it.optBoolean("variety"))"تنويع المستويات" else "مستوى ثابت"} · " +
+                        "${if(it.optBoolean("avoidRepeat"))"بلا تكرار" else "التكرار مسموح"} · " +
+                        "${it.optInt("customPromptCount")} تحديًا خاصًا",
+                        color=Color.LightGray,style=MaterialTheme.typography.bodySmall)
+                }
+                Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+                    Checkbox(effects,{effects=it});Text("انتقالات وتفاعل لمسي لطيف")
+                }
                 if(roomStatus=="WAITING"){
+                    if(mine?.optBoolean("host")==true){
+                        Text("يمكنك تعديل الإعدادات حتى تبدأ الجلسة.")
+                        Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
+                            listOf(6,10,12,18).forEach{n->
+                                FilterChip(rounds==n,{rounds=n},label={Text("$n")})
+                            }
+                        }
+                        Row{Checkbox(variety,{variety=it});Text("مزج المستوى الأقل")}
+                        Row{Checkbox(avoidRepeat,{avoidRepeat=it});Text("تجنب تكرار التحديات")}
+                        OutlinedTextField(customPrompts,{customPrompts=it.take(6500)},
+                            label={Text("تحديات مخصصة، كل تحدٍ في سطر")},modifier=Modifier.fillMaxWidth(),minLines=3)
+                        OutlinedButton(enabled=settingsValid,onClick={
+                            transport.action("configure",JSONObject().put("settings",settingsPayload()))
+                        }){Text("حفظ إعدادات الجلسة")}
+                    }
                     if(mine?.optBoolean("consent")==false)Button(onClick={transport.action("consent",JSONObject().put("value",true))}){Text("أوافق على المشاركة")}
                     if(mine?.optBoolean("host")==true)Button(onClick={transport.action("start")},enabled=members.size>=2&&members.all{it.optBoolean("consent")&&it.optBoolean("connected")}){Text("ابدأ الجولات")}
                 }
                 if(roomStatus=="ACTIVE"){
-                    Text("الجولة ${snapshot.optInt("round")+1}/${snapshot.optInt("maxRounds")}")
-                    Card(Modifier.fillMaxWidth()){Text(snapshot.optString("prompt"),Modifier.padding(16.dp))}
+                    val currentRound=snapshot.optInt("round")
+                    val maxRounds=snapshot.optInt("maxRounds").coerceAtLeast(1)
+                    Text("الجولة ${currentRound+1}/$maxRounds")
+                    LinearProgressIndicator(progress={currentRound.toFloat()/maxRounds},modifier=Modifier.fillMaxWidth())
+                    val prompt=snapshot.optString("prompt")
+                    var lastFeedbackRound by remember(id.roomId){mutableIntStateOf(-1)}
+                    LaunchedEffect(currentRound,effects){
+                        if(effects && lastFeedbackRound>=0 && lastFeedbackRound!=currentRound)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        lastFeedbackRound=currentRound
+                    }
+                    if(effects)Crossfade(targetState=prompt,label="remote-round") {shown->
+                        Card(Modifier.fillMaxWidth()){Text(shown,Modifier.padding(16.dp))}
+                    }else Card(Modifier.fillMaxWidth()){Text(prompt,Modifier.padding(16.dp))}
                     if(snapshot.optString("actorId")==id.participantId){
                         OutlinedTextField(draft,{draft=it.take(500)},label={Text("رد نصي للمشاركين — ليس مشفرًا طرفيًا")},modifier=Modifier.fillMaxWidth())
                         OutlinedButton(enabled=draft.isNotBlank(),onClick={transport.action("message",JSONObject().put("body",draft));draft=""}){Text("إرسال رد")}

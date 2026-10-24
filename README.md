@@ -68,3 +68,7 @@
 4. تخزين اختياري آمن لجلسات Relay عند إعادة تشغيل الخادم، أو اعتبارها مؤقتة مقصودة.
 5. تدقيق التهديدات وإساءة الاستخدام وتسرب مفتاح الدعوة، وRate Limiting أكثر دقة، واختبارات HTTP/WSS وعميلين فعليين.
 6. اختبار قابلية الاستخدام ومرحلة قبول المحتوى العربي، بالإضافة إلى شروط نشر تطبيقات +18 حسب قناة التوزيع.
+
+## M7.1 — Remote sessions and interactive gameplay (source only)
+
+Remote host options are now sent to `POST /api/rooms` and may be updated while WAITING with the `configure` WebSocket action: 6/10/12/18 rounds, immediate-lower-level variety, room-local non-repeat, and up to 30 custom prompts. A server-authoritative settings summary, round progress and optional motion feedback are available in Arabic on the Android and browser clients. See [`docs/M7_REMOTE_SESSION_UX.md`](docs/M7_REMOTE_SESSION_UX.md) for validation limits, privacy impact, tests, and unverified behaviors. **No Android build has been performed.**
