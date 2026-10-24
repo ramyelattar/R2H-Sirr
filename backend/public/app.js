@@ -118,7 +118,7 @@
    currentRoomRound=state.maxRounds;
   }
  }
- async function loadQuizzes(){try{const r=await fetch('/quizzes.json',{cache:'no-store'});const x=await r.json();if(x.version!==3||x.packs.length!==7)throw Error('incompatible quizzes');packs=x.packs;if(lastState)renderQuiz(lastState);}catch{notice('تعذر تحميل بنك الأسئلة العربي');}}
+ async function loadQuizzes(){try{const r=await fetch('/quizzes.json',{cache:'no-store'});const x=await r.json();if(x.version!==4||x.packs.length!==7)throw Error('incompatible quizzes');packs=x.packs;if(lastState)renderQuiz(lastState);}catch{notice('تعذر تحميل بنك الأسئلة العربي');}}
  function action(type,extra={}){
   if(!authenticated||socket?.readyState!==WebSocket.OPEN)return notice('لا يوجد اتصال آمن حالي');
   socket.send(JSON.stringify({type,eventId:id(),...extra}));
@@ -128,7 +128,7 @@
   $('gate').hidden=true;$('game').hidden=false;
   const u=new URL('/ws',location.origin);u.protocol=u.protocol==='https:'?'wss:':'ws:';
   socket=new WebSocket(u);
-  socket.addEventListener('open',()=>socket.send(JSON.stringify({type:'authenticate',roomId,auth:identity.auth,contentVersion:3,protocolVersion:4})));
+  socket.addEventListener('open',()=>socket.send(JSON.stringify({type:'authenticate',roomId,auth:identity.auth,contentVersion:4,protocolVersion:4})));
   socket.addEventListener('message',evt=>{
    let x;try{x=JSON.parse(evt.data);}catch{return;}
    if(x.type==='authenticated'){
