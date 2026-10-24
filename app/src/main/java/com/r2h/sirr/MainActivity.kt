@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
@@ -222,9 +224,9 @@ private fun SmallMode(
         modifier.clip(SoftCorner)
             .background(Brush.linearGradient(listOf(tint, Color(0xFF20151F))))
             .clickable(onClick = onClick)
-            .heightIn(min = 165.dp)
+            .heightIn(min = 184.dp)
     ) {
-        Column(Modifier.fillMaxWidth().height(165.dp).padding(18.dp), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.fillMaxWidth().heightIn(min = 184.dp).padding(18.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Text(glyph, fontSize = 26.sp, color = Gold)
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
@@ -277,31 +279,47 @@ private fun HomeScreen(onGo: (String) -> Unit) {
             fontWeight = FontWeight.Bold
         )
         Box(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(30.dp))
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(30.dp))
                 .background(Brush.linearGradient(listOf(Wine, Rose, Color(0xFF241221))))
+                .border(1.dp, Brush.linearGradient(listOf(Gold.copy(alpha=.60f),Color(0xFF4B2639),Gold.copy(alpha=.12f))), RoundedCornerShape(30.dp))
         ) {
             Canvas(Modifier.matchParentSize()) {
-                val center = Offset(size.width * .89f, size.height * .12f)
-                val base = size.minDimension * .23f
-                for (i in 1..4) {
+                val center = Offset(size.width * .86f, size.height * .26f)
+                val base = size.minDimension * .15f
+                drawCircle(Gold.copy(alpha=.045f),radius=base*2.7f,center=center)
+                for (i in 1..5) {
                     drawCircle(
-                        color = Gold.copy(alpha = .16f / i),
-                        radius = base * i,
+                        color = Gold.copy(alpha = .32f / i),
+                        radius = base * (i*.66f+.4f),
                         center = center,
-                        style = Stroke(width = 1.5.dp.toPx())
+                        style = Stroke(width = (1.6f-i*.17f).dp.toPx())
                     )
                 }
-                drawCircle(
-                    color = Gold.copy(alpha = .07f),
-                    radius = base * .62f,
-                    center = center
-                )
+                val keyhole = Path().apply {
+                    moveTo(center.x,center.y-base*.7f)
+                    cubicTo(center.x-base*.73f,center.y-base*.7f,center.x-base*.72f,center.y+base*.26f,center.x-base*.23f,center.y+base*.31f)
+                    lineTo(center.x-base*.38f,center.y+base*1.05f)
+                    lineTo(center.x+base*.38f,center.y+base*1.05f)
+                    lineTo(center.x+base*.23f,center.y+base*.31f)
+                    cubicTo(center.x+base*.72f,center.y+base*.26f,center.x+base*.73f,center.y-base*.7f,center.x,center.y-base*.7f)
+                    close()
+                }
+                drawPath(keyhole, Brush.verticalGradient(listOf(Gold.copy(alpha=.53f),Gold.copy(alpha=.09f))))
+                for (i in 0..12) {
+                    val px = (i*137 % 97)/97f*size.width
+                    val py = (i*89 % 97)/97f*size.height
+                    drawCircle(Gold.copy(alpha= .13f+(i%3)*.04f),radius=(1f+(i%2))*1.2.dp.toPx(),center=Offset(px,py))
+                }
             }
             Column(
                 Modifier.fillMaxWidth().padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(13.dp)
             ) {
-                Text("✦  بينك وبين اللي معاك", color = Gold, style = MaterialTheme.typography.labelLarge)
+                Surface(color=Color(0xFF3D202D).copy(alpha=.93f),shape=RoundedCornerShape(50)) {
+                    Text("✦  حكاية لشخصين",modifier=Modifier.padding(horizontal=12.dp,vertical=7.dp),
+                        color=Gold,style=MaterialTheme.typography.labelLarge)
+                }
                 Text("كل جولة وراها سر.", color = Color.White, fontSize = 27.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp)
                 Text(
                     "اختاروا المود، وخدوا أول خطوة. مفيش ضغط، وتقدروا تعدّوا أي تحدي.",
@@ -322,8 +340,8 @@ private fun HomeScreen(onGo: (String) -> Unit) {
             SmallMode("من بعيد", "العبوا سوا أونلاين", "↗", Color(0xFF4A2638), Modifier.weight(1f)) { onGo("remote") }
         }
         Text("حاجة مختلفة؟", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Gold)
-        FeatureRow("ارمي النرد", "سيبوا الاختيار للحظ", "◇") { onGo("dice") }
-        FeatureRow("قد إيه تعرفوا بعض؟", "أسئلة تكشف كلام جديد", "?") { onGo("quiz") }
+        FeatureRow("سيبها على النرد", "٣ نردات… وسرّ مش متوقع", "◇") { onGo("dice") }
+        FeatureRow("إنتوا شبه بعض؟", "كل اختيار بيكشف حكاية", "؟") { onGo("quiz") }
         FeatureRow("اكشف السر", "خربشة واحدة وتبان المفاجأة", "✦") { onGo("scratch") }
         FeatureRow("همسة مخصوص", "رسالة خاصة بتتفتح مرة", "♡") { onGo("whispers") }
         TextButton(
