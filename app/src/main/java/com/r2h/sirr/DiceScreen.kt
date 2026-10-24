@@ -49,7 +49,7 @@ internal fun DiceScreenV2() {
         if (nonce == 0) return@LaunchedEffect
         val final = runCatching { config.roll() }.getOrElse { error = "يجب ضبط الأوجه والاحتمالات قبل الرمي"; rolling = false; return@LaunchedEffect }
         rolling = true
-        repeat(duration * 8) {
+        repeat(if(effects.animate)duration * 8 else 0) {
             rolled = List(3) { kotlin.random.Random.nextInt(6) }
             delay(125)
         }
