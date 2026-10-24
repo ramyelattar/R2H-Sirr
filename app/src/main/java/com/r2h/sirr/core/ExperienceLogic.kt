@@ -3,7 +3,7 @@ package com.r2h.sirr.core
 import kotlin.random.Random
 
 enum class Intensity(val arabic: String) {
-    SOFT("هادئ"), NORMAL("متوازن"), SEXY("جريء"), HOT("أكثر جرأة"), HARD("تحديات متقدمة"), CUSTOM("مخصص")
+    SOFT("على الهادي"), NORMAL("كلام قريب"), SEXY("جريء"), HOT("نار شوية"), HARD("من الآخر"), CUSTOM("بتاعي")
 }
 
 data class Challenge(val id: String, val level: Intensity, val text: String)
@@ -49,7 +49,7 @@ data class LocalGame(
 }
 
 enum class ChallengeVariety(val arabic: String) {
-    ONE_LEVEL("مستوى واحد"), MIX_WITH_LOWER("تنويع مع المستوى الأقل")
+    ONE_LEVEL("مود واحد"), MIX_WITH_LOWER("مفاجآت من مودين")
 }
 
 object SessionFactory {
