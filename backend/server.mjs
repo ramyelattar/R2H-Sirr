@@ -44,7 +44,7 @@ const http=createServer(async (req,res)=>{
  if(req.method==='POST'&&url.pathname==='/api/rooms') {
   try {const json=JSON.parse((await body(req)).toString('utf8'));
    if(rooms.size>=500)return bad(res,'server busy',503);
-   const room=newRoom(json.mode,json.level,json.nickname);rooms.set(room.id,room);
+   const room=newRoom(json.mode,json.level,json.nickname,now(),{rounds:json.rounds,variety:json.variety});rooms.set(room.id,room);
    const host=room.participants[0];
    return respond(res,201,{roomId:room.id,participantId:host.id,auth:host.auth,
     inviteUrl:`${base}/join/${room.id}#invite=${encodeURIComponent(room.invite)}`,expiresAt:room.expiresAt});

@@ -8,7 +8,7 @@ export const now = () => Date.now();
 export const token = () => randomBytes(32).toString('base64url');
 export const LEVELS = new Set(['SOFT','NORMAL','SEXY','HOT','HARD']);
 export const MODE = new Set(['couple','party']);
-/** Use the same canonical v2 decks on Android and the remote server. */
+/** Canonical Arabic challenge decks shared across Android and browser. */
 export function deck(level,mode='couple') {
   if (!LEVELS.has(level) || !MODE.has(mode)) throw Error('unknown catalog');
   return challengeCatalog[mode][level];
@@ -22,12 +22,25 @@ export function selectQuizIndices(pack, pick=(limit)=>randomInt(limit)) {
     [indices[i],indices[j]]=[indices[j],indices[i]];}
   return indices.slice(0,8);
 }
-export function newRoom(mode, level, nickname, clock=now()) {
+export const ROUND_CHOICES = new Set([6,10,12,18]);
+export const VARIETIES = new Set(['ONE_LEVEL','MIX_LOWER']);
+export function gameOptions(rounds, variety) {
+  if(!ROUND_CHOICES.has(rounds) || !VARIETIES.has(variety)) throw Error('invalid game options');
+  return {rounds,variety};
+}
+export function gameDeck(room) {
+  const primary=deck(room.level,room.mode);
+  if(room.variety==='ONE_LEVEL' || room.level==='SOFT')return primary;
+  const lower=([...LEVELS].indexOf(room.level)-1);
+  return primary.concat(deck([...LEVELS][lower],room.mode));
+}
+export function newRoom(mode, level, nickname, clock=now(), options={}) {
   if (!MODE.has(mode) || !LEVELS.has(level) || !validName(nickname)) throw Error('invalid room');
+  const settings=gameOptions(options.rounds === undefined ? (mode==='couple'?10:12) : options.rounds,options.variety === undefined ? 'ONE_LEVEL' : options.variety);
   const id = randomUUID(); const invite = token(); const hostAuth = token();
   return {
     id, mode, level, invite, status:'WAITING', createdAt:clock, expiresAt:clock + 60*60*1000,
-    seq:0, round:0, turnCount:mode==='couple'?10:12, actorId:null,
+    seq:0, round:0, turnCount:settings.rounds, variety:settings.variety, actorId:null,
     prompt:null, events:new Set(), messages:[],
     participants:[{id:randomUUID(),auth:hostAuth,name:nickname,consent:true,score:0,skips:0,connected:false,host:true}],
     seenChallenges:[], quiz:null, media:[],
@@ -36,7 +49,7 @@ export function newRoom(mode, level, nickname, clock=now()) {
 export function validName(name) { return typeof name==='string' && name.trim().length>=1 && [...name].length<=32; }
 export function publicState(room, clock=now()) {
   return {
-    id:room.id, mode:room.mode, level:room.level, status:room.status,
+    id:room.id, mode:room.mode, level:room.level, variety:room.variety, status:room.status,
     round:room.round, maxRounds:room.turnCount, actorId:room.actorId,
     prompt:room.prompt, seq:room.seq, expiresAt:room.expiresAt, serverNow:clock,
     participants:room.participants.map(p=>({id:p.id, name:p.name, consent:p.consent, score:p.score, skips:p.skips, connected:p.connected,host:p.host})),
@@ -58,9 +71,9 @@ function rotate(room,clock) {
   if (room.round>=room.turnCount) {room.status='ENDED'; room.closedAt=clock; room.actorId=null; room.prompt=null; room.media=[]; room.quiz=null; room.messages=[];return;}
   const i=room.round % room.participants.length;
   room.actorId=room.participants[i].id;
-  const d=deck(room.level,room.mode); const available=d.filter(x=>!room.seenChallenges.includes(x));
-  const source=available.length?available:d;
-  room.prompt=source[Math.floor(Math.random()*source.length)];
+  const d=gameDeck(room); const available=d.filter(x=>!room.seenChallenges.includes(x));
+  if(!available.length) throw Error('not enough unique challenges');
+  room.prompt=available[randomInt(available.length)];
   room.seenChallenges.push(room.prompt);
 }
 /** Server-authoritative transitions; eventId deduplicates actor network retries. */
@@ -74,6 +87,16 @@ export function applyAction(room, member, command, clock=now()) {
     case 'consent':
       if (room.status!=='WAITING' || command.value!==true) throw Error('invalid consent');
       member.consent=true; break;
+    case 'configure': {
+      if (!member.host || room.status!=='WAITING' || room.participants.some(p=>p.id!==member.id && p.consent)) throw Error('configuration locked');
+      const config=gameOptions(command.rounds,command.variety);
+      if(!LEVELS.has(command.level)) throw Error('invalid level');
+      const pool=config.variety==='ONE_LEVEL'||command.level==='SOFT' ? deck(command.level,room.mode) :
+        deck(command.level,room.mode).concat(deck([...LEVELS][[...LEVELS].indexOf(command.level)-1],room.mode));
+      if(new Set(pool).size<config.rounds)throw Error('insufficient prompts');
+      room.turnCount=config.rounds;room.variety=config.variety;room.level=command.level;
+      break;
+    }
     case 'start':
       if (!member.host || room.status!=='WAITING') throw Error('only host may start');
       if (room.participants.length < 2 || room.participants.some(p=>!p.consent || !p.connected)) throw Error('players missing or not ready');

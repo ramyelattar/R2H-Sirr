@@ -69,9 +69,9 @@ private class RemoteTransport(private val client:OkHttpClient) {
     private fun jsonPost(url:String,data:JSONObject,done:(Result<JSONObject>)->Unit){
         request(Request.Builder().url(url).post(data.toString().toRequestBody("application/json; charset=utf-8".toMediaType())).build(),done)
     }
-    fun create(serverInput:String,name:String,mode:String,level:Intensity,done:(Result<RemoteIdentity>)->Unit){
+    fun create(serverInput:String,name:String,mode:String,level:Intensity,rounds:Int,variety:String,done:(Result<RemoteIdentity>)->Unit){
         val base=runCatching{server(serverInput)}.getOrElse{done(Result.failure(it));return}
-        jsonPost("$base/api/rooms",JSONObject().put("nickname",name).put("mode",mode).put("level",level.name)){result->
+        jsonPost("$base/api/rooms",JSONObject().put("nickname",name).put("mode",mode).put("level",level.name).put("rounds",rounds).put("variety",variety)){result->
             done(result.map{data->
                 val key=RemoteCrypto.key()
                 // The symmetric key is in URL fragment, invisible to the relay HTTP server.
@@ -236,6 +236,8 @@ internal fun RemoteScreen(){
     var server by remember{mutableStateOf("")};var link by remember{mutableStateOf("")}
     var name by remember{mutableStateOf("")};var mode by remember{mutableStateOf("couple")}
     var level by remember{mutableStateOf(Intensity.SOFT)}
+    var remoteRounds by remember{mutableIntStateOf(10)}
+    var remoteVariety by remember{mutableStateOf("ONE_LEVEL")}
     var busy by remember{mutableStateOf(false)};var status by remember{mutableStateOf("")}
     val remoteStore=remember{RemoteSessionStorage(LocalVault(context.applicationContext))}
     var identity by remember{mutableStateOf<RemoteIdentity?>(null)}
@@ -295,8 +297,16 @@ internal fun RemoteScreen(){
             Intensity.entries.filter{it!=Intensity.CUSTOM}.forEach{option->
                 FilterChip(level==option,{level=option},label={Text(option.arabic)})
             }
+            Text("عدد الجولات",style=MaterialTheme.typography.titleMedium)
+            Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) { listOf(6,10,12,18).forEach{n->
+                FilterChip(remoteRounds==n,{remoteRounds=n},label={Text("$n")})
+            } }
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Checkbox(remoteVariety=="MIX_LOWER",{remoteVariety=if(it)"MIX_LOWER" else "ONE_LEVEL"})
+                Text("تنويع التحديات من المستوى الأقل أيضًا")
+            }
             Button(enabled=name.isNotBlank()&&server.startsWith("https://")&&!busy,onClick={
-                busy=true;transport.create(server,name.trim(),mode,level,::received)
+                busy=true;transport.create(server,name.trim(),mode,level,remoteRounds,remoteVariety,::received)
             },modifier=Modifier.fillMaxWidth()){Text("إنشاء جلسة")}
             HorizontalDivider()
             OutlinedTextField(link,{link=it.take(1200)},label={Text("رابط الدعوة الكامل")},modifier=Modifier.fillMaxWidth())
@@ -322,12 +332,16 @@ internal fun RemoteScreen(){
                     "ENDED"->"انتهت الجلسة";"EXPIRED"->"انتهت صلاحيتها";"REVOKED"->"ملغاة";else->roomStatus},
                     style=MaterialTheme.typography.titleLarge)
                 members.forEach{Text("${it.optString("name")}: ${it.optInt("score")} نقطة — ${if(it.optBoolean("connected"))"متصل" else "غير متصل"} — ${if(it.optBoolean("consent"))"موافق" else "بانتظار الموافقة"}")}
+                Text("نظام الجولات: ${snapshot.optInt("maxRounds")} — ${if(snapshot.optString("variety")=="MIX_LOWER")"تنويع مستويين" else "مستوى واحد"}",color=Color.LightGray)
                 if(roomStatus=="WAITING"){
                     if(mine?.optBoolean("consent")==false)Button(onClick={transport.action("consent",JSONObject().put("value",true))}){Text("أوافق على المشاركة")}
                     if(mine?.optBoolean("host")==true)Button(onClick={transport.action("start")},enabled=members.size>=2&&members.all{it.optBoolean("consent")&&it.optBoolean("connected")}){Text("ابدأ الجولات")}
                 }
                 if(roomStatus=="ACTIVE"){
-                    Text("الجولة ${snapshot.optInt("round")+1}/${snapshot.optInt("maxRounds")}")
+                    val total=snapshot.optInt("maxRounds").coerceAtLeast(1)
+                    val currentRound=snapshot.optInt("round").coerceIn(0,total)
+                    Text("الجولة ${currentRound+1}/${total}")
+                    LinearProgressIndicator(progress={currentRound.toFloat()/total},modifier=Modifier.fillMaxWidth())
                     Card(Modifier.fillMaxWidth()){Text(snapshot.optString("prompt"),Modifier.padding(16.dp))}
                     if(snapshot.optString("actorId")==id.participantId){
                         OutlinedTextField(draft,{draft=it.take(500)},label={Text("رد نصي للمشاركين — ليس مشفرًا طرفيًا")},modifier=Modifier.fillMaxWidth())

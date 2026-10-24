@@ -7,7 +7,7 @@
  history.replaceState({},'',location.pathname); // Neither join secret nor E2EE key in browser history
  const storeKey=`sirr:${roomId}`;
  let identity=null,socket=null,authenticated=false,lastSeq=-1,deliberatelyLeft=false,retries=0,retryTimer=null;
- let packs=[],currentQuizId=null,answers=[],lastState=null,lastMediaIds='',activeMediaUrl=null;
+ let packs=[],currentQuizId=null,answers=[],lastState=null,lastMediaIds='',activeMediaUrl=null,lastEffectSeq=-1;
  try {const x=JSON.parse(sessionStorage.getItem(storeKey)||'null');if(x&&x.expiresAt>Date.now())identity=x;}catch{}
  function notice(message){$('notice').textContent=message;}
  function id(){const b=new Uint8Array(16);crypto.getRandomValues(b);return [...b].map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -43,7 +43,12 @@
   if(s.seq<lastSeq)return;lastSeq=s.seq;lastState=s;
   $('title').textContent=s.mode==='party'?'تحديات المجموعة':'تحديات الشريكين';
   const summary={WAITING:'في انتظار المشاركين',ACTIVE:'الجلسة جارية',ENDED:'انتهت الجلسة',EXPIRED:'انتهت الصلاحية',REVOKED:'أُلغيت الدعوة'};
-  $('round').textContent=`${summary[s.status]||s.status} — الجولة ${Math.min(s.round+1,s.maxRounds)} من ${s.maxRounds}`;
+  $('round').textContent=`${summary[s.status]||s.status} — الجولة ${Math.min(s.round+1,s.maxRounds)} من ${s.maxRounds} — ${s.variety==='MIX_LOWER'?'مستويان':'مستوى واحد'}`;
+  document.documentElement.style.setProperty('--game-progress', `${Math.min(100,Math.round(s.round/Math.max(1,s.maxRounds)*100))}%`);
+  if(s.status==='ACTIVE' && s.seq>lastEffectSeq && lastEffectSeq!==-1){
+    const card=$('challenge');card?.classList.remove('reveal-pop');void card?.offsetWidth;card?.classList.add('reveal-pop');
+  }
+  lastEffectSeq=s.seq;
   $('challenge').textContent=s.prompt||'تبدأ الجولة بعد موافقة الجميع وبدء المضيف.';
   const list=$('participants');list.replaceChildren();
   for(const p of s.participants){const li=document.createElement('li');li.textContent=`${p.name} — ${p.score} نقطة — ${p.connected?'متصل':'غير متصل'} — ${p.consent?'موافق':'بانتظار الموافقة'}`;list.append(li);}
