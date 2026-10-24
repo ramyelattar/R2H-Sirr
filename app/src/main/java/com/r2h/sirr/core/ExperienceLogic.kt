@@ -119,17 +119,32 @@ data class DiceConfiguration(val dice: List<List<DieFace>>, val durationSeconds:
 }
 
 object DiceCatalog {
+    /** Three face groups: إعمل إيه / عن إيه / إزاي. Every preset uses Egyptian Arabic. */
     private val base = listOf(
-        listOf("قل", "اسأل", "اقترح", "اختر", "اعترف", "شارك"),
-        listOf("مجاملة", "أمنية", "ذكرى", "رسالة", "سؤالًا", "فكرة"),
-        listOf("بهدوء", "بصراحة", "بابتسامة", "في دقيقة", "بثلاث كلمات", "الآن")
+        listOf("قول", "اسأل عن", "اقترح", "اختار", "احكي", "اكتب"),
+        listOf("مجاملة", "أمنية", "ذكرى", "رسالة", "سؤال", "مفاجأة"),
+        listOf("على الهادي", "بصراحة", "بابتسامة", "في دقيقة", "بـ٣ كلمات", "دلوقتي")
     )
     private val variations = mapOf(
         Intensity.SOFT to base,
-        Intensity.NORMAL to listOf(base[0], listOf("ذكرى", "تفضيلًا", "مجاملة", "رغبة", "سرًا صغيرًا", "سؤالًا"), base[2]),
-        Intensity.SEXY to listOf(listOf("غازل", "صارح", "همس", "اكتب", "اسأل", "اختر"), listOf("إطراء", "رسالة حب", "تفضيلًا", "لحظة قرب", "فكرة رومانسية", "أمنية"), base[2]),
-        Intensity.HOT to listOf(listOf("صارح", "اسأل", "اقترح", "غازل", "تبادل", "صف"), listOf("حدًا شخصيًا", "تفضيلًا خاصًا", "سؤالًا جريئًا", "رسالة سرية", "موقف انجذاب", "فكرة جديدة"), base[2]),
-        Intensity.HARD to listOf(listOf("ناقش", "اسأل", "شارك", "أفصح", "اختر", "اكتب"), listOf("حدودك", "توقعاتك", "تفضيلًا", "فكرة حميمة", "كلمة أمان", "رسالة خاصة"), base[2]),
+        Intensity.NORMAL to listOf(
+            base[0], listOf("ذكرى", "حاجة بتحبها", "مجاملة", "رغبة لطيفة", "سر صغير", "سؤال مختلف"), base[2]
+        ),
+        Intensity.SEXY to listOf(
+            listOf("غازل", "قول", "اهمس", "اكتب", "اسأل عن", "اختار"),
+            listOf("مجاملة جريئة", "رسالة غزل", "حاجة بتشدك", "لحظة قُرب", "فكرة رومانسية", "أمنية"),
+            base[2]
+        ),
+        Intensity.HOT to listOf(
+            listOf("صارح", "اسأل عن", "اقترح", "غازل", "اتكلم عن", "اوصف"),
+            listOf("حد شخصي", "تفضيل خاص", "سؤال جريء", "رسالة سرّية", "موقف إعجاب", "فكرة جديدة"),
+            base[2]
+        ),
+        Intensity.HARD to listOf(
+            listOf("اتكلم عن", "اسأل عن", "شارك", "قول", "اختار", "اكتب"),
+            listOf("حدودك", "توقعاتك", "تفضيلك", "حاجة خاصة", "كلمة أمان", "رسالة من قلبك"),
+            base[2]
+        ),
         Intensity.CUSTOM to base
     )
     fun preset(intensity: Intensity) = DiceConfiguration(variations.getValue(intensity).map { labels ->
