@@ -128,3 +128,42 @@ internal fun SecretLetter(text:String,order:Int,total:Int) {
         }
     }
 }
+
+
+/** One focused prompt; no generic grey Material card during the actual game. */
+@Composable
+internal fun ChallengeRevealCard(text:String,modifier:Modifier=Modifier) {
+    Box(
+        modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))
+            .background(Brush.linearGradient(listOf(Color(0xFF4C2237),Color(0xFF231521),Color(0xFF180F19))))
+    ){
+        Canvas(Modifier.matchParentSize()){
+            drawCircle(Amber.copy(alpha=.15f),size.minDimension*.39f,
+                Offset(size.width*.92f,size.height*.07f),style=Stroke(width=1.4.dp.toPx()))
+            drawCircle(Amber.copy(alpha=.07f),size.minDimension*.28f,
+                Offset(size.width*.88f,size.height*.18f))
+        }
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=30.dp),
+            verticalArrangement=Arrangement.spacedBy(19.dp)
+        ){
+            Text("✦  جولة سرّية",color=Amber,style=MaterialTheme.typography.labelLarge,fontWeight=FontWeight.Bold)
+            Text(text,color=Color.White,fontSize=24.sp,lineHeight=37.sp,fontWeight=FontWeight.SemiBold)
+            Text("تقدر تقول «عدّي» من غير أي إحراج",color=Pale,style=MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+internal fun RoundChapter(current:Int,total:Int){
+    val chapter=when {
+        current*3<total -> "البداية لسه بتسخن"
+        current*3<total*2 -> "الأسرار بتقرب"
+        else -> "وصلنا للمرحلة الأخيرة"
+    }
+    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,
+        horizontalArrangement=Arrangement.SpaceBetween){
+        Text(chapter,color=Amber,style=MaterialTheme.typography.labelLarge)
+        Text("${current+1} / ${total}",color=Pale,style=MaterialTheme.typography.labelMedium)
+    }
+}
