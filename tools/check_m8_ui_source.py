@@ -32,7 +32,8 @@ assert 'StrokeCap.Round' in scratch
 assert 'append(change.position)' in scratch
 assert 'mark(Offset(previous.x + dx * t, previous.y + dy * t))' in scratch
 assert '.pointerInput(dimensions)' in scratch
-assert 'coverage = (cells.size / 192f)' in scratch
+assert 'coverage = (coveredCells / 192f)' in scratch
+assert 'BooleanArray(192)' in scratch and 'coveredCells++' in scratch
 assert 'ChallengeRevealCard(faces.joinToString(" ") { it.text })' in dice
 assert 'MysteryDie(' in dice and 'MysteryHeader(' in dice
 assert 'ChallengeRevealCard(' in visuals
