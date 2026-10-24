@@ -1,3 +1,11 @@
+# M7 Effects/Privacy — Current Local Verification (24 October 2026)
+
+27/27 Node unit tests passing in local modified source; JS syntax checks, canonical content v3 (230 prompts / 175 questions), pure Kotlin AES-GCM/HMAC vectors and 49/49 browser DOM IDs passed. **No Android full compilation, APK, UI/browser end-to-end, deployed relay or independent security audit.**
+
+Earlier reports are historical below. Refer to docs/M7_EFFECTS_PRIVACY_IMPLEMENTATION.md.
+
+---
+
 # M7 — Current verification (24 October 2026)
 
 - `python tools/generate_content_v2.py --check`: PASS, version 3, 230 challenges and 175 questions.

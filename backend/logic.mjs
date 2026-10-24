@@ -41,9 +41,9 @@ export function newRoom(mode, level, nickname, clock=now(), options={}) {
   return {
     id, mode, level, invite, status:'WAITING', createdAt:clock, expiresAt:clock + 60*60*1000,
     seq:0, round:0, turnCount:settings.rounds, variety:settings.variety, actorId:null,
-    prompt:null, events:new Set(), messages:[],
+    prompt:null, promptSecret:null, events:new Set(), messages:[],
     participants:[{id:randomUUID(),auth:hostAuth,name:nickname,consent:true,score:0,skips:0,connected:false,host:true}],
-    seenChallenges:[], quiz:null, media:[],
+    seenChallenges:[], sealedCustom:[], customSeen:[], quiz:null, media:[],
   };
 }
 export function validName(name) { return typeof name==='string' && name.trim().length>=1 && [...name].length<=32; }
@@ -51,10 +51,10 @@ export function publicState(room, clock=now()) {
   return {
     id:room.id, mode:room.mode, level:room.level, variety:room.variety, status:room.status,
     round:room.round, maxRounds:room.turnCount, actorId:room.actorId,
-    prompt:room.prompt, seq:room.seq, expiresAt:room.expiresAt, serverNow:clock,
+    prompt:room.prompt, promptSecret:room.promptSecret||null, customCount:room.sealedCustom.length, seq:room.seq, expiresAt:room.expiresAt, serverNow:clock,
     participants:room.participants.map(p=>({id:p.id, name:p.name, consent:p.consent, score:p.score, skips:p.skips, connected:p.connected,host:p.host})),
-    messages:room.messages.map(m=>({author:m.author, body:m.body, round:m.round})),
-    contentVersion:3,
+    messages:room.messages.map(({author,authorId,iv,cipher,round})=>({author,authorId,iv,cipher,round})),
+    contentVersion:3, protocolVersion:4,
     quiz: room.quiz ? {id:room.quiz.id,pack:room.quiz.pack,indices:room.quiz.indices,
       submitted:room.quiz.submissions.map(x=>x.id),result:room.quiz.result} : null,
     media:room.media.filter(item=>item.expiresAt>clock).map(({id,kind,authorId,round,size,expiresAt,transfer})=>({id,kind,authorId,round,size,expiresAt,transfer:transfer||"single"}))
@@ -71,12 +71,25 @@ function rotate(room,clock) {
   if (room.round>=room.turnCount) {room.status='ENDED'; room.closedAt=clock; room.actorId=null; room.prompt=null; room.media=[]; room.quiz=null; room.messages=[];return;}
   const i=room.round % room.participants.length;
   room.actorId=room.participants[i].id;
-  const d=gameDeck(room); const available=d.filter(x=>!room.seenChallenges.includes(x));
-  if(!available.length) throw Error('not enough unique challenges');
-  room.prompt=available[randomInt(available.length)];
-  room.seenChallenges.push(room.prompt);
+  const custom=room.sealedCustom.filter(x=>!room.customSeen.includes(x.iv));
+  if(custom.length && room.round%3===0){
+    room.prompt=null;room.promptSecret=custom[randomInt(custom.length)];room.customSeen.push(room.promptSecret.iv);
+  }else{
+    const d=gameDeck(room); const available=d.filter(x=>!room.seenChallenges.includes(x));
+    if(!available.length)throw Error('not enough unique challenges');
+    room.prompt=available[randomInt(available.length)];room.promptSecret=null;room.seenChallenges.push(room.prompt);
+  }
 }
 /** Server-authoritative transitions; eventId deduplicates actor network retries. */
+const IV=/^[A-Za-z0-9_-]{16}$/;
+const CIPHER=/^[A-Za-z0-9_-]{24,4096}$/;
+const TAG=/^[A-Za-z0-9_-]{43}$/;
+export function sealedPromptList(value){
+  if(!Array.isArray(value)||value.length>20)throw Error('invalid encrypted prompt list');
+  if(value.some(x=>!x||typeof x!=='object'||!IV.test(x.iv)||!CIPHER.test(x.cipher)))throw Error('invalid encrypted prompt');
+  if(new Set(value.map(x=>x.iv)).size!==value.length)throw Error('repeated iv');
+  return value.map(({iv,cipher})=>({iv,cipher}));
+}
 export function applyAction(room, member, command, clock=now()) {
   const {type,eventId}=command;
   if (typeof eventId!=='string' || !/^[A-Za-z0-9_-]{8,80}$/.test(eventId)) throw Error('event id missing');
@@ -95,6 +108,7 @@ export function applyAction(room, member, command, clock=now()) {
         deck(command.level,room.mode).concat(deck([...LEVELS][[...LEVELS].indexOf(command.level)-1],room.mode));
       if(new Set(pool).size<config.rounds)throw Error('insufficient prompts');
       room.turnCount=config.rounds;room.variety=config.variety;room.level=command.level;
+      room.sealedCustom=sealedPromptList(command.custom||[]);room.customSeen=[];
       break;
     }
     case 'start':
@@ -108,8 +122,8 @@ export function applyAction(room, member, command, clock=now()) {
       room.round++; rotate(room,clock); break;
     case 'message':
       if (room.status!=='ACTIVE' || room.actorId!==member.id) throw Error('not your turn');
-      if (typeof command.body!=='string' || [...command.body].length>500) throw Error('message too long');
-      room.messages.push({author:member.name,body:command.body,round:room.round});
+      if(Object.hasOwn(command,'body')||!IV.test(command.iv)||!CIPHER.test(command.cipher))throw Error('encrypted messages required');
+      room.messages.push({author:member.name,authorId:member.id,iv:command.iv,cipher:command.cipher,round:room.round});
       if (room.messages.length>10) room.messages.shift();
       break;
     case 'quiz_open': {
@@ -121,17 +135,12 @@ export function applyAction(room, member, command, clock=now()) {
     case 'quiz_submit': {
       const q=room.quiz;
       if (!q || q.result || command.quizId!==q.id || q.submissions.some(s=>s.id===member.id)) throw Error('quiz not accepting submission');
-      if (!Array.isArray(command.answers) || command.answers.length!==8 ||
-        !command.answers.every(a=>Number.isInteger(a)&&a>=0&&a<=2)) throw Error('invalid answers');
-      q.submissions.push({id:member.id,answers:command.answers.slice()});
-      if (q.submissions.length===2) {
+      if(Object.hasOwn(command,'answers')||!Array.isArray(command.tags)||command.tags.length!==8 ||
+         !command.tags.every(x=>typeof x==='string'&&TAG.test(x))) throw Error('private quiz commitments required');
+      q.submissions.push({id:member.id,tags:command.tags.slice()});
+      if(q.submissions.length===2){
         const [a,b]=q.submissions;
-        q.result={scores:[{id:a.id,score:a.answers.reduce((s,x)=>s+x,0)},
-                          {id:b.id,score:b.answers.reduce((s,x)=>s+x,0)}],
-                  counts:[{id:a.id,values:[0,1,2].map(option=>a.answers.filter(x=>x===option).length)},
-                          {id:b.id,values:[0,1,2].map(option=>b.answers.filter(x=>x===option).length)}],
-                  agreement:a.answers.filter((x,i)=>x===b.answers[i]).length,questions:8};
-        // Never store individual answers after computing agreed aggregate.
+        q.result={agreement:a.tags.filter((x,i)=>x===b.tags[i]).length,questions:8};
         q.submissions=q.submissions.map(s=>({id:s.id}));
       }
       break;

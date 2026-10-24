@@ -14,6 +14,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.r2h.sirr.core.ExpandedQuizzes
 import com.r2h.sirr.core.Intensity
+import com.r2h.sirr.core.SecureGameProtocol
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -107,7 +109,7 @@ private class RemoteTransport(private val client:OkHttpClient) {
         val address=id.server.replaceFirst("https://","wss://")+"/ws"
         ws=client.newWebSocket(Request.Builder().url(address).build(),object:WebSocketListener(){
             override fun onOpen(webSocket:WebSocket,response:Response){
-                webSocket.send(JSONObject().put("type","authenticate").put("roomId",id.roomId).put("auth",id.auth).put("contentVersion",3).toString())
+                webSocket.send(JSONObject().put("type","authenticate").put("roomId",id.roomId).put("auth",id.auth).put("contentVersion",3).put("protocolVersion",4).toString())
             }
             override fun onMessage(webSocket:WebSocket,text:String){
                 val data=runCatching{JSONObject(text)}.getOrNull()?:return
@@ -132,6 +134,36 @@ private class RemoteTransport(private val client:OkHttpClient) {
         reconnectTask=Runnable{open()}.also{main.postDelayed(it,delay)}
     }
     fun reconnect(){reconnectAttempt=0;open()}
+    fun privateMessage(text:String){
+        val id=current?:return
+        val sealed=SecureGameProtocol.seal(id.roomId,id.sessionKey,"message",text)
+        action("message",JSONObject().put("iv",sealed.iv).put("cipher",sealed.cipher))
+    }
+    fun configure(rounds:Int,variety:String,level:Intensity,custom:List<String>){
+        val id=current?:return
+        require(custom.size<=20 && custom.all{it.length in 6..200} && custom.distinct().size==custom.size)
+        val sealed=JSONArray()
+        custom.forEach { line->
+            val encrypted=SecureGameProtocol.seal(id.roomId,id.sessionKey,"challenge",line)
+            sealed.put(JSONObject().put("iv",encrypted.iv).put("cipher",encrypted.cipher))
+        }
+        action("configure",JSONObject().put("rounds",rounds).put("variety",variety).put("level",level.name).put("custom",sealed))
+    }
+    fun sendPrivateQuiz(quiz:JSONObject,answers:List<Int>){
+        val id=current?:return
+        require(answers.size==8)
+        val questionIndices=quiz.getJSONArray("indices")
+        val tags=JSONArray()
+        answers.forEachIndexed{n,answer->
+            tags.put(SecureGameProtocol.quizTag(id.roomId,id.sessionKey,quiz.getString("id"),questionIndices.getInt(n),answer))
+        }
+        action("quiz_submit",JSONObject().put("quizId",quiz.getString("id")).put("tags",tags))
+    }
+    fun openSecret(sealed:JSONObject,domain:String):String{
+        val id=current?:error("لا توجد جلسة")
+        return SecureGameProtocol.open(id.roomId,id.sessionKey,domain,
+            SecureGameProtocol.Sealed(sealed.getString("iv"),sealed.getString("cipher")))
+    }
     fun action(type:String,extra:JSONObject=JSONObject()){
         val data=JSONObject().put("type",type).put("eventId",UUID.randomUUID().toString().replace("-",""))
         val keys=extra.keys();while(keys.hasNext()){val key=keys.next();data.put(key,extra.get(key))}
@@ -231,6 +263,7 @@ private fun transportFileSize(context:android.content.Context,uri:Uri):Long? =
 @Composable
 internal fun RemoteScreen(){
     val context=LocalContext.current
+    val effects=rememberGameEffects()
     val client=remember{OkHttpClient.Builder().retryOnConnectionFailure(true).build()}
     val transport=remember{RemoteTransport(client)}
     var server by remember{mutableStateOf("")};var link by remember{mutableStateOf("")}
@@ -244,6 +277,12 @@ internal fun RemoteScreen(){
     var state by remember{mutableStateOf<JSONObject?>(null)}
     var preview by remember{mutableStateOf<Pair<String,ByteArray>?>(null)}
     var draft by remember{mutableStateOf("")}
+    var lobbyRounds by remember{mutableIntStateOf(10)}
+    var lobbyLevel by remember{mutableStateOf(Intensity.SOFT)}
+    var lobbyVariety by remember{mutableStateOf("ONE_LEVEL")}
+    var customDraft by remember{mutableStateOf("")}
+    val customLines=remember(customDraft){customDraft.lineSequence().map{it.trim()}.filter{it.isNotEmpty()}.toList()}
+    var lastCueRound by remember{mutableIntStateOf(-1)}
     var cardMode by remember{mutableStateOf("whispers")}
     val cardTexts=remember{mutableStateListOf("","","")}
     var cardImageId by remember(identity){mutableStateOf<String?>(null)}
@@ -288,6 +327,7 @@ internal fun RemoteScreen(){
         },{msg->status=msg})
     }.onFailure{status=it.message?:"فشل الاتصال"}}
     Page("جلسة خاصة عبر الإنترنت","ملفات مشفرة بمفتاح الدعوة، واختبارات مقارنة بين جهازين. يتطلب خادم HTTPS مستقلًا."){
+        EffectPreferencesPanel(effects)
         if(identity==null){
             Text("أدخل عنوان خادم سِرّ الخاص بك. لا توجد خدمة عامة مفعلة.",color=Color.LightGray)
             OutlinedTextField(server,{server=it.take(180)},label={Text("عنوان HTTPS")},modifier=Modifier.fillMaxWidth())
@@ -334,6 +374,28 @@ internal fun RemoteScreen(){
                 members.forEach{Text("${it.optString("name")}: ${it.optInt("score")} نقطة — ${if(it.optBoolean("connected"))"متصل" else "غير متصل"} — ${if(it.optBoolean("consent"))"موافق" else "بانتظار الموافقة"}")}
                 Text("نظام الجولات: ${snapshot.optInt("maxRounds")} — ${if(snapshot.optString("variety")=="MIX_LOWER")"تنويع مستويين" else "مستوى واحد"}",color=Color.LightGray)
                 if(roomStatus=="WAITING"){
+                    Text("الضيوف يراجعون الإعدادات قبل الموافقة؛ بعدها يتم قفل التعديل.",color=Color.LightGray)
+                    val hostCanEdit=mine?.optBoolean("host")==true && members.none{!it.optBoolean("host")&&it.optBoolean("consent")}
+                    if(hostCanEdit){
+                        Text("ضبط الجولات قبل موافقة الضيوف")
+                        Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
+                            listOf(6,10,12,18).forEach{n->FilterChip(lobbyRounds==n,{lobbyRounds=n},label={Text("$n")})}
+                        }
+                        Intensity.entries.filter{it!=Intensity.CUSTOM}.forEach{v->
+                            FilterChip(lobbyLevel==v,{lobbyLevel=v},label={Text(v.arabic)})
+                        }
+                        Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+                            Checkbox(lobbyVariety=="MIX_LOWER",{lobbyVariety=if(it)"MIX_LOWER" else "ONE_LEVEL"})
+                            Text("تنويع مع المستوى الأقل")
+                        }
+                        OutlinedTextField(customDraft,{customDraft=it.take(4400)},label={Text("تحديات خاصة مشفرة، كل تحدٍ بسطر")},
+                            modifier=Modifier.fillMaxWidth(),minLines=3,maxLines=6)
+                        val valid=customLines.size<=20 && customLines.distinct().size==customLines.size && customLines.all{it.length in 6..200}
+                        Text("${customLines.size} من ٢٠ تحديًا. الطول من ٦ إلى ٢٠٠ حرف، دون تكرار.")
+                        Button(enabled=valid,onClick={runCatching{transport.configure(lobbyRounds,lobbyVariety,lobbyLevel,customLines)}
+                            .onSuccess{status="أُرسلت الإعدادات والتحديات المشفرة للغرفة"}
+                            .onFailure{status="تعذر إرسال الإعدادات: ${it.message}"}}){Text("اعتماد إعدادات الغرفة")}
+                    }
                     if(mine?.optBoolean("consent")==false)Button(onClick={transport.action("consent",JSONObject().put("value",true))}){Text("أوافق على المشاركة")}
                     if(mine?.optBoolean("host")==true)Button(onClick={transport.action("start")},enabled=members.size>=2&&members.all{it.optBoolean("consent")&&it.optBoolean("connected")}){Text("ابدأ الجولات")}
                 }
@@ -342,10 +404,16 @@ internal fun RemoteScreen(){
                     val currentRound=snapshot.optInt("round").coerceIn(0,total)
                     Text("الجولة ${currentRound+1}/${total}")
                     LinearProgressIndicator(progress={currentRound.toFloat()/total},modifier=Modifier.fillMaxWidth())
-                    Card(Modifier.fillMaxWidth()){Text(snapshot.optString("prompt"),Modifier.padding(16.dp))}
+                    val secret=snapshot.optJSONObject("promptSecret")
+                    val prompt=if(secret==null)snapshot.optString("prompt") else runCatching{transport.openSecret(secret,"challenge")}
+                        .getOrDefault("تعذر فك التحدي الخاص — تحقق من المفتاح")
+                    LaunchedEffect(snapshot.optInt("round"),roomStatus){
+                        if(lastCueRound!=snapshot.optInt("round")){effects.cue(GameCue.ROUND);lastCueRound=snapshot.optInt("round")}
+                    }
+                    CinematicChallenge(prompt,effects)
                     if(snapshot.optString("actorId")==id.participantId){
-                        OutlinedTextField(draft,{draft=it.take(500)},label={Text("رد نصي للمشاركين — ليس مشفرًا طرفيًا")},modifier=Modifier.fillMaxWidth())
-                        OutlinedButton(enabled=draft.isNotBlank(),onClick={transport.action("message",JSONObject().put("body",draft));draft=""}){Text("إرسال رد")}
+                        OutlinedTextField(draft,{draft=it.take(500)},label={Text("رسالة مشفرة طرفيًا للمشاركين")},modifier=Modifier.fillMaxWidth())
+                        OutlinedButton(enabled=draft.isNotBlank(),onClick={runCatching{transport.privateMessage(draft)}.onFailure{status="فشل تشفير الرسالة"};draft=""}){Text("إرسال رد")}
                         OutlinedButton(onClick={filePicker.launch("*/*")}){Text("إرسال صورة أو صوت أو فيديو مشفر (حتى ٤٨MB)")}
                         OutlinedButton(onClick={transport.resumeUpload(context.applicationContext){status=it}}){Text("استئناف ملف كبير متوقف")}
                         OutlinedButton(onClick={transport.cancelUpload();status="تم طلب إلغاء الرفع"}){Text("إلغاء رفع ملف كبير")}
@@ -377,11 +445,13 @@ internal fun RemoteScreen(){
                             Text("يتسلمها الشريك مرة واحدة. لا تُحفظ نسخة قابلة للفتح مجددًا على الخادم.",
                                 style=MaterialTheme.typography.bodySmall,color=Color.LightGray)
                         }
-                        Button(onClick={transport.action("complete")}){Text("أكملت التحدي")}
-                        OutlinedButton(onClick={transport.action("skip")}){Text("تخطي")}
+                        Button(onClick={effects.cue(GameCue.SUCCESS);transport.action("complete")}){Text("أكملت التحدي")}
+                        OutlinedButton(onClick={effects.cue(GameCue.SKIP);transport.action("skip")}){Text("تخطي")}
                     }
                     snapshot.optJSONArray("messages")?.let{messages->repeat(messages.length()){i->
-                        val m=messages.getJSONObject(i);Text("${m.optString("author")}: ${m.optString("body")}")
+                        val m=messages.getJSONObject(i)
+                        val plaintext=runCatching{transport.openSecret(m,"message")}.getOrDefault("تعذر فك الرسالة")
+                        Text("${m.optString("author")}: $plaintext")
                     }}
                     val media=snapshot.optJSONArray("media")
                     if(media!=null&&media.length()>0){
@@ -450,10 +520,10 @@ private fun RemoteQuizPanel(snapshot:JSONObject,id:RemoteIdentity,transport:Remo
                 OutlinedButton(modifier=Modifier.fillMaxWidth(),onClick={answers.add(index)}){Text(option)}
             }
         }else Button(onClick={
-            transport.action("quiz_submit",JSONObject().put("quizId",quizId).put("answers",JSONArray(answers.toList())))
+            transport.sendPrivateQuiz(quiz,answers.toList())
         }){Text("إرسال الإجابات للمقارنة")}
     }
-    Text("أسئلة ترفيهية؛ يرى الخادم الإجابات أثناء احتساب النتيجة، ثم يحذف الإجابات الفردية من الذاكرة.",color=Color.LightGray,style=MaterialTheme.typography.bodySmall)
+    Text("الاختيارات لا تُرسل للخادم؛ ترسل وسوم HMAC لإظهار عدد الإجابات المتطابقة فقط. يحتفظ الخادم بمعلومات الجلسة.",color=Color.LightGray,style=MaterialTheme.typography.bodySmall)
 }
 
 @Composable

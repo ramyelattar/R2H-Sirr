@@ -21,6 +21,7 @@ internal fun ExperienceScreen(group: Boolean) {
     val consent = remember { mutableStateListOf(false, false, false, false) }
     var game by remember { mutableStateOf<LocalGame?>(null) }
     var reply by remember { mutableStateOf("") }
+    val effects=rememberGameEffects()
     val context = LocalContext.current
     val vault = remember { LocalVault(context.applicationContext) }
     val storageName = if (group) "custom-party" else "custom-couple"
@@ -31,6 +32,7 @@ internal fun ExperienceScreen(group: Boolean) {
     val customValid = customEntries.size <= 60 && customEntries.all { it.length in 6..200 } &&
         customEntries.distinct().size == customEntries.size
     Page(if (group) "تحديات المجموعة" else "تحديات الشريكين", "${roundCount} جولات محلية. يستطيع كل مشارك الرفض أو الإنهاء في أي وقت.") {
+        EffectPreferencesPanel(effects)
         if (game == null) {
             if (group) {
                 Text("عدد المقاعد: $seats")
@@ -96,20 +98,21 @@ internal fun ExperienceScreen(group: Boolean) {
             val current = game!!
             if (!current.finished) {
                 val turn = current.turns[current.round]
+                LaunchedEffect(current.round){effects.cue(GameCue.ROUND)}
                 LinearProgressIndicator(
                     progress = { current.round.toFloat() / current.turns.size },
                     modifier=Modifier.fillMaxWidth()
                 )
                 Text("الجولة ${current.round + 1} / ${current.turns.size}", color = MaterialTheme.colorScheme.primary)
                 Text("دور: ${current.playerNames[turn.actorIndex]}", style = MaterialTheme.typography.titleMedium)
-                Card(Modifier.fillMaxWidth()) { Text(turn.prompt.text, Modifier.padding(20.dp), style = MaterialTheme.typography.titleLarge) }
+                CinematicChallenge(turn.prompt.text,effects)
                 OutlinedTextField(reply, { reply = it.take(1000) }, label = { Text("رد نصي اختياري (يبقى داخل الجلسة)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
                 LocalResponseMedia(current.round)
                 Button(onClick = {
-                    game = current.resolve(completed = true); reply = ""
+                    effects.cue(GameCue.SUCCESS);game = current.resolve(completed = true); reply = ""
                 }, modifier = Modifier.fillMaxWidth()) { Text("إكمال التحدي (+١)") }
                 OutlinedButton(onClick = {
-                    game = current.resolve(completed = false); reply = ""
+                    effects.cue(GameCue.SKIP);game = current.resolve(completed = false); reply = ""
                 }, modifier = Modifier.fillMaxWidth()) { Text("تخطي دون عقوبة") }
                 TextButton(onClick = { game = current.leave(); reply = "" }) { Text("إيقاف الجلسة فورًا") }
             } else {
