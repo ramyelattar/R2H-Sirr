@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,7 +91,7 @@ private fun SirrApp() {
     var confirmedAdult by remember { mutableStateOf(
         runCatching { vault.readPrivate("adult-consent-v1") == "accepted" }.getOrDefault(false)
     ) }
-    var route by remember { mutableStateOf("home") }
+    var route by rememberSaveable { mutableStateOf("home") }
     var sessionVersion by remember { mutableIntStateOf(0) }
     var askToLeave by remember { mutableStateOf(false) }
     val immersiveRoutes = remember { setOf("couple","party","dice","quiz","scratch","whispers","remote") }
@@ -123,7 +124,7 @@ private fun SirrApp() {
                         AlertDialog(
                             onDismissRequest = { askToLeave = false },
                             title = { Text("عايز تخرج من اللعبة؟") },
-                            text = { Text("الجولة اللي مفتوحة ممكن تروح، وأي وسائط مؤقتة ممكن تتمسح.") },
+                            text = { Text("جولات التحديات المحلية محفوظة مشفّرة، لكن وسائط المعاينة المؤقتة ممكن تتمسح.") },
                             confirmButton = {
                                 TextButton(onClick = { askToLeave = false; route = "home" }) {
                                     Text("أيوه، اخرج")

@@ -28,7 +28,6 @@ internal fun ExperienceScreen(group: Boolean) {
     var intensity by remember { mutableStateOf(Intensity.SOFT) }
     val names = remember { mutableStateListOf("إنت", "اللي معاك", "صاحبكم ٣", "صاحبكم ٤") }
     val consent = remember { mutableStateListOf(false, false, false, false) }
-    var game by remember { mutableStateOf<LocalGame?>(null) }
     var reply by remember { mutableStateOf("") }
     var advanced by remember { mutableStateOf(false) }
     var mediaOpen by remember { mutableStateOf(false) }
@@ -36,6 +35,23 @@ internal fun ExperienceScreen(group: Boolean) {
     val effects = rememberGameEffects()
     val context = LocalContext.current
     val vault = remember { LocalVault(context.applicationContext) }
+    val gameName = if (group) "game-party" else "game-couple"
+    val replyName = if (group) "replies-party" else "replies-couple"
+    // Sensitive randomized challenges are stored encrypted, never in saved-instance-state.
+    var game by remember(group) { mutableStateOf(LocalSessionStore.load(vault, gameName, group)) }
+    LaunchedEffect(game, gameName) {
+        runCatching {
+            if (game == null) vault.deletePrivate(gameName)
+            else LocalSessionStore.save(vault, gameName, requireNotNull(game))
+        }
+    }
+    var replyStatus by remember { mutableStateOf("") }
+    LaunchedEffect(game?.round) {
+        reply = game?.takeIf { !it.finished }?.let {
+            LocalSessionStore.readReply(vault, replyName, it.round)
+        }.orEmpty()
+        replyStatus = ""
+    }
     val storageName = if (group) "custom-party" else "custom-couple"
     val historyName = if (group) "recent-party" else "recent-couple"
     var customText by remember(group) { mutableStateOf(vault.readPrivate(storageName).orEmpty()) }
@@ -145,6 +161,7 @@ internal fun ExperienceScreen(group: Boolean) {
                             roundCount = roundCount, variety = variety, recentlySeen = recent
                         )
                     }.onSuccess { newGame ->
+                        vault.deletePrivate(replyName)
                         game = newGame
                         runCatching { vault.writePrivate(historyName, newGame.turns.joinToString("\n") { it.prompt.text }) }
                         reply = ""
@@ -193,18 +210,37 @@ internal fun ExperienceScreen(group: Boolean) {
                             label = { Text("رد خاص… لو حابب") },
                             modifier = Modifier.fillMaxWidth(), minLines = 2)
                         LocalResponseMedia(current.round)
+                        OutlinedButton(onClick = {
+                            runCatching { LocalSessionStore.writeReply(vault, replyName, current.round, reply) }
+                                .onSuccess { replyStatus = "ردك اتحفظ مشفّر على الموبايل" }
+                                .onFailure { replyStatus = "معرفناش نحفظ الرد؛ حاول تاني قبل ما تكمل" }
+                        }, enabled = reply.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+                            Text("احفظ ردك عندك")
+                        }
+                        if (replyStatus.isNotBlank()) Text(replyStatus)
                     }
                     }
                 }
+                fun finishRound(completed:Boolean) {
+                    if (reply.isNotBlank() && runCatching {
+                        LocalSessionStore.writeReply(vault, replyName, current.round, reply)
+                    }.isFailure) {
+                        replyStatus = "فشل حفظ الرد؛ النص لسه موجود علشان متفقدوش"
+                        return
+                    }
+                    effects.cue(if (completed) GameCue.SUCCESS else GameCue.SKIP)
+                    game = current.resolve(completed = completed)
+                    reply = ""; mediaOpen = false; replyStatus = ""
+                }
                 if (isRevealed) {
                     Button(
-                        onClick = { effects.cue(GameCue.SUCCESS); game = current.resolve(completed = true); reply = ""; mediaOpen = false },
+                        onClick = { finishRound(true) },
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         shape = RoundedCornerShape(17.dp)
                     ) { Text("خلصت التحدي ✦", fontWeight = FontWeight.Bold) }
                 }
                 OutlinedButton(
-                    onClick = { effects.cue(GameCue.SKIP); game = current.resolve(completed = false); reply = ""; mediaOpen = false },
+                    onClick = { finishRound(false) },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("مش دلوقتي… عَدّي") }
                 TextButton(onClick = { game = current.leave(); reply = "" }) { Text("وقّف اللعبة") }
@@ -217,6 +253,7 @@ internal fun ExperienceScreen(group: Boolean) {
                 }
                 Button(onClick = {
                     game = null
+                    vault.deletePrivate(replyName)
                     consent.indices.forEach { consent[it] = false }
                 }, modifier = Modifier.fillMaxWidth()) { Text("نبدأ واحدة جديدة؟") }
             }
