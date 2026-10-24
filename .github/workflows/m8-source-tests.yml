@@ -1,10 +1,12 @@
 name: M8 Source Tests
 on:
   push:
-    branches: [feature/m8-egyptian-experience]
+    branches: [feature/m8-egyptian-experience, feature/m9-stabilization]
   pull_request:
     paths:
       - 'backend/**'
+      - 'app/src/main/java/com/r2h/sirr/**'
+      - 'tools/check_m8_ui_source.py'
       - 'content/**'
       - 'tools/generate_content_v2.py'
       - 'app/src/main/java/com/r2h/sirr/core/**'

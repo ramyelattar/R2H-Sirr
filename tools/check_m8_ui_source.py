@@ -56,7 +56,8 @@ assert '"settings" -> GameSettingsScreen(' in main
 assert 'EffectPreferencesPanel(effects, initiallyExpanded = true)' in main
 assert 'FeatureRow("ظبّط التجربة على مزاجك"' in main
 assert 'assert' not in scratch[:200], "No dummy source assertions inside Compose"
-assert 'savedPoints' in scratch and 'strokes[strokes.lastIndex] = strokes.last() + p' in scratch
+assert 'savedPoints' in scratch and 'strokes.last().add(p)' in scratch
+assert 'strokes[strokes.lastIndex] = strokes.last() + p' not in scratch
 assert 'Brush.linearGradient' in artwork and 'drawPath' in scratch
 
 assert 'DiscoveryMotif.WHISPER' in main and 'Canvas(' in artwork
@@ -96,4 +97,13 @@ assert 'event == Lifecycle.Event.ON_STOP' in whispers
 assert 'player.pause()' in whispers
 assert 'activity?.lifecycle?.removeObserver(observer)' in whispers
 
-print("M8 UI source regression guards PASS (static checks only, NOT Android build)")
+remote = source("RemoteScreen.kt")
+session = source("LocalSessionStore.kt")
+transfer = source("RemoteChunkTransfer.kt")
+assert 'rememberSaveable' in quiz and 'rememberSaveable' in main
+assert 'LocalSessionStore.load(' in experience and 'LocalSessionStore.save(' in experience
+assert 'fun writeReply(' in session and 'vault.writePrivate(name,json.toString())' in session
+assert 'pendingActions' in remote and 'forceRetry=true' in remote
+assert 'expectedDigest=fingerprint(' in transfer and 'actual!=expectedDigest' in transfer
+assert 'val content=ByteArray(total);var copied=0' not in transfer
+print("M9 UI/source regression guards PASS (static checks only, NOT Android build)")

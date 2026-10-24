@@ -11,6 +11,7 @@ import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.SequenceInputStream
+import java.security.MessageDigest
 
 /** M6 encrypted, resumable transfer. Only ciphertext and chunk metadata reach the relay. */
 internal class RemoteChunkTransfer(private val client:OkHttpClient) {
@@ -18,7 +19,7 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
         const val CHUNK_SIZE=512*1024
         const val MAX_SIZE=48*1024*1024
     }
-    data class Pending(val uri:Uri,val roomId:String,val id:String,val mime:String,val total:Int)
+    data class Pending(val uri:Uri,val roomId:String,val id:String,val mime:String,val total:Int,val digest:String)
     @Volatile var cancelled=false
         private set
     @Volatile var pending:Pending?=null
@@ -60,6 +61,23 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
         while(got<bytes){val count=stream.read(result,got,bytes-got);if(count<=0)error("ملف ناقص أو تغيّر أثناء الإرسال");got+=count}
         return result
     }
+    /** Fingerprint includes the MIME prefix. Never resume chunks from a different same-size file. */
+    private fun fingerprint(context:Context,uri:Uri,prefix:ByteArray,size:Long):String {
+        val digest=MessageDigest.getInstance("SHA-256")
+        digest.update(prefix)
+        var length=0L
+        context.contentResolver.openInputStream(uri).use { input ->
+            val stream=requireNotNull(input)
+            val buffer=ByteArray(16*1024)
+            while(true) {
+                val n=stream.read(buffer)
+                if(n<0)break
+                if(n>0){digest.update(buffer,0,n);length+=n;require(length<=MAX_SIZE)}
+            }
+        }
+        require(length==size){"اتغير حجم الملف؛ اختاره من جديد"}
+        return digest.digest().joinToString(""){"%02x".format(it)}
+    }
     fun upload(id:RemoteIdentity,context:Context,uri:Uri,progress:(String)->Unit):String {
         cancelled=false
         val mime=RemoteCrypto.mime(context.contentResolver.getType(uri))
@@ -68,23 +86,26 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
         val prefix=mime.toByteArray(Charsets.UTF_8).let{byteArrayOf(it.size.toByte())+it}
         val total=size+prefix.size
         require(size>0 && total<=MAX_SIZE && total<=Int.MAX_VALUE){"الحد الأقصى ٤٨ ميجابايت"}
-        var task=pending?.takeIf{it.uri==uri && it.roomId==id.roomId && it.mime==mime && it.total==total.toInt()}
+        val expectedDigest=fingerprint(context,uri,prefix,size)
+        var task=pending?.takeIf{it.uri==uri && it.roomId==id.roomId && it.mime==mime && it.total==total.toInt() && it.digest==expectedDigest}
         if(task==null){
             val request=JSONObject().put("kind",RemoteCrypto.kind(mime)).put("totalBytes",total)
             val info=call(id,"${base(id)}/uploads","POST",json=request.toString()).first!!
-            task=Pending(uri,id.roomId,info.getString("id"),mime,total.toInt());pending=task
+            task=Pending(uri,id.roomId,info.getString("id"),mime,total.toInt(),expectedDigest);pending=task
         }
         val draft=task
         val statusUrl="${base(id)}/uploads/${draft.id}"
         val received=call(id,statusUrl).first!!.getJSONArray("received")
         val existing=(0 until received.length()).map{received.getInt(it)}.toSet()
         val count=(draft.total+CHUNK_SIZE-1)/CHUNK_SIZE
+        val actualDigest=MessageDigest.getInstance("SHA-256")
         context.contentResolver.openInputStream(uri).use { source ->
             requireNotNull(source)
             SequenceInputStream(ByteArrayInputStream(prefix),source).use { stream ->
                 for(i in 0 until count){
                     if(cancelled)error("تم إلغاء النقل")
                     val part=readPart(stream,minOf(CHUNK_SIZE,draft.total-i*CHUNK_SIZE))
+                    actualDigest.update(part)
                     if(i in existing){progress("تجاوز الجزء المؤكد ${i+1}/$count");continue}
                     val (iv,encrypted)=RemoteCrypto.encryptChunk(id.roomId,id.sessionKey,draft.id,i,
                         RemoteCrypto.kind(mime),part)
@@ -106,6 +127,11 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
             }
         }
         if(cancelled)error("تم إلغاء النقل")
+        val actual=actualDigest.digest().joinToString(""){"%02x".format(it)}
+        if(actual!=expectedDigest){
+            runCatching{call(id,statusUrl,"DELETE")};pending=null
+            error("الملف اتغير أثناء الرفع، ابدأ نقل جديد")
+        }
         val complete=call(id,"$statusUrl/complete","POST").first!!
         pending=null
         return complete.getString("id")
@@ -116,7 +142,10 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
         require(meta.getString("kind")==kind)
         val total=meta.getInt("totalBytes");val count=meta.getInt("count")
         require(total in 1..MAX_SIZE && count==(total+CHUNK_SIZE-1)/CHUNK_SIZE)
-        val content=ByteArray(total);var copied=0
+        // Allocate only the final plaintext output; do not hold a second 48 MB copy.
+        var plaintext:ByteArray?=null
+        var expectedMime:String?=null
+        var copied=0
         for(index in 0 until count){
             val url="$path/chunks/$index"
             val req=Request.Builder().url(url).header("Authorization","Bearer ${id.auth}").get().build()
@@ -125,17 +154,29 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
                 val iv=response.header("X-Encrypted-Iv").orEmpty()
                 val payload=response.body?.bytes()?:error("الجزء فارغ")
                 val decoded=RemoteCrypto.decryptChunk(id.roomId,id.sessionKey,mediaId,index,kind,iv,payload)
-                val expected=if(index==count-1)total-index*CHUNK_SIZE else CHUNK_SIZE
-                require(decoded.size==expected){"حجم الجزء غير مطابق"}
-                System.arraycopy(decoded,0,content,copied,decoded.size);copied+=decoded.size
+                try {
+                    val expected=if(index==count-1)total-index*CHUNK_SIZE else CHUNK_SIZE
+                    require(decoded.size==expected){"حجم الجزء غير مطابق"}
+                    val offset=if(index==0){
+                        val nameSize=decoded[0].toInt() and 255
+                        require(nameSize in 1..64 && decoded.size>nameSize)
+                        val mime=RemoteCrypto.mime(String(decoded,1,nameSize,Charsets.UTF_8))
+                        require(RemoteCrypto.kind(mime)==kind)
+                        expectedMime=mime
+                        plaintext=ByteArray(total-nameSize-1)
+                        nameSize+1
+                    } else 0
+                    val target=requireNotNull(plaintext)
+                    val length=decoded.size-offset
+                    require(copied+length<=target.size)
+                    System.arraycopy(decoded,offset,target,copied,length)
+                    copied+=length
+                } finally { decoded.fill(0) }
             }
             progress("تنزيل ${index+1}/$count أجزاء مشفرة")
         }
-        require(copied==total)
-        val nameSize=content[0].toInt() and 255
-        require(nameSize in 1..64 && content.size>nameSize)
-        val mime=RemoteCrypto.mime(String(content,1,nameSize,Charsets.UTF_8))
-        require(RemoteCrypto.kind(mime)==kind)
-        return mime to content.copyOfRange(nameSize+1,content.size)
+        val result=requireNotNull(plaintext)
+        require(copied==result.size)
+        return requireNotNull(expectedMime) to result
     }
 }
