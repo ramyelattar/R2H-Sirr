@@ -338,7 +338,10 @@ internal fun RemoteScreen(){
                     if(mine?.optBoolean("host")==true)Button(onClick={transport.action("start")},enabled=members.size>=2&&members.all{it.optBoolean("consent")&&it.optBoolean("connected")}){Text("ابدأ الجولات")}
                 }
                 if(roomStatus=="ACTIVE"){
-                    Text("الجولة ${snapshot.optInt("round")+1}/${snapshot.optInt("maxRounds")}")
+                    val total=snapshot.optInt("maxRounds").coerceAtLeast(1)
+                    val currentRound=snapshot.optInt("round").coerceIn(0,total)
+                    Text("الجولة ${currentRound+1}/${total}")
+                    LinearProgressIndicator(progress={currentRound.toFloat()/total},modifier=Modifier.fillMaxWidth())
                     Card(Modifier.fillMaxWidth()){Text(snapshot.optString("prompt"),Modifier.padding(16.dp))}
                     if(snapshot.optString("actorId")==id.participantId){
                         OutlinedTextField(draft,{draft=it.take(500)},label={Text("رد نصي للمشاركين — ليس مشفرًا طرفيًا")},modifier=Modifier.fillMaxWidth())
