@@ -1,3 +1,5 @@
+> **M7 effects/privacy follow-up (24 Oct 2026 — source-only):** Android/Web effects controls, encrypted private messages, encrypted custom challenges for the waiting room, and HMAC-only quiz agreement. Old clients must upgrade to protocolVersion=4. See [details](docs/M7_EFFECTS_PRIVACY_IMPLEMENTATION.md). No APK or device test performed.
+
 # سِرّ — Android + Arabic Guest Web + Relay
 
 **M7 / Source only — 24 October 2026**
@@ -14,7 +16,7 @@
 
 راجع `docs/M7_IMPLEMENTATION.md` للتفاصيل والقيود، و`VERIFICATION.md` لأدلة الاختبار.
 
-## قاعدة M4 السابقة (أرقام تاريخية)
+## قاعدة M4 السابقة (أرقام تاريخية — وليس وصف بروتوكول الخصوصية الحالي)
 
 ### 1. مكتبة عربية أصلية قابلة للتحديث
 
