@@ -1,5 +1,9 @@
 package com.r2h.sirr
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -169,7 +173,13 @@ internal fun ExperienceScreen(group: Boolean) {
                         isRevealed = true
                         effects.cue(GameCue.REVEAL)
                     })
-                } else {
+                }
+                AnimatedVisibility(
+                    visible = isRevealed,
+                    enter = fadeIn(animationSpec = tween(320)) +
+                        scaleIn(initialScale = .94f, animationSpec = tween(420))
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     CinematicChallenge(turn.prompt.text, effects)
                     OutlinedButton(
                         onClick = { mediaOpen = !mediaOpen },
@@ -180,6 +190,7 @@ internal fun ExperienceScreen(group: Boolean) {
                             label = { Text("رد خاص… لو حابب") },
                             modifier = Modifier.fillMaxWidth(), minLines = 2)
                         LocalResponseMedia(current.round)
+                    }
                     }
                 }
                 if (isRevealed) {
