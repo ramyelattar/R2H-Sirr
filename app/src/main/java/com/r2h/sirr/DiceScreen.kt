@@ -71,9 +71,21 @@ internal fun DiceScreenV2() {
     }
     Page("سيبها على النرد", "3 نردات هتقرروا تعملوا إيه… خليك جاهز.") {
         MysteryHeader("مود الليلة", "مين قال إن الحظ بريء؟", "كل رمية بتفتح حكاية جديدة.", "◇")
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically) {
-            repeat(3){ i ->
-                MysteryDie((rolled?.getOrNull(i)?:i)+1,rolling,Modifier.weight(1f))
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            listOf("الفعل", "الفكرة", "الطريقة").forEachIndexed { index, label ->
+                Column(
+                    Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    MysteryDie((rolled?.getOrNull(index) ?: index) + 1, rolling, Modifier.fillMaxWidth())
+                    Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium)
+                }
             }
         }
         Text(if(rolling) "استنى المفاجأة…" else if(rolled==null) "اختار المود وارمي أول رمية." else "أهي الرمية اختارت لكم!",
@@ -149,19 +161,23 @@ internal fun DiceScreenV2() {
             }) { Text("رجّع الإعدادات الأصلية") }
         }
         }
-        rolled?.forEachIndexed { i, selectedFace ->
-            val face = dice[i][selectedFace]
-            Card(
-                Modifier.fillMaxWidth(),
-                shape=RoundedCornerShape(22.dp),
-                colors=CardDefaults.cardColors(containerColor=Color(0xFF2F1E2D))
-            ) {
-                Column(Modifier.padding(18.dp), verticalArrangement=Arrangement.spacedBy(9.dp)) {
-                    Text("✦  ${listOf("اعمل","إيه","إزاي")[i]}",
-                        color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelLarge)
-                    Text(face.text,style=MaterialTheme.typography.headlineSmall,color=Color.White)
+        if (rolled != null && !rolling) {
+            val outcome = requireNotNull(rolled)
+            val faces = outcome.mapIndexed { i, faceIndex -> dice[i][faceIndex] }
+            ChallengeRevealCard(faces.joinToString(" ") { it.text })
+            if (selected == Intensity.CUSTOM) {
+                faces.forEachIndexed { index, face ->
                     val bitmap = remember(face.imageId) { vault.readPhoto(face.imageId) }
-                    if (bitmap != null) Image(bitmap, contentDescription = "صورة الوجه", modifier = Modifier.fillMaxWidth().height(125.dp), contentScale = ContentScale.Fit)
+                    if (bitmap != null) {
+                        Text("الصورة اللي طلعت في النرد ${index + 1}",
+                            color = MaterialTheme.colorScheme.primary)
+                        Image(
+                            bitmap,
+                            contentDescription = "الصورة المختارة للنرد ${index + 1}",
+                            modifier = Modifier.fillMaxWidth().height(170.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
             }
         }
