@@ -12,6 +12,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import android.media.MediaPlayer
+import androidx.activity.ComponentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import android.net.Uri
 import com.r2h.sirr.core.EphemeralEnvelope
 import kotlinx.coroutines.delay
@@ -41,8 +44,18 @@ internal fun WhispersScreenV2() {
     var page by remember { mutableIntStateOf(-1) }
     var playing by remember { mutableStateOf(false) }
     val player = remember { MediaPlayer() }
-    DisposableEffect(Unit) {
+    // User-selected soundtrack must not continue playing after the app is backgrounded.
+    val activity = context as? ComponentActivity
+    DisposableEffect(activity, player) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                runCatching { if (player.isPlaying) player.pause() }
+                playing = false
+            }
+        }
+        activity?.lifecycle?.addObserver(observer)
         onDispose {
+            activity?.lifecycle?.removeObserver(observer)
             runCatching { player.stop() }
             runCatching { player.release() }
         }
