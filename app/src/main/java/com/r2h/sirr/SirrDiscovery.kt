@@ -130,3 +130,58 @@ internal fun DiscoveryTile(
         }
     }
 }
+
+
+/** Seven non-identical illustrated doors into the Egyptian quiz chapters. */
+@Composable
+internal fun QuizTopicTile(
+    number: Int,
+    title: String,
+    subtitle: String = "25 سؤال… وكل إجابة وراها حكاية",
+    onClick: () -> Unit
+) {
+    val hues = listOf(
+        Color(0xFFE5BC9A), Color(0xFFF1A9BD), Color(0xFFBDADEB),
+        Color(0xFFE3B7CD), Color(0xFFE5D7A5), Color(0xFFB9D6C9),
+        Color(0xFFECC5A2)
+    )
+    val accent = hues[(number - 1).coerceIn(0, hues.lastIndex)]
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+            .semantics { contentDescription = "الموضوع $number: $title. $subtitle" },
+        color = Color(0xFF251923),
+        shape = RoundedCornerShape(24.dp),
+        border = BorderStroke(1.dp, accent.copy(alpha=.30f))
+    ) {
+        Box(Modifier.fillMaxWidth().heightIn(min=122.dp)) {
+            Canvas(Modifier.matchParentSize()) {
+                val center = Offset(size.width*.16f,size.height*.39f)
+                val base = size.minDimension*.17f
+                drawCircle(accent.copy(alpha=.08f),base*2.5f,center)
+                for (i in 1..3) {
+                    drawCircle(accent.copy(alpha=.46f / i),base*(.65f+.44f*i),center,
+                        style=Stroke(width=1.8.dp.toPx()))
+                }
+                val end = Offset(size.width*.92f,size.height*.77f)
+                drawCircle(accent.copy(alpha=.38f),2.5.dp.toPx(),end)
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=22.dp),
+                verticalAlignment=Alignment.CenterVertically,
+                horizontalArrangement=Arrangement.spacedBy(16.dp)
+            ) {
+                Box(Modifier.size(57.dp),contentAlignment=Alignment.Center){
+                    Text(number.toString().padStart(2,'0'), color=accent,
+                        fontSize=27.sp, fontWeight=FontWeight.Bold)
+                }
+                Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)){
+                    Text(title,color=Color.White,style=MaterialTheme.typography.titleMedium,
+                        fontWeight=FontWeight.Bold)
+                    Text(subtitle,color=Color(0xFFD8C3CD),style=MaterialTheme.typography.bodySmall)
+                }
+                Text("‹",color=accent,fontSize=28.sp)
+            }
+        }
+    }
+}
