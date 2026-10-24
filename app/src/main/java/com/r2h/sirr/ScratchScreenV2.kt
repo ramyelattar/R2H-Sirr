@@ -28,7 +28,16 @@ internal fun ScratchScreenV2() {
     val context = LocalContext.current
     val vault = remember { LocalVault(context.applicationContext) }
     var stages by remember { mutableIntStateOf(1) }
-    val texts = remember { mutableStateListOf("رسالة خاصة تظهر بعد الكشف", "مفاجأة ثانية", "وهذه هي الخاتمة") }
+    val texts = remember { mutableStateListOf("في سر صغير مستني يتقال…", "المفاجأة لسه مخلصتش!", "إنت تستاهل مفاجأة على مزاجك ✦") }
+    var extras by remember { mutableStateOf(false) }
+    val ideas=remember { listOf(
+        "النهارده دورك تختار مغامرتنا الجاية!",
+        "لو عندك أمنية واحدة لليلتنا، هتختار إيه؟",
+        "في رسالة ليك: وجودك بيخلّي اللحظة أحلى.",
+        "جاهز لسؤال مش متوقع؟ إيه أكتر حاجة بتفرحك؟",
+        "المفاجأة اللي جاية… هتختارها إنت!",
+        "اختار أغنية ومحدش يسألك ليه."
+    ) }
     var photoId by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf(true) }
     var stage by remember { mutableIntStateOf(0) }
@@ -52,8 +61,18 @@ internal fun ScratchScreenV2() {
             close()
         }
     }
-    Page("اكشف اللي مستخبي", "امسح الغطا بإيدك… كل طبقة وراها حاجة مستخبية.") {
+    Page("اكشف اللي مستخبي", "مفيش طريقة تعرف اللي جاي… غير لما تكشفه بنفسك.") {
+        MysteryHeader("مفاجأة من ورا الستار", "جرّب تكتشف السر.", "مرّر صباعك على الغطا… وشوف اللي مستنيك.", "✦")
         if (editing) {
+            OutlinedButton(
+                onClick={
+                    val start=ideas.indices.random()
+                    repeat(3){ i->texts[i]=ideas[(start+i)%ideas.size] }
+                    stages=1
+                },
+                modifier=Modifier.fillMaxWidth()
+            ){Text("اختارلي سر جاهز ✦")}
+            Text("أو اكتب مفاجأة مخصوص:",color=MaterialTheme.colorScheme.onSurfaceVariant)
             Text("هتخبّي كام مفاجأة؟")
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 (1..3).forEach { n -> FilterChip(stages == n, onClick = { stages = n }, label = { Text("$n") }) }
@@ -61,11 +80,18 @@ internal fun ScratchScreenV2() {
             repeat(stages) { i ->
                 OutlinedTextField(texts[i], { texts[i] = it.take(280) }, label = { Text("السر المستخبي ${i+1}") }, minLines = 2, modifier = Modifier.fillMaxWidth())
             }
-            OutlinedButton(onClick = { pickPhoto.launch("image/*") }) { Text("حط صورة في الآخر") }
-            if (photoId != null) TextButton(onClick = { vault.delete(photoId); photoId = null }) { Text("امسح الصورة") }
-            Text("انتهاء العرض:")
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                listOf(3, 6, 24).forEach { hours -> FilterChip(ttlHours == hours, onClick = { ttlHours = hours }, label = { Text("$hours ساعات") }) }
+            OutlinedButton(onClick={extras=!extras},modifier=Modifier.fillMaxWidth()){
+                Text(if(extras)"اقفل الاختيارات الإضافية" else "ممكن تزود صورة أو تغيّر وقت العرض")
+            }
+            if(extras) {
+                OutlinedButton(onClick={pickPhoto.launch("image/*")}){Text("حط صورة في الآخر")}
+                if(photoId!=null)TextButton(onClick={vault.delete(photoId);photoId=null}){Text("امسح الصورة")}
+                Text("المفاجأة تفضل مفتوحة قد إيه؟")
+                Row(horizontalArrangement=Arrangement.spacedBy(7.dp)){
+                    listOf(3,6,24).forEach{hours->
+                        FilterChip(ttlHours==hours,onClick={ttlHours=hours},label={Text("$hours ساعات")})
+                    }
+                }
             }
             if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
             Button(enabled = texts.take(stages).all { it.isNotBlank() }, onClick = {
@@ -73,7 +99,8 @@ internal fun ScratchScreenV2() {
                 expiresAt = System.currentTimeMillis() + ttlHours * 3_600_000L
             }, modifier = Modifier.fillMaxWidth()) { Text("خبّي المفاجأة") }
         } else {
-            Text("الطبقة ${stage + 1} من $stages")
+            Text("ورا الغطا ${stage + 1} من $stages…",
+                style=MaterialTheme.typography.titleLarge,color=MaterialTheme.colorScheme.primary)
             key(reset, stage) {
                 ScratchPanel(texts[stage]) { stageRevealed = true }
             }
@@ -109,9 +136,10 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             if (x in 0..11 && y in 0..9) touched[y*12+x] = true
         }
     }
-    Text("تم كشف ${(coverage * 100).toInt().coerceAtMost(100)}٪ — استمر حتى ٥٥٪")
-    Box(Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(18.dp)), contentAlignment = Alignment.Center) {
-        Surface(color = Color(0xFF312B40), modifier = Modifier.fillMaxSize()) {
+    Text(if(revealed)"السر بان! ✦" else "امسح بإيدك لحد ما يظهر السر",
+        color=MaterialTheme.colorScheme.onSurfaceVariant)
+    Box(Modifier.fillMaxWidth().height(265.dp).clip(RoundedCornerShape(27.dp)),contentAlignment=Alignment.Center) {
+        Surface(color=Color(0xFF321B2B),modifier=Modifier.fillMaxSize()) {
             Box(Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
                 Text(hiddenText, color = Color.White, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge)
             }
@@ -122,7 +150,9 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             .pointerInput(Unit) { detectDragGestures(onDragStart = { touch(it) }, onDrag = { change, _ -> touch(change.position); change.consume() }) }
             .pointerInput(Unit) { detectTapGestures { touch(it) } }
         ) {
-            drawRect(Brush.linearGradient(listOf(Color(0xFFD0B58B), Color(0xFF65547C))))
+            drawRect(Brush.linearGradient(listOf(Color(0xFFDCB98D),Color(0xFF8C5169),Color(0xFF50283A))))
+            drawCircle(Color.White.copy(alpha=.1f),radius=size.minDimension*.3f,
+                center=Offset(size.width*.83f,size.height*.27f))
             drawPoints(points = points.toList(), pointMode = PointMode.Points, color = Color.Transparent,
                 strokeWidth = 48.dp.toPx(), cap = StrokeCap.Round, blendMode = BlendMode.Clear)
         }
