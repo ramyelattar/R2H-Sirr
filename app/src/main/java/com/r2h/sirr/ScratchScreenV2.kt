@@ -14,21 +14,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import kotlin.math.hypot
+import kotlin.math.ceil
 
 @Composable
 internal fun ScratchScreenV2() {
     val context = LocalContext.current
     val vault = remember { LocalVault(context.applicationContext) }
     var stages by remember { mutableIntStateOf(1) }
-    val texts = remember { mutableStateListOf("رسالة خاصة تظهر بعد الكشف", "مفاجأة ثانية", "وهذه هي الخاتمة") }
+    val texts = remember { mutableStateListOf("في سر صغير مستني يتقال…", "المفاجأة لسه مخلصتش!", "إنت تستاهل مفاجأة على مزاجك ✦") }
+    var extras by remember { mutableStateOf(false) }
+    val ideas=remember { listOf(
+        "النهارده دورك تختار مغامرتنا الجاية!",
+        "لو عندك أمنية واحدة لليلتنا، هتختار إيه؟",
+        "في رسالة ليك: وجودك بيخلّي اللحظة أحلى.",
+        "جاهز لسؤال مش متوقع؟ إيه أكتر حاجة بتفرحك؟",
+        "المفاجأة اللي جاية… هتختارها إنت!",
+        "اختار أغنية ومحدش يسألك ليه."
+    ) }
     var photoId by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf(true) }
     var stage by remember { mutableIntStateOf(0) }
@@ -52,66 +65,131 @@ internal fun ScratchScreenV2() {
             close()
         }
     }
-    Page("الكشط والكشف", "كشف فردي أو متتابع حتى ثلاث طبقات، مع رسالة وصورة نهائية اختيارية.") {
+    Page("اكشف اللي مستخبي", "مفيش طريقة تعرف اللي جاي… غير لما تكشفه بنفسك.") {
+        MysteryHeader("مفاجأة من ورا الستار", "جرّب تكتشف السر.", "مرّر صباعك على الغطا… وشوف اللي مستنيك.", "✦")
         if (editing) {
-            Text("عدد طبقات الكشف")
+            OutlinedButton(
+                onClick={
+                    val start=ideas.indices.random()
+                    repeat(3){ i->texts[i]=ideas[(start+i)%ideas.size] }
+                    stages=1
+                },
+                modifier=Modifier.fillMaxWidth()
+            ){Text("اختارلي سر جاهز ✦")}
+            Text("أو اكتب مفاجأة مخصوص:",color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("هتخبّي كام مفاجأة؟")
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 (1..3).forEach { n -> FilterChip(stages == n, onClick = { stages = n }, label = { Text("$n") }) }
             }
             repeat(stages) { i ->
-                OutlinedTextField(texts[i], { texts[i] = it.take(280) }, label = { Text("الرسالة المخفية ${i+1}") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(texts[i], { texts[i] = it.take(280) }, label = { Text("السر المستخبي ${i+1}") }, minLines = 2, modifier = Modifier.fillMaxWidth())
             }
-            OutlinedButton(onClick = { pickPhoto.launch("image/*") }) { Text("إضافة صورة نهائية") }
-            if (photoId != null) TextButton(onClick = { vault.delete(photoId); photoId = null }) { Text("حذف الصورة") }
-            Text("انتهاء العرض:")
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                listOf(3, 6, 24).forEach { hours -> FilterChip(ttlHours == hours, onClick = { ttlHours = hours }, label = { Text("$hours ساعات") }) }
+            OutlinedButton(onClick={extras=!extras},modifier=Modifier.fillMaxWidth()){
+                Text(if(extras)"اقفل الاختيارات الإضافية" else "ممكن تزود صورة أو تغيّر وقت العرض")
+            }
+            if(extras) {
+                OutlinedButton(onClick={pickPhoto.launch("image/*")}){Text("حط صورة في الآخر")}
+                if(photoId!=null)TextButton(onClick={vault.delete(photoId);photoId=null}){Text("امسح الصورة")}
+                Text("المفاجأة تفضل مفتوحة قد إيه؟")
+                Row(horizontalArrangement=Arrangement.spacedBy(7.dp)){
+                    listOf(3,6,24).forEach{hours->
+                        FilterChip(ttlHours==hours,onClick={ttlHours=hours},label={Text("$hours ساعات")})
+                    }
+                }
             }
             if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
             Button(enabled = texts.take(stages).all { it.isNotBlank() }, onClick = {
                 editing = false; stage = 0; stageRevealed = false; reset++
                 expiresAt = System.currentTimeMillis() + ttlHours * 3_600_000L
-            }, modifier = Modifier.fillMaxWidth()) { Text("إخفاء وبدء الكشط") }
+            }, modifier = Modifier.fillMaxWidth()) { Text("خبّي المفاجأة") }
         } else {
-            Text("الطبقة ${stage + 1} من $stages")
+            Text("ورا الغطا ${stage + 1} من $stages…",
+                style=MaterialTheme.typography.titleLarge,color=MaterialTheme.colorScheme.primary)
             key(reset, stage) {
                 ScratchPanel(texts[stage]) { stageRevealed = true }
             }
             if (stage < stages-1) {
-                Button(onClick = { stage++; stageRevealed = false; reset++ }, enabled = stageRevealed, modifier = Modifier.fillMaxWidth()) { Text("الطبقة التالية بعد إتمام الكشف") }
+                Button(onClick = { stage++; stageRevealed = false; reset++ }, enabled = stageRevealed, modifier = Modifier.fillMaxWidth()) { Text("اكشف اللي بعدها") }
             } else {
                 val photo = remember(photoId) { vault.readPhoto(photoId) }
-                if (photo != null && stageRevealed) Image(photo, contentDescription = "الصورة النهائية", modifier = Modifier.fillMaxWidth().height(180.dp), contentScale = ContentScale.Fit)
+                if (photo != null && stageRevealed) Image(photo, contentDescription = "المفاجأة الأخيرة", modifier = Modifier.fillMaxWidth().height(180.dp), contentScale = ContentScale.Fit)
             }
-            OutlinedButton(onClick = { stageRevealed = false; reset++ }, modifier = Modifier.fillMaxWidth()) { Text("إعادة الغطاء") }
-            TextButton(onClick = { close() }) { Text("إغلاق ومسح الصورة") }
+            OutlinedButton(onClick = { stageRevealed = false; reset++ }, modifier = Modifier.fillMaxWidth()) { Text("خبّيها تاني") }
+            TextButton(onClick = { close() }) { Text("اقفل وامسح الصورة") }
         }
     }
 }
 
 @Composable
 internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
-    val points = remember { mutableStateListOf<Offset>() }
-    val touched = remember { mutableStateMapOf<Int, Boolean>() }
+    val effects = rememberGameEffects()
+    val brushRadiusPx = with(LocalDensity.current) { 17.dp.toPx() }
+    val strokes = remember { mutableStateListOf<List<Offset>>() }
+    var savedPoints by remember { mutableIntStateOf(0) }
+    val cells = remember { BooleanArray(192) }
+    var coveredCells by remember { mutableIntStateOf(0) }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
     var alreadyRevealed by remember { mutableStateOf(false) }
-    val coverage = touched.size / 120f
-    val revealed = coverage >= 0.55f
-    LaunchedEffect(revealed) { if (revealed && !alreadyRevealed) { alreadyRevealed = true; onRevealed() } }
-    fun touch(p: Offset) {
-        val w = dimensions.width.toFloat(); val h = dimensions.height.toFloat()
-        if (w <= 0 || h <= 0 || p.x !in 0f..w || p.y !in 0f..h) return
-        if (points.size < 2300) points.add(p)
-        val col = (p.x / w * 12).toInt().coerceIn(0,11)
-        val row = (p.y / h * 10).toInt().coerceIn(0,9)
-        for (dx in -1..1) for (dy in -1..1) {
-            val x = col + dx; val y = row + dy
-            if (x in 0..11 && y in 0..9) touched[y*12+x] = true
+    // Coverage measures the same brush-sized trail that is visibly cleared.
+    // 16×12 cells are sampled along the line and inside the brush radius.
+    val coverage = (coveredCells / 192f).coerceIn(0f, 1f)
+    val revealed = coverage >= .58f
+    LaunchedEffect(revealed) {
+        if (revealed && !alreadyRevealed) {
+            alreadyRevealed = true
+            effects.cue(GameCue.REVEAL)
+            onRevealed()
         }
     }
-    Text("تم كشف ${(coverage * 100).toInt().coerceAtMost(100)}٪ — استمر حتى ٥٥٪")
-    Box(Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(18.dp)), contentAlignment = Alignment.Center) {
-        Surface(color = Color(0xFF312B40), modifier = Modifier.fillMaxSize()) {
+    fun mark(center: Offset) {
+        val w = dimensions.width.toFloat()
+        val h = dimensions.height.toFloat()
+        if (w < 1f || h < 1f) return
+        // The brush width and hit testing both scale in density-independent
+        // physical pixels; clamp the edge so swiping outside has no effect.
+        if (center.x < 0f || center.y < 0f || center.x > w || center.y > h) return
+        val radius = brushRadiusPx
+        val startX = ((center.x - radius) / w * 16).toInt().coerceIn(0, 15)
+        val endX = ((center.x + radius) / w * 16).toInt().coerceIn(0, 15)
+        val startY = ((center.y - radius) / h * 12).toInt().coerceIn(0, 11)
+        val endY = ((center.y + radius) / h * 12).toInt().coerceIn(0, 11)
+        for (y in startY..endY) for (x in startX..endX) {
+            val midX = (x + .5f) * w / 16f
+            val midY = (y + .5f) * h / 12f
+            val dx = midX - center.x
+            val dy = midY - center.y
+            val index = y * 16 + x
+            if (dx * dx + dy * dy <= radius * radius && !cells[index]) {
+                cells[index] = true
+                coveredCells++
+            }
+        }
+    }
+    fun begin(p: Offset) {
+        if (savedPoints < 2400) { strokes.add(listOf(p)); savedPoints++ }
+        mark(p)
+    }
+    fun append(p: Offset) {
+        val previous = strokes.lastOrNull()?.lastOrNull()
+        if (previous == null) { begin(p); return }
+        val dx = p.x - previous.x
+        val dy = p.y - previous.y
+        val distance = hypot(dx, dy)
+        if (distance < 1f) return
+        val count = ceil(distance / 7f).toInt().coerceIn(1, 180)
+        for (i in 1..count) {
+            val t = i.toFloat() / count
+            mark(Offset(previous.x + dx * t, previous.y + dy * t))
+        }
+        if (savedPoints < 2400 && strokes.isNotEmpty()) {
+            strokes[strokes.lastIndex] = strokes.last() + p
+            savedPoints++
+        }
+    }
+    Text(if(revealed) "السر بان! ✦" else "امسح بإيدك لحد ما يظهر السر — ${(coverage * 100).toInt()}٪",
+        color=MaterialTheme.colorScheme.onSurfaceVariant)
+    Box(Modifier.fillMaxWidth().height(265.dp).clip(RoundedCornerShape(27.dp)),contentAlignment=Alignment.Center) {
+        Surface(color=Color(0xFF321B2B),modifier=Modifier.fillMaxSize()) {
             Box(Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
                 Text(hiddenText, color = Color.White, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge)
             }
@@ -119,13 +197,46 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
         if (!revealed) Canvas(Modifier.fillMaxSize()
             .onSizeChanged { dimensions = it }
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .pointerInput(Unit) { detectDragGestures(onDragStart = { touch(it) }, onDrag = { change, _ -> touch(change.position); change.consume() }) }
-            .pointerInput(Unit) { detectTapGestures { touch(it) } }
+            .pointerInput(dimensions) {
+                detectDragGestures(
+                    onDragStart = { begin(it) },
+                    onDrag = { change, _ ->
+                        append(change.position)
+                        change.consume()
+                    }
+                )
+            }
+            .pointerInput(dimensions) { detectTapGestures { begin(it) } }
         ) {
-            drawRect(Brush.linearGradient(listOf(Color(0xFFD0B58B), Color(0xFF65547C))))
-            drawPoints(points = points.toList(), pointMode = PointMode.Points, color = Color.Transparent,
-                strokeWidth = 48.dp.toPx(), cap = StrokeCap.Round, blendMode = BlendMode.Clear)
+            drawRect(Brush.linearGradient(listOf(Color(0xFFDCB98D),Color(0xFF8C5169),Color(0xFF50283A))))
+            drawCircle(Color.White.copy(alpha=.1f),radius=size.minDimension*.3f,
+                center=Offset(size.width*.83f,size.height*.27f))
+            for (i in 0..19) {
+                val x = (i*41 % 97) / 97f * size.width
+                val y = (i*73 % 97) / 97f * size.height
+                drawCircle(
+                    color = Color(0xFFFFEDCF).copy(alpha = if(i%2==0) .38f else .2f),
+                    radius = (if(i%3==0) 2.3f else 1.3f).dp.toPx(),
+                    center = Offset(x, y)
+                )
+            }
+            // Keep the visual clearing as connected lines rather than isolated dots.
+            strokes.forEach { stroke ->
+                if (stroke.isNotEmpty()) {
+                    val path = Path().apply {
+                        moveTo(stroke.first().x, stroke.first().y)
+                        if (stroke.size == 1) {
+                            lineTo(stroke.first().x + .1f, stroke.first().y)
+                        } else {
+                            stroke.drop(1).forEach { lineTo(it.x, it.y) }
+                        }
+                    }
+                    drawPath(path, color = Color.Transparent, style = Stroke(
+                        width = 34.dp.toPx(), cap = StrokeCap.Round
+                    ), blendMode = BlendMode.Clear)
+                }
+            }
         }
     }
-    if (revealed) Text("اكتمل الكشف", color = MaterialTheme.colorScheme.primary)
+    if (revealed) Text("بان السر!", color = MaterialTheme.colorScheme.primary)
 }

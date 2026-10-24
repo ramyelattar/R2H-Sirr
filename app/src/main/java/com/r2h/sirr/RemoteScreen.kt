@@ -12,6 +12,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -109,7 +111,7 @@ private class RemoteTransport(private val client:OkHttpClient) {
         val address=id.server.replaceFirst("https://","wss://")+"/ws"
         ws=client.newWebSocket(Request.Builder().url(address).build(),object:WebSocketListener(){
             override fun onOpen(webSocket:WebSocket,response:Response){
-                webSocket.send(JSONObject().put("type","authenticate").put("roomId",id.roomId).put("auth",id.auth).put("contentVersion",3).put("protocolVersion",4).toString())
+                webSocket.send(JSONObject().put("type","authenticate").put("roomId",id.roomId).put("auth",id.auth).put("contentVersion",4).put("protocolVersion",4).toString())
             }
             override fun onMessage(webSocket:WebSocket,text:String){
                 val data=runCatching{JSONObject(text)}.getOrNull()?:return
@@ -271,6 +273,9 @@ internal fun RemoteScreen(){
     var level by remember{mutableStateOf(Intensity.SOFT)}
     var remoteRounds by remember{mutableIntStateOf(10)}
     var remoteVariety by remember{mutableStateOf("ONE_LEVEL")}
+    var newRoomExtras by remember{mutableStateOf(false)}
+    var lobbyExtras by remember{mutableStateOf(false)}
+    var actorExtras by remember{mutableStateOf(false)}
     var busy by remember{mutableStateOf(false)};var status by remember{mutableStateOf("")}
     val remoteStore=remember{RemoteSessionStorage(LocalVault(context.applicationContext))}
     var identity by remember{mutableStateOf<RemoteIdentity?>(null)}
@@ -326,33 +331,42 @@ internal fun RemoteScreen(){
             if(s.optString("status") in listOf("ENDED","REVOKED","EXPIRED")) remoteStore.clear()
         },{msg->status=msg})
     }.onFailure{status=it.message?:"فشل الاتصال"}}
-    Page("جلسة خاصة عبر الإنترنت","ملفات مشفرة بمفتاح الدعوة، واختبارات مقارنة بين جهازين. يتطلب خادم HTTPS مستقلًا."){
+    Page("العبوا من بعيد","المسافة مش هتمنعكم تلعبوا سوا. محتاجين سيرفر HTTPS خاص."){
+        MysteryHeader("مع بعض… حتى من بعيد","افتحوا أوضة ليكم وبس.","ابعت الدعوة للي هيلعب، وخليكوا على راحتكم.","↗")
         EffectPreferencesPanel(effects)
         if(identity==null){
-            Text("أدخل عنوان خادم سِرّ الخاص بك. لا توجد خدمة عامة مفعلة.",color=Color.LightGray)
-            OutlinedTextField(server,{server=it.take(180)},label={Text("عنوان HTTPS")},modifier=Modifier.fillMaxWidth())
-            OutlinedTextField(name,{name=it.take(32)},label={Text("الاسم المستعار")},modifier=Modifier.fillMaxWidth())
+            Text("مفيش سيرفر عام شغال حاليًا. اكتب عنوان سيرفرك الآمن الأول.",color=Color.LightGray)
+            OutlinedTextField(server,{server=it.take(180)},label={Text("عنوان السيرفر الآمن HTTPS")},modifier=Modifier.fillMaxWidth())
+            OutlinedTextField(name,{name=it.take(32)},label={Text("اسمك في اللعبة")},modifier=Modifier.fillMaxWidth())
             Row{FilterChip(mode=="couple",{mode="couple"},label={Text("شريكان")});Spacer(Modifier.width(8.dp));
                 FilterChip(mode=="party",{mode="party"},label={Text("مجموعة")})}
-            Intensity.entries.filter{it!=Intensity.CUSTOM}.forEach{option->
-                FilterChip(level==option,{level=option},label={Text(option.arabic)})
+            Text("اختاروا المود",style=MaterialTheme.typography.titleMedium)
+            Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)){
+                Intensity.entries.filter{it!=Intensity.CUSTOM}.forEach{option->
+                    FilterChip(level==option,{level=option},label={Text(option.arabic)})
+                }
             }
-            Text("عدد الجولات",style=MaterialTheme.typography.titleMedium)
-            Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) { listOf(6,10,12,18).forEach{n->
-                FilterChip(remoteRounds==n,{remoteRounds=n},label={Text("$n")})
-            } }
-            Row(verticalAlignment=Alignment.CenterVertically) {
-                Checkbox(remoteVariety=="MIX_LOWER",{remoteVariety=if(it)"MIX_LOWER" else "ONE_LEVEL"})
-                Text("تنويع التحديات من المستوى الأقل أيضًا")
+            OutlinedButton(onClick={newRoomExtras=!newRoomExtras},modifier=Modifier.fillMaxWidth()){
+                Text(if(newRoomExtras)"اقفل اختيارات الجولات" else "عايز تختار عدد الجولات والتنوع؟")
+            }
+            if(newRoomExtras){
+                Text("كام جولة؟",style=MaterialTheme.typography.titleMedium)
+                Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
+                    listOf(6,10,12,18).forEach{n->FilterChip(remoteRounds==n,{remoteRounds=n},label={Text("$n")})}
+                }
+                Row(verticalAlignment=Alignment.CenterVertically) {
+                    Checkbox(remoteVariety=="MIX_LOWER",{remoteVariety=if(it)"MIX_LOWER" else "ONE_LEVEL"})
+                    Text("نوّع مع المود الأقل")
+                }
             }
             Button(enabled=name.isNotBlank()&&server.startsWith("https://")&&!busy,onClick={
                 busy=true;transport.create(server,name.trim(),mode,level,remoteRounds,remoteVariety,::received)
-            },modifier=Modifier.fillMaxWidth()){Text("إنشاء جلسة")}
+            },modifier=Modifier.fillMaxWidth()){Text("افتح أوضة خاصة ✦")}
             HorizontalDivider()
-            OutlinedTextField(link,{link=it.take(1200)},label={Text("رابط الدعوة الكامل")},modifier=Modifier.fillMaxWidth())
+            OutlinedTextField(link,{link=it.take(1200)},label={Text("لينك الدعوة")},modifier=Modifier.fillMaxWidth())
             Button(enabled=link.startsWith("https://")&&name.isNotBlank()&&!busy,onClick={
                 busy=true;transport.join(link,name.trim(),::received)
-            },modifier=Modifier.fillMaxWidth()){Text("الانضمام")}
+            },modifier=Modifier.fillMaxWidth()){Text("ادخل الأوضة")}
         }else{
             val id=identity!!
             Text(status,color=Color.LightGray)
@@ -368,16 +382,20 @@ internal fun RemoteScreen(){
                 val roomStatus=snapshot.optString("status")
                 val members=snapshot.getJSONArray("participants").let{array->(0 until array.length()).map{array.getJSONObject(it)}}
                 val mine=members.find{it.optString("id")==id.participantId}
-                Text(when(roomStatus){"WAITING"->"في انتظار المشاركين";"ACTIVE"->"الجلسة جارية";
+                Text(when(roomStatus){"WAITING"->"مستنيين اللي هيلعبوا";"ACTIVE"->"الجلسة جارية";
                     "ENDED"->"انتهت الجلسة";"EXPIRED"->"انتهت صلاحيتها";"REVOKED"->"ملغاة";else->roomStatus},
                     style=MaterialTheme.typography.titleLarge)
                 members.forEach{Text("${it.optString("name")}: ${it.optInt("score")} نقطة — ${if(it.optBoolean("connected"))"متصل" else "غير متصل"} — ${if(it.optBoolean("consent"))"موافق" else "بانتظار الموافقة"}")}
                 Text("نظام الجولات: ${snapshot.optInt("maxRounds")} — ${if(snapshot.optString("variety")=="MIX_LOWER")"تنويع مستويين" else "مستوى واحد"}",color=Color.LightGray)
                 if(roomStatus=="WAITING"){
-                    Text("الضيوف يراجعون الإعدادات قبل الموافقة؛ بعدها يتم قفل التعديل.",color=Color.LightGray)
+                    Text("اللي داخل معاك بيشوف الإعدادات قبل ما يوافق. بعدها بتتقفل.",color=Color.LightGray)
                     val hostCanEdit=mine?.optBoolean("host")==true && members.none{!it.optBoolean("host")&&it.optBoolean("consent")}
                     if(hostCanEdit){
-                        Text("ضبط الجولات قبل موافقة الضيوف")
+                        OutlinedButton(onClick={lobbyExtras=!lobbyExtras},modifier=Modifier.fillMaxWidth()){
+                            Text(if(lobbyExtras)"اقفل تجهيزات الأوضة" else "عايز تغيّر الجولات أو تضيف تحديات؟")
+                        }
+                        if(lobbyExtras){
+                        Text("ظبّط اللعب قبل ما الباقي يوافق")
                         Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
                             listOf(6,10,12,18).forEach{n->FilterChip(lobbyRounds==n,{lobbyRounds=n},label={Text("$n")})}
                         }
@@ -394,10 +412,11 @@ internal fun RemoteScreen(){
                         Text("${customLines.size} من ٢٠ تحديًا. الطول من ٦ إلى ٢٠٠ حرف، دون تكرار.")
                         Button(enabled=valid,onClick={runCatching{transport.configure(lobbyRounds,lobbyVariety,lobbyLevel,customLines)}
                             .onSuccess{status="أُرسلت الإعدادات والتحديات المشفرة للغرفة"}
-                            .onFailure{status="تعذر إرسال الإعدادات: ${it.message}"}}){Text("اعتماد إعدادات الغرفة")}
+                            .onFailure{status="تعذر إرسال الإعدادات: ${it.message}"}}){Text("احفظ التعديلات")}
+                        }
                     }
-                    if(mine?.optBoolean("consent")==false)Button(onClick={transport.action("consent",JSONObject().put("value",true))}){Text("أوافق على المشاركة")}
-                    if(mine?.optBoolean("host")==true)Button(onClick={transport.action("start")},enabled=members.size>=2&&members.all{it.optBoolean("consent")&&it.optBoolean("connected")}){Text("ابدأ الجولات")}
+                    if(mine?.optBoolean("consent")==false)Button(onClick={transport.action("consent",JSONObject().put("value",true))}){Text("أنا موافق ألعب")}
+                    if(mine?.optBoolean("host")==true)Button(onClick={transport.action("start")},enabled=members.size>=2&&members.all{it.optBoolean("consent")&&it.optBoolean("connected")}){Text("يلا نبدأ الجولات ✦")}
                 }
                 if(roomStatus=="ACTIVE"){
                     val total=snapshot.optInt("maxRounds").coerceAtLeast(1)
@@ -412,9 +431,13 @@ internal fun RemoteScreen(){
                     }
                     CinematicChallenge(prompt,effects)
                     if(snapshot.optString("actorId")==id.participantId){
-                        OutlinedTextField(draft,{draft=it.take(500)},label={Text("رسالة مشفرة طرفيًا للمشاركين")},modifier=Modifier.fillMaxWidth())
-                        OutlinedButton(enabled=draft.isNotBlank(),onClick={runCatching{transport.privateMessage(draft)}.onFailure{status="فشل تشفير الرسالة"};draft=""}){Text("إرسال رد")}
-                        OutlinedButton(onClick={filePicker.launch("*/*")}){Text("إرسال صورة أو صوت أو فيديو مشفر (حتى ٤٨MB)")}
+                        OutlinedTextField(draft,{draft=it.take(500)},label={Text("قول اللي عندك… الرسالة مشفّرة")},modifier=Modifier.fillMaxWidth())
+                        OutlinedButton(enabled=draft.isNotBlank(),onClick={runCatching{transport.privateMessage(draft)}.onFailure{status="فشل تشفير الرسالة"};draft=""}){Text("ابعت الرسالة")}
+                        OutlinedButton(onClick={actorExtras=!actorExtras},modifier=Modifier.fillMaxWidth()){
+                            Text(if(actorExtras)"اقفل الإضافات" else "ابعت صورة أو همسة مخصوص")
+                        }
+                        if(actorExtras){
+                        OutlinedButton(onClick={filePicker.launch("*/*")}){Text("ابعت صورة أو صوت أو فيديو مشفّر")}
                         OutlinedButton(onClick={transport.resumeUpload(context.applicationContext){status=it}}){Text("استئناف ملف كبير متوقف")}
                         OutlinedButton(onClick={transport.cancelUpload();status="تم طلب إلغاء الرفع"}){Text("إلغاء رفع ملف كبير")}
                         HorizontalDivider()
@@ -445,8 +468,11 @@ internal fun RemoteScreen(){
                             Text("يتسلمها الشريك مرة واحدة. لا تُحفظ نسخة قابلة للفتح مجددًا على الخادم.",
                                 style=MaterialTheme.typography.bodySmall,color=Color.LightGray)
                         }
-                        Button(onClick={effects.cue(GameCue.SUCCESS);transport.action("complete")}){Text("أكملت التحدي")}
-                        OutlinedButton(onClick={effects.cue(GameCue.SKIP);transport.action("skip")}){Text("تخطي")}
+                        }
+                        Button(onClick={effects.cue(GameCue.SUCCESS);transport.action("complete")},modifier=Modifier.fillMaxWidth()){
+                            Text("خلصت التحدي ✦")
+                        }
+                        OutlinedButton(onClick={effects.cue(GameCue.SKIP);transport.action("skip")}){Text("مش دلوقتي… عدّي")}
                     }
                     snapshot.optJSONArray("messages")?.let{messages->repeat(messages.length()){i->
                         val m=messages.getJSONObject(i)
@@ -468,7 +494,7 @@ internal fun RemoteScreen(){
                 }
                 if(roomStatus=="WAITING"||roomStatus=="ACTIVE"){
                     RemoteQuizPanel(snapshot,id,transport)
-                    TextButton(onClick={transport.action("leave")}){Text("إنهاء الجلسة للجميع")}
+                    TextButton(onClick={transport.action("leave")}){Text("نوقف اللعب لكل الناس")}
                     if(mine?.optBoolean("host")==true)TextButton(onClick={transport.action("revoke")}){Text("إلغاء الدعوة")}
                 }
             }

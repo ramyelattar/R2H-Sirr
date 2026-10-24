@@ -12,8 +12,8 @@ function prepared(mode='couple') {
  const guest=join(room,room.invite,'الشريك',1010);guest.connected=true;act(room,guest,'consent',{value:true});act(room,host,'start');
  return {room,host,guest};
 }
-test('content v3: 230 original Arabic prompts, unique per scope and level, 175 varied questions',()=>{
- assert.equal(quizzes.version,3);assert.equal(catalog.version,3);
+test('content v4: 230 original Arabic prompts, unique per scope and level, 175 varied questions',()=>{
+ assert.equal(quizzes.version,4);assert.equal(catalog.version,4);
  assert.equal(quizzes.packs.length,7);assert.ok(quizzes.packs.every(p=>p.questions.length===25));
  const qtexts=quizzes.packs.flatMap(p=>p.questions.map(q=>q.text));
  assert.equal(qtexts.length,175);assert.equal(new Set(qtexts).size,175);

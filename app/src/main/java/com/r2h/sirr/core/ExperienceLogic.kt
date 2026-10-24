@@ -3,7 +3,7 @@ package com.r2h.sirr.core
 import kotlin.random.Random
 
 enum class Intensity(val arabic: String) {
-    SOFT("هادئ"), NORMAL("متوازن"), SEXY("جريء"), HOT("أكثر جرأة"), HARD("تحديات متقدمة"), CUSTOM("مخصص")
+    SOFT("على الهادي"), NORMAL("كلام قريب"), SEXY("جريء"), HOT("نار شوية"), HARD("من الآخر"), CUSTOM("بتاعي")
 }
 
 data class Challenge(val id: String, val level: Intensity, val text: String)
@@ -49,7 +49,7 @@ data class LocalGame(
 }
 
 enum class ChallengeVariety(val arabic: String) {
-    ONE_LEVEL("مستوى واحد"), MIX_WITH_LOWER("تنويع مع المستوى الأقل")
+    ONE_LEVEL("مود واحد"), MIX_WITH_LOWER("مفاجآت من مودين")
 }
 
 object SessionFactory {
@@ -71,8 +71,14 @@ object SessionFactory {
         }
         fun prioritize(items: List<Challenge>): List<Challenge> {
             val unique = items.distinctBy { it.text }
-            return unique.filterNot { it.id in recentlySeen || it.text in recentlySeen }.shuffled(random) +
-                unique.filter { it.id in recentlySeen || it.text in recentlySeen }.shuffled(random)
+            fun freshFirst(pool: List<Challenge>): List<Challenge> {
+                val featured = pool.filter {
+                    (it.id.substringAfterLast('-').toIntOrNull() ?: 999) in 1..10
+                }
+                return featured.shuffled(random) + pool.filterNot { it in featured }.shuffled(random)
+            }
+            return freshFirst(unique.filterNot { it.id in recentlySeen || it.text in recentlySeen }) +
+                freshFirst(unique.filter { it.id in recentlySeen || it.text in recentlySeen })
         }
         val selection = when {
             level == Intensity.CUSTOM -> (customs.shuffled(random) +
@@ -104,7 +110,7 @@ data class DiceConfiguration(val dice: List<List<DieFace>>, val durationSeconds:
     fun validate() {
         require(dice.size == 3 && dice.all { die -> die.size == 6 && die.sumOf { it.weight } == 100 &&
             die.all { it.weight >= 0 && it.text.length <= 72 } })
-        require(durationSeconds in listOf(5, 7, 10, 13, 20))
+        require(durationSeconds in listOf(2, 3, 5, 7, 10, 13, 20))
     }
     fun roll(pick: (Int) -> Int = { Random.nextInt(it) }): List<Int> {
         validate()
@@ -113,17 +119,32 @@ data class DiceConfiguration(val dice: List<List<DieFace>>, val durationSeconds:
 }
 
 object DiceCatalog {
+    /** Three face groups: إعمل إيه / عن إيه / إزاي. Every preset uses Egyptian Arabic. */
     private val base = listOf(
-        listOf("قل", "اسأل", "اقترح", "اختر", "اعترف", "شارك"),
-        listOf("مجاملة", "أمنية", "ذكرى", "رسالة", "سؤالًا", "فكرة"),
-        listOf("بهدوء", "بصراحة", "بابتسامة", "في دقيقة", "بثلاث كلمات", "الآن")
+        listOf("قول", "اسأل عن", "اقترح", "اختار", "احكي", "اكتب"),
+        listOf("مجاملة", "أمنية", "ذكرى", "رسالة", "سؤال", "مفاجأة"),
+        listOf("على الهادي", "بصراحة", "بابتسامة", "في دقيقة", "بـ٣ كلمات", "دلوقتي")
     )
     private val variations = mapOf(
         Intensity.SOFT to base,
-        Intensity.NORMAL to listOf(base[0], listOf("ذكرى", "تفضيلًا", "مجاملة", "رغبة", "سرًا صغيرًا", "سؤالًا"), base[2]),
-        Intensity.SEXY to listOf(listOf("غازل", "صارح", "همس", "اكتب", "اسأل", "اختر"), listOf("إطراء", "رسالة حب", "تفضيلًا", "لحظة قرب", "فكرة رومانسية", "أمنية"), base[2]),
-        Intensity.HOT to listOf(listOf("صارح", "اسأل", "اقترح", "غازل", "تبادل", "صف"), listOf("حدًا شخصيًا", "تفضيلًا خاصًا", "سؤالًا جريئًا", "رسالة سرية", "موقف انجذاب", "فكرة جديدة"), base[2]),
-        Intensity.HARD to listOf(listOf("ناقش", "اسأل", "شارك", "أفصح", "اختر", "اكتب"), listOf("حدودك", "توقعاتك", "تفضيلًا", "فكرة حميمة", "كلمة أمان", "رسالة خاصة"), base[2]),
+        Intensity.NORMAL to listOf(
+            base[0], listOf("ذكرى", "حاجة بتحبها", "مجاملة", "رغبة لطيفة", "سر صغير", "سؤال مختلف"), base[2]
+        ),
+        Intensity.SEXY to listOf(
+            listOf("غازل", "قول", "اهمس", "اكتب", "اسأل عن", "اختار"),
+            listOf("مجاملة جريئة", "رسالة غزل", "حاجة بتشدك", "لحظة قُرب", "فكرة رومانسية", "أمنية"),
+            base[2]
+        ),
+        Intensity.HOT to listOf(
+            listOf("صارح", "اسأل عن", "اقترح", "غازل", "اتكلم عن", "اوصف"),
+            listOf("حد شخصي", "تفضيل خاص", "سؤال جريء", "رسالة سرّية", "موقف إعجاب", "فكرة جديدة"),
+            base[2]
+        ),
+        Intensity.HARD to listOf(
+            listOf("اتكلم عن", "اسأل عن", "شارك", "قول", "اختار", "اكتب"),
+            listOf("حدودك", "توقعاتك", "تفضيلك", "حاجة خاصة", "كلمة أمان", "رسالة من قلبك"),
+            base[2]
+        ),
         Intensity.CUSTOM to base
     )
     fun preset(intensity: Intensity) = DiceConfiguration(variations.getValue(intensity).map { labels ->
