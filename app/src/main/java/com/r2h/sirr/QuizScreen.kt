@@ -187,13 +187,16 @@ internal fun QuizScreenV2() {
                         }
                     }
                 }
-                Button(
-                    onClick = { if (revealStep < selectedIndices.lastIndex) revealStep++ },
-                    enabled = revealStep < selectedIndices.lastIndex,
-                    shape = RoundedCornerShape(17.dp),
-                    modifier = Modifier.fillMaxWidth().height(54.dp)
-                ) {
-                    Text(if (revealStep < selectedIndices.lastIndex) "اكشف السؤال اللي بعده ✦" else "خلصنا الأسرار")
+                if (revealStep < selectedIndices.lastIndex) {
+                    Button(
+                        onClick = { revealStep++ },
+                        shape = RoundedCornerShape(17.dp),
+                        modifier = Modifier.fillMaxWidth().height(54.dp)
+                    ) { Text("اكشف السؤال اللي بعده ✦") }
+                } else {
+                    Text("✦  كل حكاية بتبدأ بسؤال… عايزين جولة تانية؟",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary)
                 }
                 OutlinedButton(
                     onClick = {
