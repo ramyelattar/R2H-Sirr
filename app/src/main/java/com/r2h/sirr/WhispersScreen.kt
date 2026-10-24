@@ -57,36 +57,36 @@ internal fun WhispersScreenV2() {
         if (remaining > 0) delay(remaining)
         clear()
     }
-    Page("الهمسات الخاصة", "ثلاث رسائل وصورة وتوقيع. تُعرض مرة واحدة محليًا مع انتهاء صلاحية تلقائي.") {
+    Page("همسة ليك وبس", "3 همسات ورا بعض… وفي الآخر ممكن تخبّي صورة مخصوص.") {
         if (page == -1) {
-            OutlinedTextField(sender, { sender = it.take(35) }, label = { Text("اسم المُرسل (اختياري)") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(receiver, { receiver = it.take(35) }, label = { Text("اسم المُستقبل (اختياري)") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(sender, { sender = it.take(35) }, label = { Text("من مين؟ (اختياري)") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(receiver, { receiver = it.take(35) }, label = { Text("لمين؟ (اختياري)") }, modifier = Modifier.fillMaxWidth())
             repeat(3) { index ->
                 OutlinedTextField(messages[index], { messages[index] = it.take(350) }, label = { Text("الهمسة ${index + 1}") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
             }
-            OutlinedTextField(signature, { signature = it.take(80) }, label = { Text("التوقيع (اختياري)") }, modifier = Modifier.fillMaxWidth())
-            Text("تنتهي صلاحية العرض بعد:")
+            OutlinedTextField(signature, { signature = it.take(80) }, label = { Text("توقيعك (اختياري)") }, modifier = Modifier.fillMaxWidth())
+            Text("المفاجأة تفضل متاحة قد إيه؟")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(3,6,24).forEach { value -> FilterChip(ttlHours == value, onClick = { ttlHours = value }, label = { Text("$value ساعات") }) }
             }
-            OutlinedButton(onClick = { pickPhoto.launch("image/*") }) { Text(if (photoId == null) "إضافة صورة ختامية" else "تغيير الصورة") }
-            if (photoId != null) TextButton(onClick = { vault.delete(photoId); photoId = null }) { Text("حذف الصورة") }
-            OutlinedButton(onClick = { pickAudio.launch("audio/*") }) { Text("اختيار ملف موسيقى محلي (دون تشغيل آلي)") }
+            OutlinedButton(onClick = { pickPhoto.launch("image/*") }) { Text(if (photoId == null) "حط صورة في الآخر" else "غيّر الصورة") }
+            if (photoId != null) TextButton(onClick = { vault.delete(photoId); photoId = null }) { Text("امسح الصورة") }
+            OutlinedButton(onClick = { pickAudio.launch("audio/*") }) { Text("اختار أغنية من موبايلك") }
             if (audioUri != null) {
                 OutlinedButton(onClick = {
                     runCatching {
                         if (playing) { player.stop(); player.reset(); playing = false }
                         else { player.reset(); player.setDataSource(context, Uri.parse(requireNotNull(audioUri))); player.prepare(); player.start(); playing = true }
-                    }.onFailure { error = "تعذر تشغيل الملف الصوتي"; playing = false }
-                }) { Text(if (playing) "إيقاف معاينة الصوت" else "معاينة الموسيقى المحلية") }
-                Text("الموسيقى للمعاينة داخل الهاتف فقط، ولا تُشارك عن بُعد.", color = Color.LightGray)
+                    }.onFailure { error = "الأغنية مش راضية تشتغل"; playing = false }
+                }) { Text(if (playing) "وقّف الأغنية" else "اسمع الأغنية") }
+                Text("الأغنية هنا على الموبايل بس، مش بتتبعت.", color = Color.LightGray)
             }
             if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
             Button(enabled = messages.all { it.isNotBlank() }, onClick = {
                 val now = System.currentTimeMillis()
                 envelope = EphemeralEnvelope(now, now + ttlHours * 3_600_000L)
                 page = 0
-            }, modifier = Modifier.fillMaxWidth()) { Text("بدء العرض مرة واحدة") }
+            }, modifier = Modifier.fillMaxWidth()) { Text("خلّي السر يتفتح") }
         } else if (page < 3) {
             if (receiver.isNotBlank()) Text("إلى $receiver", color = MaterialTheme.colorScheme.primary)
             Text("الرسالة ${page + 1} من ٣")
@@ -94,16 +94,16 @@ internal fun WhispersScreenV2() {
             Button(onClick = {
                 messages[page] = "" // Destroy each message immediately after advancing.
                 page++
-            }) { Text(if (page == 2) "إظهار الخاتمة" else "الرسالة التالية") }
-            TextButton(onClick = { clear() }) { Text("إلغاء ومسح المحتوى") }
+            }) { Text(if (page == 2) "ورّيني المفاجأة" else "الهمسة اللي بعدها") }
+            TextButton(onClick = { clear() }) { Text("اقفل وامسح") }
         } else {
-            Text("انتهى العرض", style = MaterialTheme.typography.titleLarge)
+            Text("ده كان آخر سر", style = MaterialTheme.typography.titleLarge)
             if (sender.isNotBlank()) Text("من: $sender")
             if (signature.isNotBlank()) Text(signature)
             val photo = remember(photoId) { vault.readPhoto(photoId) }
             if (photo != null) Image(photo, contentDescription = "الصورة الختامية", modifier = Modifier.fillMaxWidth().height(260.dp), contentScale = ContentScale.Fit)
-            Text("عند الضغط على الإغلاق، تُمسح كل بيانات هذه التجربة من الذاكرة المحلية.", color = Color.LightGray)
-            Button(onClick = { clear() }) { Text("إغلاق ومسح نهائي") }
+            Text("لما تقفل، الرسائل والصورة هيتمسحوا من الجلسة دي.", color = Color.LightGray)
+            Button(onClick = { clear() }) { Text("اقفل وامسح السر") }
         }
     }
 }
