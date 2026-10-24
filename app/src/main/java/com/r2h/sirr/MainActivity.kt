@@ -334,11 +334,10 @@ private fun HomeScreen(onGo: (String) -> Unit) {
                 ) { Text("يلا نبدأ", fontWeight = FontWeight.Bold) }
             }
         }
-        Text("إنتوا في مود إيه؟", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Gold)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            SmallMode("لَمّة صحاب", "ضحك ومفاجآت", "✳", Color(0xFF38304D), Modifier.weight(1f)) { onGo("party") }
-            SmallMode("من بعيد", "محتاج سيرفر آمن خاص", "↗", Color(0xFF4A2638), Modifier.weight(1f)) { onGo("remote") }
-        }
+        Text("لَمّة صحاب؟", style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold, color = Gold)
+        SmallMode("اللّمة ليها حكاية", "ضحك ومفاجآت لكل اللي معاك", "✳",
+            Color(0xFF38304D), Modifier.fillMaxWidth()) { onGo("party") }
         Text("واختار سرّ تاني…", style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold, color = Gold)
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)){
@@ -353,6 +352,9 @@ private fun HomeScreen(onGo: (String) -> Unit) {
             DiscoveryTile("همسة مخصوص", "رسالة متتقريش مرتين",
                 DiscoveryMotif.WHISPER,Modifier.weight(1f)){onGo("whispers")}
         }
+        Text("من بعيد؟", style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold, color = Gold)
+        FeatureRow("أوضة خاصة أونلاين", "محتاج سيرفر آمن خاص قبل اللعب", "↗") { onGo("remote") }
         TextButton(
             onClick = { onGo("privacy") },
             modifier = Modifier.fillMaxWidth()
