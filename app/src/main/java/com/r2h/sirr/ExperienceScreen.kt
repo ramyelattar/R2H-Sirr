@@ -55,7 +55,7 @@ internal fun ExperienceScreen(group: Boolean) {
                 }
             }
             Text("قد إيه عندكم وقت؟", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(6, 10, 12, 18).forEach { count ->
                     FilterChip(selected = roundCount == count, onClick = { roundCount = count },
                         label = { Text("${count} جولات") })
