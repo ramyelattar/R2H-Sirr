@@ -14,6 +14,8 @@ scratch = source("ScratchScreenV2.kt")
 dice = source("DiceScreen.kt")
 visuals = source("SirrVisuals.kt")
 logic = source("core/ExperienceLogic.kt")
+experience = source("ExperienceScreen.kt")
+whispers = source("WhispersScreen.kt")
 
 assert 'readPrivate("adult-consent-v1")' in main
 assert 'writePrivate("adult-consent-v1", "accepted")' in main
@@ -30,5 +32,15 @@ assert 'ChallengeRevealCard(faces.joinToString(" ") { it.text })' in dice
 assert 'MysteryDie(' in dice and 'MysteryHeader(' in dice
 assert 'ChallengeRevealCard(' in visuals
 assert 'listOf("قول", "اسأل عن", "اقترح", "اختار", "احكي", "اكتب")' in logic
+
+
+assert 'SealedChallengeCard(onReveal = {' in experience
+assert 'if (!isRevealed)' in experience and 'if (isRevealed)' in experience
+assert 'Text("مش دلوقتي… عَدّي")' in experience
+assert 'fun toggleAudio()' in whispers
+assert 'شغّل موسيقى المفاجأة' in whispers
+assert 'effects.cue(GameCue.REVEAL)' in scratch
+assert 'Modifier.fillMaxWidth().heightIn(min = 184.dp)' in main
+assert 'محتاج سيرفر آمن خاص' in main
 
 print("M8 UI source regression guards PASS (static checks only, NOT Android build)")
