@@ -148,7 +148,13 @@ private fun SirrApp() {
                             "remote" -> RemoteScreen()
                             "settings" -> GameSettingsScreen(onPrivacy = { route = "privacy" })
                             "privacy" -> PrivacyScreen(onClear = {
-                                LocalVault(context.applicationContext).clear()
+                                val appContext = context.applicationContext
+                                LocalVault(appContext).clear()
+                                // Encrypted vault isn't the only private location: media previews
+                                // can be temporarily decrypted into app-owned cache files.
+                                appContext.cacheDir.listFiles()
+                                    ?.filter { it.name.startsWith("sirr_media_") }
+                                    ?.forEach { runCatching { it.delete() } }
                                 sessionVersion++
                                 route = "home"
                                 confirmedAdult = false
