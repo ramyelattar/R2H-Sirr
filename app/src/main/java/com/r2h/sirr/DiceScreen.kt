@@ -47,7 +47,7 @@ internal fun DiceScreenV2() {
     val config = DiceConfiguration(dice.toList(), duration, sound)
     LaunchedEffect(nonce) {
         if (nonce == 0) return@LaunchedEffect
-        val final = runCatching { config.roll() }.getOrElse { error = "يجب ضبط الأوجه والاحتمالات قبل الرمي"; rolling = false; return@LaunchedEffect }
+        val final = runCatching { config.roll() }.getOrElse { error = "راجع إعدادات النرد الأول"; rolling = false; return@LaunchedEffect }
         rolling = true
         repeat(if(effects.animate)duration * 8 else 0) {
             rolled = List(3) { kotlin.random.Random.nextInt(6) }
@@ -64,7 +64,7 @@ internal fun DiceScreenV2() {
             } finally { tone.release() }
         }
     }
-    Page("النرد التفاعلي", "ستة أوضاع، ثلاثة نرود، احتمالات مستقلة، صور اختيارية وإعدادات محلية مشفرة.") {
+    Page("سيبها على النرد", "3 نردات، ومفاجأة كل مرة. اختار المود وارمي.") {
         EffectPreferencesPanel(effects)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Intensity.entries.forEach { level ->
@@ -82,15 +82,15 @@ internal fun DiceScreenV2() {
                 }, label = { Text(level.arabic) })
             }
         }
-        Text("مدة الدوران", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        Text("النرد يلف قد إيه؟", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             listOf(5, 7, 10, 13, 20).forEach { s ->
                 FilterChip(duration == s, onClick = { duration = s }, label = { Text("$s ث") })
             }
         }
-        Row { Checkbox(sound, onCheckedChange = { sound = it }); Text("صوت قصير عند نهاية الرمية") }
+        Row { Checkbox(sound, onCheckedChange = { sound = it }); Text("صوت خفيف آخر الرمية") }
         if (selected == Intensity.CUSTOM) {
-            Text("تعديل ١٨ وجهًا. مجموع أوزان كل نرد يجب أن يساوي ١٠٠٪.")
+            Text("اكتب الأوجه على مزاجك. لازم مجموع نسب كل نرد يبقى 100٪.")
             repeat(3) { die ->
                 Text("النرد ${die + 1}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 repeat(6) { face ->
@@ -115,14 +115,14 @@ internal fun DiceScreenV2() {
                 Text("المجموع: ${dice[die].sumOf { it.weight }}٪", color = if (dice[die].sumOf { it.weight } == 100) Color.LightGray else MaterialTheme.colorScheme.error)
             }
             Button(onClick = {
-                runCatching { DiceStorage.save(vault, config) }.onSuccess { success = "حُفظ الإعداد المخصص مشفرًا على الهاتف"; error = "" }
-                    .onFailure { error = "لم تُحفظ الإعدادات؛ راجع مجموع الاحتمالات" }
-            }, modifier = Modifier.fillMaxWidth(), enabled = !rolling) { Text("حفظ التخصيص") }
+                runCatching { DiceStorage.save(vault, config) }.onSuccess { success = "اتحفظت إعداداتك مشفّرة على الموبايل"; error = "" }
+                    .onFailure { error = "معرفناش نحفظ. اتأكد من مجموع النسب" }
+            }, modifier = Modifier.fillMaxWidth(), enabled = !rolling) { Text("احفظ النرد بتاعي") }
             OutlinedButton(onClick = {
                 val preset = DiceCatalog.preset(Intensity.CUSTOM)
                 dice.clear(); dice.addAll(preset.dice)
                 error = ""; success = ""
-            }) { Text("استعادة القيم الافتراضية") }
+            }) { Text("رجّع الإعدادات الأصلية") }
         }
         rolled?.forEachIndexed { i, selectedFace ->
             val face = dice[i][selectedFace]
@@ -138,8 +138,8 @@ internal fun DiceScreenV2() {
         if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
         if (success.isNotBlank()) Text(success)
         Button(enabled = !rolling, onClick = { error = ""; nonce++ }, modifier = Modifier.fillMaxWidth()) {
-            Text(if (rolling) "النرد يدور..." else "رمية جديدة")
+            Text(if (rolling) "النرد بيلف..." else "ارمي تاني")
         }
-        Text("يمكن إيقاف الرمية بمغادرة الصفحة. الصور محفوظة مشفرة محليًا في وضع التخصيص فقط.", style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
+        Text("تقدر توقف الرمية وترجع. صورك الخاصة بتفضل مشفّرة على الموبايل.", style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
     }
 }
