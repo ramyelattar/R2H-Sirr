@@ -108,7 +108,7 @@ private fun SirrApp() {
                         if (route == "home") {
                             Text("سِرّ", style = MaterialTheme.typography.headlineMedium, color = Gold, fontWeight = FontWeight.Bold)
                         } else {
-                            TextButton(onClick = { route = "home" }) { Text("← رجوع", color = Gold) }
+                            TextButton(onClick = { route = "home" }) { Text("→ رجوع", color = Gold) }
                         }
                         Text("خاص بينكم  ·  18+", style = MaterialTheme.typography.labelSmall, color = Muted)
                     }
