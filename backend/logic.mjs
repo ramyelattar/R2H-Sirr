@@ -77,7 +77,14 @@ function rotate(room,clock) {
   }else{
     const d=gameDeck(room); const available=d.filter(x=>!room.seenChallenges.includes(x));
     if(!available.length)throw Error('not enough unique challenges');
-    room.prompt=available[randomInt(available.length)];room.promptSecret=null;room.seenChallenges.push(room.prompt);
+    // The first ten prompts of each level are curated Egyptian mini-games.
+    const baseSize=deck(room.level,room.mode).length;
+    const featured=available.filter(x=>{
+      const index=d.indexOf(x);
+      return index>=0&&(index<10||(index>=baseSize&&index<baseSize+10));
+    });
+    const source=featured.length?featured:available;
+    room.prompt=source[randomInt(source.length)];room.promptSecret=null;room.seenChallenges.push(room.prompt);
   }
 }
 /** Server-authoritative transitions; eventId deduplicates actor network retries. */
