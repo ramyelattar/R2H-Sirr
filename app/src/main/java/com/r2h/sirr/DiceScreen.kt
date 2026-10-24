@@ -21,6 +21,7 @@ import android.media.AudioManager
 
 @Composable
 internal fun DiceScreenV2() {
+    val effects=rememberGameEffects()
     val context = LocalContext.current
     val vault = remember { LocalVault(context.applicationContext) }
     var selected by remember { mutableStateOf(Intensity.SOFT) }
@@ -54,6 +55,7 @@ internal fun DiceScreenV2() {
         }
         rolled = final
         rolling = false
+        effects.cue(GameCue.REVEAL)
         if (sound) {
             val tone = runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 35) }.getOrNull()
             if (tone != null) try {
@@ -63,6 +65,7 @@ internal fun DiceScreenV2() {
         }
     }
     Page("النرد التفاعلي", "ستة أوضاع، ثلاثة نرود، احتمالات مستقلة، صور اختيارية وإعدادات محلية مشفرة.") {
+        EffectPreferencesPanel(effects)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Intensity.entries.forEach { level ->
                 FilterChip(selected == level, onClick = {
