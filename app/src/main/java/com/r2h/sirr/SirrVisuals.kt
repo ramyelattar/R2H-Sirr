@@ -7,9 +7,11 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -168,5 +170,47 @@ internal fun RoundChapter(current:Int,total:Int){
         horizontalArrangement=Arrangement.SpaceBetween){
         Text(chapter,color=Amber,style=MaterialTheme.typography.labelLarge)
         Text("${current+1} / ${total}",color=Pale,style=MaterialTheme.typography.labelMedium)
+    }
+}
+
+
+/** A sealed private challenge: deliberate one-tap reveal, skip/stop remains available. */
+@Composable
+internal fun SealedChallengeCard(onReveal: () -> Unit) {
+    Surface(
+        onClick = onReveal,
+        color = Color(0xFF231522),
+        shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(1.dp, Amber.copy(alpha=.56f)),
+        modifier = Modifier.fillMaxWidth().heightIn(min=250.dp)
+    ) {
+        Box(contentAlignment=Alignment.Center) {
+            Canvas(Modifier.matchParentSize()) {
+                val center=Offset(size.width*.50f,size.height*.48f)
+                val r=size.minDimension*.18f
+                drawCircle(Amber.copy(alpha=.08f),r*1.5f,center)
+                for(i in 1..3) {
+                    drawCircle(Amber.copy(alpha=.45f/i),r*(.82f+i*.29f),center,
+                        style=Stroke(width=1.5.dp.toPx()))
+                }
+                drawCircle(Amber.copy(alpha=.23f),radius=3.dp.toPx(),
+                    center=Offset(size.width*.14f,size.height*.17f))
+                drawCircle(Amber.copy(alpha=.22f),radius=2.dp.toPx(),
+                    center=Offset(size.width*.82f,size.height*.75f))
+            }
+            Column(
+                Modifier.padding(24.dp),
+                horizontalAlignment=Alignment.CenterHorizontally,
+                verticalArrangement=Arrangement.spacedBy(16.dp)
+            ){
+                Text("✦",color=Amber,fontSize=49.sp)
+                Text("السر لسه متفتحش",
+                    color=Color.White,fontSize=24.sp,lineHeight=34.sp,
+                    fontWeight=FontWeight.Bold,textAlign=TextAlign.Center)
+                Text("دوس هنا… واكشف تحدّي الجولة",
+                    color=Pale,style=MaterialTheme.typography.bodyMedium,
+                    textAlign=TextAlign.Center)
+            }
+        }
     }
 }
