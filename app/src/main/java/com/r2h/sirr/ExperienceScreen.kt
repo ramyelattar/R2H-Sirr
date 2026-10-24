@@ -160,8 +160,7 @@ internal fun ExperienceScreen(group: Boolean) {
                     progress = { current.round.toFloat() / current.turns.size },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Text("جولة ${current.round + 1} من ${current.turns.size}",
-                    color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+                RoundChapter(current.round,current.turns.size)
                 Text("الدور على ${current.playerNames[turn.actorIndex]}",
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 CinematicChallenge(turn.prompt.text, effects)
