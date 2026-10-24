@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import kotlin.math.hypot
 
 @Composable
 internal fun ScratchScreenV2() {
@@ -122,21 +123,33 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     val touched = remember { mutableStateMapOf<Int, Boolean>() }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
     var alreadyRevealed by remember { mutableStateOf(false) }
-    val coverage = touched.size / 120f
+    // A 16x12 area map approximates actual scratched coverage instead of a few taps.
+    val coverage = (touched.size / 192f).coerceIn(0f, 1f)
     val revealed = coverage >= 0.55f
     LaunchedEffect(revealed) { if (revealed && !alreadyRevealed) { alreadyRevealed = true; onRevealed() } }
     fun touch(p: Offset) {
         val w = dimensions.width.toFloat(); val h = dimensions.height.toFloat()
         if (w <= 0 || h <= 0 || p.x !in 0f..w || p.y !in 0f..h) return
         if (points.size < 2300) points.add(p)
-        val col = (p.x / w * 12).toInt().coerceIn(0,11)
-        val row = (p.y / h * 10).toInt().coerceIn(0,9)
-        for (dx in -1..1) for (dy in -1..1) {
+        val col = (p.x / w * 16).toInt().coerceIn(0, 15)
+        val row = (p.y / h * 12).toInt().coerceIn(0, 11)
+        for (dx in 0..1) for (dy in 0..1) {
             val x = col + dx; val y = row + dy
-            if (x in 0..11 && y in 0..9) touched[y*12+x] = true
+            if (x in 0..15 && y in 0..11) touched[y * 16 + x] = true
         }
     }
-    Text(if(revealed)"السر بان! ✦" else "امسح بإيدك لحد ما يظهر السر",
+    fun trace(start: Offset, end: Offset) {
+        val distance = hypot(end.x - start.x, end.y - start.y)
+        val steps = (distance / 12f).toInt().coerceIn(1, 100)
+        for (index in 0..steps) {
+            val t = index.toFloat() / steps
+            touch(Offset(
+                start.x + (end.x - start.x) * t,
+                start.y + (end.y - start.y) * t
+            ))
+        }
+    }
+    Text(if(revealed) "السر بان! ✦" else "امسح بإيدك لحد ما يظهر السر — ${(coverage * 100).toInt()}٪",
         color=MaterialTheme.colorScheme.onSurfaceVariant)
     Box(Modifier.fillMaxWidth().height(265.dp).clip(RoundedCornerShape(27.dp)),contentAlignment=Alignment.Center) {
         Surface(color=Color(0xFF321B2B),modifier=Modifier.fillMaxSize()) {
@@ -147,14 +160,22 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
         if (!revealed) Canvas(Modifier.fillMaxSize()
             .onSizeChanged { dimensions = it }
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .pointerInput(Unit) { detectDragGestures(onDragStart = { touch(it) }, onDrag = { change, _ -> touch(change.position); change.consume() }) }
-            .pointerInput(Unit) { detectTapGestures { touch(it) } }
+            .pointerInput(dimensions) {
+                detectDragGestures(
+                    onDragStart = { touch(it) },
+                    onDrag = { change, dragAmount ->
+                        trace(change.position - dragAmount, change.position)
+                        change.consume()
+                    }
+                )
+            }
+            .pointerInput(dimensions) { detectTapGestures { touch(it) } }
         ) {
             drawRect(Brush.linearGradient(listOf(Color(0xFFDCB98D),Color(0xFF8C5169),Color(0xFF50283A))))
             drawCircle(Color.White.copy(alpha=.1f),radius=size.minDimension*.3f,
                 center=Offset(size.width*.83f,size.height*.27f))
             drawPoints(points = points.toList(), pointMode = PointMode.Points, color = Color.Transparent,
-                strokeWidth = 48.dp.toPx(), cap = StrokeCap.Round, blendMode = BlendMode.Clear)
+                strokeWidth = 45.dp.toPx(), cap = StrokeCap.Round, blendMode = BlendMode.Clear)
         }
     }
     if (revealed) Text("بان السر!", color = MaterialTheme.colorScheme.primary)
