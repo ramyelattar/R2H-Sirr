@@ -14,19 +14,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlin.math.hypot
 import kotlin.math.ceil
-import kotlin.math.min
 
 @Composable
 internal fun ScratchScreenV2() {
@@ -124,6 +123,7 @@ internal fun ScratchScreenV2() {
 @Composable
 internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     val effects = rememberGameEffects()
+    val brushRadiusPx = with(LocalDensity.current) { 17.dp.toPx() }
     val strokes = remember { mutableStateListOf<List<Offset>>() }
     val cells = remember { mutableStateMapOf<Int, Boolean>() }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
@@ -146,7 +146,7 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
         // The brush width and hit testing both scale in density-independent
         // physical pixels; clamp the edge so swiping outside has no effect.
         if (center.x < 0f || center.y < 0f || center.x > w || center.y > h) return
-        val radius = min(w / 7f, h / 5f)
+        val radius = brushRadiusPx
         val startX = ((center.x - radius) / w * 16).toInt().coerceIn(0, 15)
         val endX = ((center.x + radius) / w * 16).toInt().coerceIn(0, 15)
         val startY = ((center.y - radius) / h * 12).toInt().coerceIn(0, 11)
@@ -225,7 +225,7 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
                         }
                     }
                     drawPath(path, color = Color.Transparent, style = Stroke(
-                        width = 34.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round
+                        width = 34.dp.toPx(), cap = StrokeCap.Round
                     ), blendMode = BlendMode.Clear)
                 }
             }
