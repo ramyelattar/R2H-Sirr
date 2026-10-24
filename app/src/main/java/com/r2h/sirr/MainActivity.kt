@@ -387,7 +387,7 @@ private fun GameSettingsScreen(onPrivacy: () -> Unit) {
         MysteryHeader("تجربتك ليك", "كل تفصيلة بإيدك.", "صوت، حركة، اهتزاز… خليك على راحتك.", "✦")
         EffectPreferencesPanel(effects, initiallyExpanded = true)
         Text(
-            "لو سكّنت الصوت من هنا، مؤثرات اللعبة مش هتشتغل. الأغاني اللي بتختارها بنفسك في الهمسات ليها زر تشغيل وإيقاف مستقل.",
+            "لو قفلت الصوت من هنا، مؤثرات اللعبة مش هتشتغل. الأغاني اللي بتختارها بنفسك في الهمسات ليها زر تشغيل وإيقاف مستقل.",
             style = MaterialTheme.typography.bodySmall,
             color = Muted
         )
