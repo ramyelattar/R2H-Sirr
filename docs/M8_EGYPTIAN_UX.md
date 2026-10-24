@@ -32,3 +32,30 @@
 - Native typography/fonts and asset system; accessibility contrast; RTL motion.
 - Better original content with coherent play progression rather than number of generic prompts.
 - Full Android compile, UI test and device acceptance. The changes in this branch are **source-only**.
+
+
+## Second iteration — real gameplay implementation
+- Added `SirrVisuals.kt`: reusable native mystery hero, faux-3D dice, custom secret-letter reveal, immersive challenge card, and three-act round chapter cue.
+- `DiceScreen.kt`: dice scene above settings, default three-second roll, one prominent action, all advanced controls and 18-face custom editor collapsed by default. Custom durations now include two and three seconds; unchanged die weighting/storage.
+- `ScratchScreenV2.kt`: mystery scene, one-tap locally generated Egyptian secret suggestions, progressive reveal stage and optional image/expiry settings concealed by default.
+- `WhispersScreen.kt`: three-step letter composer, opt-in one-tap suggested messages, private letter reveal, optional audio/photo/recipient controls collapsed. Existing one-use semantics retained.
+- `RemoteScreen.kt`: Egyptian lobby copy, optional host configuration and attachment controls collapsed; HTTPS/WSS restriction preserved.
+- `GameEffects.kt` / `ExperienceScreen.kt`: challenge scene in place of default grey cards, three-act chapter labels.
+- `content/challenges_ar_v2.json`: rewrote the first ten prompts across five difficulty levels in each of couple/party into 100 unique Egyptian mini-games; prioritization now favors those prompts in short local and remote sessions. 130 legacy fallback prompts still need editorial revision.
+- `content/additional_quizzes_ar_v2.json`: rewrote the first ten additions in each of seven packs (70 questions). Existing 105 remaining questions still need Egyptian editorial revision.
+- Synchronized generated Kotlin and backend JSON mirrors without changing the agreed `contentVersion=3` / `protocolVersion=4` wire schema.
+- New backend test: `backend/test/m8-experience.test.mjs` verifies curated prompt coverage, default 10-round content, and uniqueness for 18-round mixed sessions.
+- Checked generated challenge and quiz mirror content against source: all matched, 230/230 challenge texts unique and seven packs of 25 questions.
+
+### Verification and risks
+**No Android/Gradle build, emulator, deployed backend, or visual device test has been run for this branch.**
+The new Node test file was added but has **not yet been executed** against the GitHub branch.
+The Kotlin UI changes have **not yet been typechecked with Compose**; UI/runtime regressions are possible.
+An actual device pass is still required for all layout sizes, RTL, transitions, scratch gestures, audio, privacy and saved-state behavior.
+This is not release-ready. The earlier M7 device build succeeds, but that result does not validate M8.
+
+### Further design work
+- Finish rewriting all remaining legacy challenge/question wording in authentic Egyptian colloquial style.
+- Replace faux-3D vector dice with a reviewed interactive 3D scene only if it can remain performant and accessible.
+- Test real phone screenshots before approving palette, type scale, tap targets and RTL presentation.
+- Improve media/remote multiuser experiences, typography assets and visual regression coverage.
