@@ -41,12 +41,37 @@ internal fun WhispersScreenV2() {
     var page by remember { mutableIntStateOf(-1) }
     var playing by remember { mutableStateOf(false) }
     val player = remember { MediaPlayer() }
-    DisposableEffect(Unit) { onDispose { player.release() } }
+    DisposableEffect(Unit) {
+        onDispose {
+            runCatching { player.stop() }
+            runCatching { player.release() }
+        }
+    }
     DisposableEffect(photoId) { val activeId = photoId; onDispose { vault.delete(activeId) } }
     var envelope by remember { mutableStateOf<EphemeralEnvelope?>(null) }
     val effects=rememberGameEffects()
     LaunchedEffect(page){if(page in 0..3)effects.cue(GameCue.REVEAL)}
     var error by remember { mutableStateOf("") }
+    fun toggleAudio() {
+        val selectedAudio = audioUri ?: return
+        runCatching {
+            if (playing) {
+                player.stop()
+                player.reset()
+                playing = false
+            } else {
+                player.reset()
+                player.setDataSource(context, Uri.parse(selectedAudio))
+                player.prepare()
+                player.start()
+                playing = true
+            }
+        }.onFailure {
+            runCatching { player.reset() }
+            error = "مش قادرين نشغّل الأغنية"
+            playing = false
+        }
+    }
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) runCatching {
             val newId = vault.importPhoto(uri)
@@ -123,19 +148,13 @@ internal fun WhispersScreenV2() {
                 }
                 if(photoId!=null)TextButton(onClick={vault.delete(photoId);photoId=null}){Text("امسح الصورة")}
                 OutlinedButton(onClick={pickAudio.launch("audio/*")}){Text("اختار أغنية من موبايلك")}
-                if(audioUri!=null) {
-                    OutlinedButton(onClick={
-                        runCatching{
-                            if(playing){player.stop();player.reset();playing=false}
-                            else {
-                                player.reset()
-                                player.setDataSource(context,Uri.parse(requireNotNull(audioUri)))
-                                player.prepare();player.start();playing=true
-                            }
-                        }.onFailure{error="الأغنية مش راضية تشتغل";playing=false}
-                    }){Text(if(playing)"وقّف الأغنية" else "اسمع الأغنية")}
-                    Text("الأغنية هنا على الموبايل بس، مش بتتبعت.",
-                        style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                if (audioUri != null) {
+                    OutlinedButton(onClick = { toggleAudio() }) {
+                        Text(if (playing) "وقّف الأغنية" else "اسمع الأغنية")
+                    }
+                    Text("الأغنية بتفضل على الموبايل ده، ومش بتتبعت لحد.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if(error.isNotBlank())Text(error,color=MaterialTheme.colorScheme.error)
@@ -143,6 +162,11 @@ internal fun WhispersScreenV2() {
             if (receiver.isNotBlank()) Text("إلى $receiver", color = MaterialTheme.colorScheme.primary)
             Text("الرسالة ${page + 1} من ٣")
             SecretLetter(messages[page],page+1,3)
+            if (audioUri != null) {
+                OutlinedButton(onClick = { toggleAudio() },modifier=Modifier.fillMaxWidth()) {
+                    Text(if (playing) "وقّف الموسيقى" else "شغّل موسيقى المفاجأة")
+                }
+            }
             Button(onClick = {
                 messages[page] = "" // Destroy each message immediately after advancing.
                 page++
@@ -152,6 +176,11 @@ internal fun WhispersScreenV2() {
             MysteryHeader("آخر صفحة", "ده كان آخر سر…", "اللي اتقال هنا، فضل بينكم.", "♡")
             if (sender.isNotBlank()) Text("من: $sender")
             if (signature.isNotBlank()) Text(signature)
+            if (audioUri != null) {
+                OutlinedButton(onClick = { toggleAudio() },modifier=Modifier.fillMaxWidth()) {
+                    Text(if (playing) "وقّف الموسيقى" else "شغّل موسيقى المفاجأة")
+                }
+            }
             val photo = remember(photoId) { vault.readPhoto(photoId) }
             if (photo != null) Image(photo, contentDescription = "الصورة الختامية", modifier = Modifier.fillMaxWidth().height(260.dp), contentScale = ContentScale.Fit)
             Text("لما تقفل، الرسائل والصورة هيتمسحوا من الجلسة دي.", color = Color.LightGray)
