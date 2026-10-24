@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {deck,newRoom,join,applyAction} from '../logic.mjs';
+import {deck,newRoom,join,applyAction,publicState} from '../logic.mjs';
+import {readFileSync} from 'node:fs';
 
 let sequence=0;
 const action=(type,details={})=>({type,eventId:`m8_event_${++sequence}_2026`,...details});
@@ -43,4 +44,15 @@ test('18-round mixed sessions do not repeat prompts',()=>{
   }
   assert.equal(room.status,'ENDED');
   assert.equal(new Set(played).size,18);
+});
+
+test('M8 content v4 stays consistent in the lobby and quiz deck',()=>{
+  const c=JSON.parse(readFileSync(new URL('../public/challenges.json',import.meta.url),'utf8'));
+  const q=JSON.parse(readFileSync(new URL('../public/quizzes.json',import.meta.url),'utf8'));
+  assert.equal(c.version,4);
+  assert.equal(q.version,4);
+  assert.equal(q.packs.length,7);
+  assert.ok(q.packs.every(pack=>pack.questions.length===25));
+  const room=newRoom('couple','SOFT','المضيف',Date.now());
+  assert.equal(publicState(room).contentVersion,4);
 });
