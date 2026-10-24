@@ -149,7 +149,7 @@
   const summary={WAITING:'في انتظار المشاركين',ACTIVE:'الجلسة جارية',ENDED:'انتهت الجلسة',EXPIRED:'انتهت الصلاحية',REVOKED:'أُلغيت الدعوة'};
   $('round').textContent=`${summary[s.status]||s.status} — الجولة ${Math.min(s.round+1,s.maxRounds)} من ${s.maxRounds} — ${s.variety==='MIX_LOWER'?'مستويان':'مستوى واحد'}`;
   document.documentElement.style.setProperty('--game-progress', `${Math.min(100,Math.round(s.round/Math.max(1,s.maxRounds)*100))}%`);
-  if(s.status==='ACTIVE' && s.seq>lastEffectSeq && lastEffectSeq!==-1){
+  if(s.status==='ACTIVE' && s.round!==roundForCue && roundForCue!==-1){
     const card=$('challenge');card?.classList.remove('reveal-pop');void card?.offsetWidth;card?.classList.add('reveal-pop');
   }
   if(s.status==='ACTIVE'&&roundForCue!==s.round){roundForCue=s.round;fxCue('round');}
@@ -343,6 +343,6 @@
  $('agree').onclick=()=>action('consent',{value:true});
  $('applyWaiting').onclick=async()=>{try{await configureLobby();notice('تم إرسال الإعدادات المشفرة');}catch(e){notice(e.message);}};
  $('leave').onclick=()=>{if(confirm('إنهاء الجلسة للجميع؟')){action('leave');deliberatelyLeft=true;sessionStorage.removeItem(storeKey);}};
- window.addEventListener('pagehide',()=>{if(activeMediaUrl)URL.revokeObjectURL(activeMediaUrl);clearTimeout(retryTimer);});
+ window.addEventListener('pagehide',()=>{if(audioCtx)void audioCtx.close();if(activeMediaUrl)URL.revokeObjectURL(activeMediaUrl);clearTimeout(retryTimer);});
  loadQuizzes();if(identity)connect();
 })();
