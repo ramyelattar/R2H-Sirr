@@ -90,22 +90,39 @@ internal fun rememberGameEffects():GameEffects{
 @Composable
 internal fun EffectPreferencesPanel(effects:GameEffects){
     val p=effects.preferences
-    Card(Modifier.fillMaxWidth()){Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(5.dp)){
-        Text("المؤثرات السينمائية",style=MaterialTheme.typography.titleMedium)
-        Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
-            Switch(checked=p.cinematic,onCheckedChange={effects.change(p.copy(cinematic=it))});Spacer(Modifier.width(8.dp));Text("حركات ظهور وانتقال")
+    var expanded by remember { mutableStateOf(false) }
+    OutlinedButton(
+        onClick = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+    ) { Text(if(expanded) "اقفل إعدادات الصوت والحركة" else "الصوت والحركة — لو حابب تغيّرهم") }
+    if(expanded) Card(Modifier.fillMaxWidth()){
+        Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
+            Text("اختار اللي يناسبك",style=MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+                Switch(checked=p.cinematic,onCheckedChange={effects.change(p.copy(cinematic=it))})
+                Spacer(Modifier.width(12.dp))
+                Text("حركات وظهور ناعم")
+            }
+            Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+                Switch(checked=p.sound,onCheckedChange={effects.change(p.copy(sound=it))})
+                Spacer(Modifier.width(12.dp))
+                Text("أصوات وقت اللعب")
+            }
+            Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+                Switch(checked=p.haptic,onCheckedChange={effects.change(p.copy(haptic=it))})
+                Spacer(Modifier.width(12.dp))
+                Text("اهتزازات خفيفة")
+            }
+            if(p.sound){
+                Text("صوت المؤثرات: ${p.volume}٪")
+                Slider(value=p.volume.toFloat(),
+                    onValueChange={effects.change(p.copy(volume=it.toInt()))},valueRange=0f..80f)
+            }
+            OutlinedButton(onClick={effects.cue(GameCue.REVEAL)}){Text("جرّب المؤثرات")}
+            if(!effects.animate)Text("الحركة متوقفة من هنا أو من إعدادات الموبايل",
+                color=Color.LightGray,style=MaterialTheme.typography.bodySmall)
         }
-        Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
-            Switch(checked=p.sound,onCheckedChange={effects.change(p.copy(sound=it))});Spacer(Modifier.width(8.dp));Text("أصوات قصيرة محلية")
-        }
-        Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
-            Switch(checked=p.haptic,onCheckedChange={effects.change(p.copy(haptic=it))});Spacer(Modifier.width(8.dp));Text("اهتزازات اختيارية")
-        }
-        if(p.sound){Text("مستوى الصوت: "+"${p.volume}٪");Slider(value=p.volume.toFloat(),
-            onValueChange={effects.change(p.copy(volume=it.toInt()))},valueRange=0f..80f)}
-        OutlinedButton(onClick={effects.cue(GameCue.REVEAL)}){Text("تجربة المؤثرات")}
-        if(!effects.animate)Text("الحركات معطلة بإعداد التطبيق أو إعداد النظام لتقليل الحركة",color=Color.LightGray)
-    }}
+    }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
