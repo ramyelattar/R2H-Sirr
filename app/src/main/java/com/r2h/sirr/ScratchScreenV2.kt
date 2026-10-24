@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -23,6 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlin.math.hypot
+import kotlin.math.ceil
+import kotlin.math.min
 
 @Composable
 internal fun ScratchScreenV2() {
@@ -120,13 +124,14 @@ internal fun ScratchScreenV2() {
 @Composable
 internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     val effects = rememberGameEffects()
-    val points = remember { mutableStateListOf<Offset>() }
-    val touched = remember { mutableStateMapOf<Int, Boolean>() }
+    val strokes = remember { mutableStateListOf<List<Offset>>() }
+    val cells = remember { mutableStateMapOf<Int, Boolean>() }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
     var alreadyRevealed by remember { mutableStateOf(false) }
-    // A 16x12 area map approximates actual scratched coverage instead of a few taps.
-    val coverage = (touched.size / 192f).coerceIn(0f, 1f)
-    val revealed = coverage >= 0.55f
+    // Coverage measures the same brush-sized trail that is visibly cleared.
+    // 16×12 cells are sampled along the line and inside the brush radius.
+    val coverage = (cells.size / 192f).coerceIn(0f, 1f)
+    val revealed = coverage >= .58f
     LaunchedEffect(revealed) {
         if (revealed && !alreadyRevealed) {
             alreadyRevealed = true
@@ -134,26 +139,44 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             onRevealed()
         }
     }
-    fun touch(p: Offset) {
-        val w = dimensions.width.toFloat(); val h = dimensions.height.toFloat()
-        if (w <= 0 || h <= 0 || p.x !in 0f..w || p.y !in 0f..h) return
-        if (points.size < 2300) points.add(p)
-        val col = (p.x / w * 16).toInt().coerceIn(0, 15)
-        val row = (p.y / h * 12).toInt().coerceIn(0, 11)
-        for (dx in 0..1) for (dy in 0..1) {
-            val x = col + dx; val y = row + dy
-            if (x in 0..15 && y in 0..11) touched[y * 16 + x] = true
+    fun mark(center: Offset) {
+        val w = dimensions.width.toFloat()
+        val h = dimensions.height.toFloat()
+        if (w < 1f || h < 1f) return
+        // The brush width and hit testing both scale in density-independent
+        // physical pixels; clamp the edge so swiping outside has no effect.
+        if (center.x < 0f || center.y < 0f || center.x > w || center.y > h) return
+        val radius = min(w / 7f, h / 5f)
+        val startX = ((center.x - radius) / w * 16).toInt().coerceIn(0, 15)
+        val endX = ((center.x + radius) / w * 16).toInt().coerceIn(0, 15)
+        val startY = ((center.y - radius) / h * 12).toInt().coerceIn(0, 11)
+        val endY = ((center.y + radius) / h * 12).toInt().coerceIn(0, 11)
+        for (y in startY..endY) for (x in startX..endX) {
+            val midX = (x + .5f) * w / 16f
+            val midY = (y + .5f) * h / 12f
+            val dx = midX - center.x
+            val dy = midY - center.y
+            if (dx * dx + dy * dy <= radius * radius) cells[y * 16 + x] = true
         }
     }
-    fun trace(start: Offset, end: Offset) {
-        val distance = hypot(end.x - start.x, end.y - start.y)
-        val steps = (distance / 12f).toInt().coerceIn(1, 100)
-        for (index in 0..steps) {
-            val t = index.toFloat() / steps
-            touch(Offset(
-                start.x + (end.x - start.x) * t,
-                start.y + (end.y - start.y) * t
-            ))
+    fun begin(p: Offset) {
+        if (strokes.sumOf { it.size } < 2400) strokes.add(listOf(p))
+        mark(p)
+    }
+    fun append(p: Offset) {
+        val previous = strokes.lastOrNull()?.lastOrNull()
+        if (previous == null) { begin(p); return }
+        val dx = p.x - previous.x
+        val dy = p.y - previous.y
+        val distance = hypot(dx, dy)
+        if (distance < 1f) return
+        val count = ceil(distance / 7f).toInt().coerceIn(1, 180)
+        for (i in 1..count) {
+            val t = i.toFloat() / count
+            mark(Offset(previous.x + dx * t, previous.y + dy * t))
+        }
+        if (strokes.sumOf { it.size } < 2400) {
+            strokes[strokes.lastIndex] = strokes.last() + p
         }
     }
     Text(if(revealed) "السر بان! ✦" else "امسح بإيدك لحد ما يظهر السر — ${(coverage * 100).toInt()}٪",
@@ -169,14 +192,14 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .pointerInput(dimensions) {
                 detectDragGestures(
-                    onDragStart = { touch(it) },
-                    onDrag = { change, dragAmount ->
-                        trace(change.position - dragAmount, change.position)
+                    onDragStart = { begin(it) },
+                    onDrag = { change, _ ->
+                        append(change.position)
                         change.consume()
                     }
                 )
             }
-            .pointerInput(dimensions) { detectTapGestures { touch(it) } }
+            .pointerInput(dimensions) { detectTapGestures { begin(it) } }
         ) {
             drawRect(Brush.linearGradient(listOf(Color(0xFFDCB98D),Color(0xFF8C5169),Color(0xFF50283A))))
             drawCircle(Color.White.copy(alpha=.1f),radius=size.minDimension*.3f,
@@ -190,8 +213,22 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
                     center = Offset(x, y)
                 )
             }
-            drawPoints(points = points.toList(), pointMode = PointMode.Points, color = Color.Transparent,
-                strokeWidth = 45.dp.toPx(), cap = StrokeCap.Round, blendMode = BlendMode.Clear)
+            // Keep the visual clearing as connected lines rather than isolated dots.
+            strokes.forEach { stroke ->
+                if (stroke.isNotEmpty()) {
+                    val path = Path().apply {
+                        moveTo(stroke.first().x, stroke.first().y)
+                        if (stroke.size == 1) {
+                            lineTo(stroke.first().x + .1f, stroke.first().y)
+                        } else {
+                            stroke.drop(1).forEach { lineTo(it.x, it.y) }
+                        }
+                    }
+                    drawPath(path, color = Color.Transparent, style = Stroke(
+                        width = 34.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round
+                    ), blendMode = BlendMode.Clear)
+                }
+            }
         }
     }
     if (revealed) Text("بان السر!", color = MaterialTheme.colorScheme.primary)
