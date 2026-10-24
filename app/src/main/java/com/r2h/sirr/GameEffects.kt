@@ -10,6 +10,7 @@ import android.os.VibratorManager
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -19,10 +20,14 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
 
@@ -37,6 +42,8 @@ internal class GameEffects(private val context:Context){
         private set
     private val vault=LocalVault(context.applicationContext)
     private var tones:ToneGenerator?=null
+    var burstNonce by mutableIntStateOf(0)
+        private set
     private fun load():EffectPreferences=runCatching{
         val x=JSONObject(LocalVault(context.applicationContext).readPrivate("game-effects")?:return@runCatching EffectPreferences())
         EffectPreferences(x.optBoolean("sound"),x.optBoolean("haptic"),x.optBoolean("cinematic",true),x.optInt("volume",35)).normalized()
@@ -52,6 +59,7 @@ internal class GameEffects(private val context:Context){
         Settings.Global.getFloat(context.contentResolver,Settings.Global.ANIMATOR_DURATION_SCALE,1f)>0f
     }.getOrDefault(true)
     fun cue(cue:GameCue){
+        if(cue in setOf(GameCue.REVEAL,GameCue.COMPLETE,GameCue.SUCCESS) && animate)burstNonce++
         val p=preferences
         if(p.sound && p.volume>0)runCatching{
             if(tones==null)tones=ToneGenerator(AudioManager.STREAM_MUSIC,p.volume)
@@ -104,6 +112,7 @@ internal fun EffectPreferencesPanel(effects:GameEffects){
 @Composable
 internal fun CinematicChallenge(text:String,effects:GameEffects){
     if(!effects.animate){Card(Modifier.fillMaxWidth()){Text(text,Modifier.padding(18.dp),style=MaterialTheme.typography.titleLarge)};return}
+    Box(Modifier.fillMaxWidth()) {
     AnimatedContent(targetState=text,transitionSpec={
         (fadeIn(tween(350))+scaleIn(initialScale=.92f,animationSpec=tween(350))+
             slideInVertically(tween(350)){it/6}) togetherWith
@@ -111,5 +120,18 @@ internal fun CinematicChallenge(text:String,effects:GameEffects){
             slideOutVertically(tween(150)){-it/8})
     },label="سينما التحديات"){value->
         Card(Modifier.fillMaxWidth()){Text(value,Modifier.padding(18.dp),style=MaterialTheme.typography.titleLarge)}
+    }
+    val fraction=remember{Animatable(1f)}
+    LaunchedEffect(effects.burstNonce){
+        if(effects.burstNonce>0){fraction.snapTo(0f);fraction.animateTo(1f,tween(650))}
+    }
+    if(effects.burstNonce>0 && fraction.value<1f)Canvas(Modifier.matchParentSize()){
+        for(n in 0 until 18){
+            val angle=(n*2*Math.PI/18).toFloat();val dist=(30f+(n%4)*16f)*fraction.value
+            drawCircle(Color(0xFFD2AE80),radius=3f*(1f-fraction.value),
+                center=Offset(size.width*.5f+cos(angle)*dist,size.height*.5f+sin(angle)*dist),
+                alpha=1f-fraction.value)
+        }
+    }
     }
 }
