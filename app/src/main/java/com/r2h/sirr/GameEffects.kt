@@ -127,9 +127,9 @@ internal fun rememberGameEffects():GameEffects{
 }
 
 @Composable
-internal fun EffectPreferencesPanel(effects:GameEffects){
+internal fun EffectPreferencesPanel(effects:GameEffects, initiallyExpanded:Boolean=false){
     val p=effects.preferences
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(initiallyExpanded) }
     OutlinedButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.fillMaxWidth()
