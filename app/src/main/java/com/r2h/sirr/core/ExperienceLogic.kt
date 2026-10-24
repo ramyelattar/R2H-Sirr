@@ -71,8 +71,14 @@ object SessionFactory {
         }
         fun prioritize(items: List<Challenge>): List<Challenge> {
             val unique = items.distinctBy { it.text }
-            return unique.filterNot { it.id in recentlySeen || it.text in recentlySeen }.shuffled(random) +
-                unique.filter { it.id in recentlySeen || it.text in recentlySeen }.shuffled(random)
+            fun freshFirst(pool: List<Challenge>): List<Challenge> {
+                val featured = pool.filter {
+                    (it.id.substringAfterLast('-').toIntOrNull() ?: 999) in 1..10
+                }
+                return featured.shuffled(random) + pool.filterNot { it in featured }.shuffled(random)
+            }
+            return freshFirst(unique.filterNot { it.id in recentlySeen || it.text in recentlySeen }) +
+                freshFirst(unique.filter { it.id in recentlySeen || it.text in recentlySeen })
         }
         val selection = when {
             level == Intensity.CUSTOM -> (customs.shuffled(random) +
