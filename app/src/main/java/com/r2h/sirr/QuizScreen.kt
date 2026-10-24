@@ -18,6 +18,7 @@ internal fun QuizScreenV2() {
     var selectedIndices by remember { mutableStateOf<List<Int>>(emptyList()) }
     var phase by remember { mutableIntStateOf(0) }
     var step by remember { mutableIntStateOf(0) }
+    var revealStep by remember { mutableIntStateOf(0) }
     val answersA = remember { mutableStateListOf<Int>() }
     val answersB = remember { mutableStateListOf<Int>() }
     var acceptedB by remember { mutableStateOf(false) }
@@ -25,7 +26,7 @@ internal fun QuizScreenV2() {
     val moodTitles = listOf("إنت من جوّه", "الحب على مزاجك", "إحنا شبه بعض؟",
         "الجاذبية والإشارات", "أمنيات متخبية", "راحة وحدود", "جرأة ولا صراحة؟")
     fun reset() {
-        packIndex = -1; phase = 0; step = 0
+        packIndex = -1; phase = 0; step = 0; revealStep = 0
         answersA.clear(); answersB.clear()
         acceptedB = false; selectedIndices = emptyList()
     }
@@ -36,7 +37,7 @@ internal fun QuizScreenV2() {
             packs.forEachIndexed { index, quiz ->
                 Surface(
                     onClick = {
-                        packIndex = index; phase = 0; step = 0
+                        packIndex = index; phase = 0; step = 0; revealStep = 0
                         answersA.clear(); answersB.clear(); selectedIndices = emptyList()
                     },
                     shape = RoundedCornerShape(22.dp),
@@ -125,27 +126,78 @@ internal fun QuizScreenV2() {
                 Text("اختار على طول… مفيش إجابة صح أو غلط.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             } else if (phase == 4) {
-                val first = QuizInsights.summary(answersA)
-                Text("المفاجأة في إجاباتكم", style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary)
-                Text("دي مجرد مقارنة لطيفة، مش حكم على شخصيتك أو علاقتك.")
-                Text("إجابات الشخص الأول:", style = MaterialTheme.typography.titleMedium)
-                first.counts.forEachIndexed { option, count ->
-                    Text("الاختيار ${option + 1}: ${count} من ${first.total} (${first.percentage(option)}٪)")
-                }
+                val currentQuestion = quiz.questions[selectedIndices[revealStep]]
+                MysteryHeader(
+                    if (pairing) "مفاجأة الإجابات" else "آخر صفحة",
+                    if (pairing) "قد إيه كنتوا شبه بعض؟" else "دي إجاباتك… من غير أحكام.",
+                    "مفيش صح وغلط هنا. الحكاية في الكلام اللي هيبدأ بعد كل إجابة.",
+                    "✦"
+                )
                 if (pairing) {
-                    val comparison = QuizInsights.compare(answersA, answersB)
-                    Text("إجابات الشخص التاني:", style = MaterialTheme.typography.titleMedium)
-                    comparison.second.counts.forEachIndexed { option, count ->
-                        Text("الاختيار ${option + 1}: ${count} من ${comparison.questions} (${comparison.second.percentage(option)}٪)")
-                    }
-                    Text("اتفقتوا في ${comparison.agreement} من ${comparison.questions} إجابة (${comparison.agreementPercent}٪)",
-                        style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                    val result = QuizInsights.compare(answersA, answersB)
+                    Text(
+                        "اتّفقتوا في ${result.agreement} من ${result.questions} إجابة",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text("مش درجة توافق ولا اختبار شخصية — مجرد لعبة كلام.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall)
                 }
-                Button(onClick = {
-                    phase = 0; step = 0; answersA.clear(); answersB.clear()
-                    acceptedB = false; selectedIndices = emptyList()
-                }, modifier = Modifier.fillMaxWidth()) { Text("نلعب تاني؟") }
+                LinearProgressIndicator(
+                    progress = { (revealStep + 1).toFloat() / selectedIndices.size },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text("نكشف سؤال ${revealStep + 1} من ${selectedIndices.size}",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelLarge)
+                Surface(
+                    shape = RoundedCornerShape(26.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        Modifier.padding(22.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Text(currentQuestion.text,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold)
+                        Text("إنت اخترت: ${currentQuestion.choices[answersA[revealStep]]}",
+                            style = MaterialTheme.typography.bodyLarge)
+                        if (pairing) {
+                            Text("اللي معاك اختار: ${currentQuestion.choices[answersB[revealStep]]}",
+                                style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                if (answersA[revealStep] == answersB[revealStep])
+                                    "✦  نفس الإجابة… افتحوا الكلام فيها!"
+                                else "إجابتين مختلفتين… اسألوا بعض ليه.",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        } else {
+                            Text("ممكن تحكي للي معاك ليه اخترت الإجابة دي.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                Button(
+                    onClick = { if (revealStep < selectedIndices.lastIndex) revealStep++ },
+                    enabled = revealStep < selectedIndices.lastIndex,
+                    shape = RoundedCornerShape(17.dp),
+                    modifier = Modifier.fillMaxWidth().height(54.dp)
+                ) {
+                    Text(if (revealStep < selectedIndices.lastIndex) "اكشف السؤال اللي بعده ✦" else "خلصنا الأسرار")
+                }
+                OutlinedButton(
+                    onClick = {
+                        phase = 0; step = 0; revealStep = 0
+                        answersA.clear(); answersB.clear()
+                        acceptedB = false; selectedIndices = emptyList()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("نلعب جولة جديدة؟") }
             }
             TextButton(onClick = { reset() }) { Text("اختار موضوع تاني") }
         }
