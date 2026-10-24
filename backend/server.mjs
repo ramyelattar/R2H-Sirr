@@ -142,7 +142,7 @@ http.on('upgrade',(req,socket,head)=>{
    let data;try{data=JSON.parse(String(raw));}catch{return ws.close(4002,'invalid data');}
    if(!authenticated){
     if(data.type!=='authenticate')return ws.close(4003,'authenticate first');
-    if(data.contentVersion!==3 || data.protocolVersion!==4)return ws.close(4009,'protocol version mismatch');
+    if(data.contentVersion!==4 || data.protocolVersion!==4)return ws.close(4009,'protocol version mismatch');
     room=rooms.get(data.roomId);
     member=room&&participantByToken(room,data.auth);
     if(!room||!member||room.expiresAt<=now()||['REVOKED','EXPIRED','ENDED'].includes(room.status))return ws.close(4003,'not authorized');
