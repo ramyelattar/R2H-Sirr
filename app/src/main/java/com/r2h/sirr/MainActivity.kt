@@ -339,11 +339,20 @@ private fun HomeScreen(onGo: (String) -> Unit) {
             SmallMode("لَمّة صحاب", "ضحك ومفاجآت", "✳", Color(0xFF38304D), Modifier.weight(1f)) { onGo("party") }
             SmallMode("من بعيد", "محتاج سيرفر آمن خاص", "↗", Color(0xFF4A2638), Modifier.weight(1f)) { onGo("remote") }
         }
-        Text("حاجة مختلفة؟", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Gold)
-        FeatureRow("سيبها على النرد", "٣ نردات… وسرّ مش متوقع", "◇") { onGo("dice") }
-        FeatureRow("إنتوا شبه بعض؟", "كل اختيار بيكشف حكاية", "؟") { onGo("quiz") }
-        FeatureRow("اكشف السر", "خربشة واحدة وتبان المفاجأة", "✦") { onGo("scratch") }
-        FeatureRow("همسة مخصوص", "رسالة خاصة بتتفتح مرة", "♡") { onGo("whispers") }
+        Text("واختار سرّ تاني…", style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold, color = Gold)
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)){
+            DiscoveryTile("سيبها على النرد", "الحظ ليه كلمة تانية",
+                DiscoveryMotif.DICE,Modifier.weight(1f)){onGo("dice")}
+            DiscoveryTile("إنتوا شبه بعض؟", "كل إجابة وراها حكاية",
+                DiscoveryMotif.QUIZ,Modifier.weight(1f)){onGo("quiz")}
+        }
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)){
+            DiscoveryTile("اكشف السر", "ورا الغطا مفاجأة",
+                DiscoveryMotif.SCRATCH,Modifier.weight(1f)){onGo("scratch")}
+            DiscoveryTile("همسة مخصوص", "رسالة متتقريش مرتين",
+                DiscoveryMotif.WHISPER,Modifier.weight(1f)){onGo("whispers")}
+        }
         TextButton(
             onClick = { onGo("privacy") },
             modifier = Modifier.fillMaxWidth()
