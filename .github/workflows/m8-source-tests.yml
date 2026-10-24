@@ -22,6 +22,8 @@ jobs:
           python-version: '3.12'
       - name: Verify Kotlin and server content are in sync
         run: python tools/generate_content_v2.py --check
+      - name: Verify critical Android UX source regressions
+        run: python tools/check_m8_ui_source.py
   backend-protocol:
     name: Node protocol and gameplay tests
     runs-on: ubuntu-latest
