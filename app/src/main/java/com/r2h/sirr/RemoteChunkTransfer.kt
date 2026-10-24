@@ -89,6 +89,11 @@ internal class RemoteChunkTransfer(private val client:OkHttpClient) {
         val expectedDigest=fingerprint(context,uri,prefix,size)
         var task=pending?.takeIf{it.uri==uri && it.roomId==id.roomId && it.mime==mime && it.total==total.toInt() && it.digest==expectedDigest}
         if(task==null){
+            // A changed source must never reuse an old transfer, even when length is unchanged.
+            pending?.let{old->
+                if(old.roomId==id.roomId)runCatching{call(id,"${base(id)}/uploads/${old.id}","DELETE")}
+            }
+            pending=null
             val request=JSONObject().put("kind",RemoteCrypto.kind(mime)).put("totalBytes",total)
             val info=call(id,"${base(id)}/uploads","POST",json=request.toString()).first!!
             task=Pending(uri,id.roomId,info.getString("id"),mime,total.toInt(),expectedDigest);pending=task

@@ -99,7 +99,7 @@ internal fun DiceScreenV2() {
                 }, label = { Text(level.arabic) })
             }
         }
-        Button(enabled=!rolling,onClick={error="";nonce++},modifier=Modifier.fillMaxWidth().height(56.dp),
+        Button(enabled=!rolling,onClick={error="";rolling=true;nonce++},modifier=Modifier.fillMaxWidth().height(56.dp),
             shape=RoundedCornerShape(18.dp)) {
             Text(if(rolling)"النرد بيلف…" else if(rolled==null)"ارمي النرد ✦" else "ارمي كمان مرة ✦",fontWeight=FontWeight.Bold)
         }
