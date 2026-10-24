@@ -22,6 +22,8 @@ internal fun QuizScreenV2() {
     val answersB = remember { mutableStateListOf<Int>() }
     var acceptedB by remember { mutableStateOf(false) }
     val packs = ExpandedQuizzes.packs
+    val moodTitles = listOf("إنت من جوّه", "الحب على مزاجك", "إحنا شبه بعض؟",
+        "الجاذبية والإشارات", "أمنيات متخبية", "راحة وحدود", "جرأة ولا صراحة؟")
     fun reset() {
         packIndex = -1; phase = 0; step = 0
         answersA.clear(); answersB.clear()
@@ -45,7 +47,7 @@ internal fun QuizScreenV2() {
                         Text("${index + 1}", color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(quiz.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(moodTitles[index], style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text("اختار اللي على مزاجك… وبعدين نبدأ",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                         }
@@ -56,7 +58,7 @@ internal fun QuizScreenV2() {
         } else {
             val quiz = packs[packIndex]
             if (phase == 0) {
-                Text(quiz.name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+                Text(moodTitles[packIndex], style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                 Text("تقدر تلعب لوحدك أو تقارن إجاباتك مع اللي معاك.", style = MaterialTheme.typography.bodyMedium)
                 Row {
                     Checkbox(pairing, { pairing = it })
