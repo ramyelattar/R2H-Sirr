@@ -104,7 +104,7 @@ data class DiceConfiguration(val dice: List<List<DieFace>>, val durationSeconds:
     fun validate() {
         require(dice.size == 3 && dice.all { die -> die.size == 6 && die.sumOf { it.weight } == 100 &&
             die.all { it.weight >= 0 && it.text.length <= 72 } })
-        require(durationSeconds in listOf(5, 7, 10, 13, 20))
+        require(durationSeconds in listOf(2, 3, 5, 7, 10, 13, 20))
     }
     fun roll(pick: (Int) -> Int = { Random.nextInt(it) }): List<Int> {
         validate()
