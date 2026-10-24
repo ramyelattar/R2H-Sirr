@@ -1,6 +1,7 @@
 package com.r2h.sirr
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
@@ -176,8 +177,10 @@ internal fun ExperienceScreen(group: Boolean) {
                 }
                 AnimatedVisibility(
                     visible = isRevealed,
-                    enter = fadeIn(animationSpec = tween(320)) +
-                        scaleIn(initialScale = .94f, animationSpec = tween(420))
+                    enter = if (effects.animate)
+                        fadeIn(animationSpec = tween(320)) +
+                            scaleIn(initialScale = .94f, animationSpec = tween(420))
+                    else EnterTransition.None
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     CinematicChallenge(turn.prompt.text, effects)
