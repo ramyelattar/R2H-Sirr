@@ -1,8 +1,8 @@
 package com.r2h.sirr
 
 import android.content.Context
-import android.media.AudioManager
-import android.media.ToneGenerator
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -41,7 +41,48 @@ internal class GameEffects(private val context:Context){
     var preferences by mutableStateOf(load())
         private set
     private val vault=LocalVault(context.applicationContext)
-    private var tones:ToneGenerator?=null
+    private val soundPool: SoundPool? = runCatching {
+        SoundPool.Builder()
+            .setMaxStreams(2)
+            .setAudioAttributes(AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build())
+            .build()
+    }.getOrNull()
+    private val sounds = mutableMapOf<GameCue, Int>()
+    private val loadedSamples = mutableSetOf<Int>()
+    private var pendingCue: GameCue? = null
+    init {
+        soundPool?.setOnLoadCompleteListener { _, sampleId, status ->
+            if (status == 0) {
+                loadedSamples.add(sampleId)
+                val expected = pendingCue
+                if (expected != null && sounds[expected] == sampleId) {
+                    pendingCue = null
+                    playSample(expected, preferences)
+                }
+            }
+        }
+        val resources = mapOf(
+            GameCue.ROUND to R.raw.sirr_round,
+            GameCue.REVEAL to R.raw.sirr_reveal,
+            GameCue.SUCCESS to R.raw.sirr_success,
+            GameCue.SKIP to R.raw.sirr_skip,
+            GameCue.COMPLETE to R.raw.sirr_complete
+        )
+        for ((cue, raw) in resources) {
+            runCatching { soundPool?.load(context, raw, 1) }
+                .getOrNull()?.let { sounds[cue] = it }
+        }
+    }
+    private fun playSample(cue: GameCue, p: EffectPreferences) {
+        if (!p.sound || p.volume <= 0) return
+        val sample = sounds[cue] ?: return
+        if (!loadedSamples.contains(sample)) { pendingCue = cue; return }
+        val gain = p.volume.coerceIn(0, 80) / 100f
+        runCatching { soundPool?.play(sample, gain, gain, 1, 0, 1f) }
+    }
     var burstNonce by mutableIntStateOf(0)
         private set
     private fun load():EffectPreferences=runCatching{
@@ -53,7 +94,7 @@ internal class GameEffects(private val context:Context){
         runCatching{vault.writePrivate("game-effects",JSONObject()
             .put("sound",preferences.sound).put("haptic",preferences.haptic)
             .put("cinematic",preferences.cinematic).put("volume",preferences.volume).toString())}
-        runCatching{tones?.release()};tones=null
+        pendingCue = null
     }
     val animate:Boolean get()=preferences.cinematic && runCatching{
         Settings.Global.getFloat(context.contentResolver,Settings.Global.ANIMATOR_DURATION_SCALE,1f)>0f
@@ -61,14 +102,7 @@ internal class GameEffects(private val context:Context){
     fun cue(cue:GameCue){
         if(cue in setOf(GameCue.REVEAL,GameCue.COMPLETE,GameCue.SUCCESS) && animate)burstNonce++
         val p=preferences
-        if(p.sound && p.volume>0)runCatching{
-            if(tones==null)tones=ToneGenerator(AudioManager.STREAM_MUSIC,p.volume)
-            val tone=when(cue){GameCue.ROUND->ToneGenerator.TONE_PROP_PROMPT
-                GameCue.SUCCESS,GameCue.COMPLETE->ToneGenerator.TONE_PROP_ACK
-                GameCue.SKIP->ToneGenerator.TONE_PROP_NACK
-                GameCue.REVEAL->ToneGenerator.TONE_PROP_BEEP}
-            tones?.startTone(tone,if(cue==GameCue.COMPLETE)220 else 90)
-        }
+        playSample(cue, p)
         if(p.haptic)runCatching{
             val v:Vibrator=if(Build.VERSION.SDK_INT>=31)context.getSystemService(VibratorManager::class.java).defaultVibrator
                 else (context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator)
@@ -76,7 +110,12 @@ internal class GameEffects(private val context:Context){
                 if(cue==GameCue.SKIP)55 else 95))
         }
     }
-    fun release(){runCatching{tones?.release()};tones=null}
+    fun release() {
+        pendingCue = null
+        runCatching { soundPool?.release() }
+        sounds.clear()
+        loadedSamples.clear()
+    }
 }
 
 @Composable
