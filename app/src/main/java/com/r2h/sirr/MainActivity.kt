@@ -337,7 +337,7 @@ private fun HomeScreen(onGo: (String) -> Unit) {
         Text("إنتوا في مود إيه؟", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Gold)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             SmallMode("لَمّة صحاب", "ضحك ومفاجآت", "✳", Color(0xFF38304D), Modifier.weight(1f)) { onGo("party") }
-            SmallMode("من بعيد", "العبوا سوا أونلاين", "↗", Color(0xFF4A2638), Modifier.weight(1f)) { onGo("remote") }
+            SmallMode("من بعيد", "محتاج سيرفر آمن خاص", "↗", Color(0xFF4A2638), Modifier.weight(1f)) { onGo("remote") }
         }
         Text("حاجة مختلفة؟", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Gold)
         FeatureRow("سيبها على النرد", "٣ نردات… وسرّ مش متوقع", "◇") { onGo("dice") }
