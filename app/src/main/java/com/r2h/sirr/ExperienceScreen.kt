@@ -105,14 +105,14 @@ internal fun ExperienceScreen(group: Boolean) {
                 )
                 Text("الجولة ${current.round + 1} / ${current.turns.size}", color = MaterialTheme.colorScheme.primary)
                 Text("دور: ${current.playerNames[turn.actorIndex]}", style = MaterialTheme.typography.titleMedium)
-                Card(Modifier.fillMaxWidth()) { Text(turn.prompt.text, Modifier.padding(20.dp), style = MaterialTheme.typography.titleLarge) }
+                CinematicChallenge(turn.prompt.text,effects)
                 OutlinedTextField(reply, { reply = it.take(1000) }, label = { Text("رد نصي اختياري (يبقى داخل الجلسة)") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
                 LocalResponseMedia(current.round)
                 Button(onClick = {
-                    game = current.resolve(completed = true); reply = ""
+                    effects.cue(GameCue.SUCCESS);game = current.resolve(completed = true); reply = ""
                 }, modifier = Modifier.fillMaxWidth()) { Text("إكمال التحدي (+١)") }
                 OutlinedButton(onClick = {
-                    game = current.resolve(completed = false); reply = ""
+                    effects.cue(GameCue.SKIP);game = current.resolve(completed = false); reply = ""
                 }, modifier = Modifier.fillMaxWidth()) { Text("تخطي دون عقوبة") }
                 TextButton(onClick = { game = current.leave(); reply = "" }) { Text("إيقاف الجلسة فورًا") }
             } else {
