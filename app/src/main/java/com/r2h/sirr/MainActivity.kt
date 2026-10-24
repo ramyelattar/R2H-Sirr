@@ -124,6 +124,7 @@ private fun SirrApp() {
                             "couple" -> ExperienceScreen(group = false)
                             "party" -> ExperienceScreen(group = true)
                             "remote" -> RemoteScreen()
+                            "settings" -> GameSettingsScreen(onPrivacy = { route = "privacy" })
                             "privacy" -> PrivacyScreen(onClear = {
                                 LocalVault(context.applicationContext).clear()
                                 sessionVersion++
@@ -355,6 +356,7 @@ private fun HomeScreen(onGo: (String) -> Unit) {
         Text("من بعيد؟", style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold, color = Gold)
         FeatureRow("أوضة خاصة أونلاين", "محتاج سيرفر آمن خاص قبل اللعب", "↗") { onGo("remote") }
+        FeatureRow("ظبّط التجربة على مزاجك", "الصوت · الاهتزاز · حركة الكروت", "⚙") { onGo("settings") }
         TextButton(
             onClick = { onGo("privacy") },
             modifier = Modifier.fillMaxWidth()
@@ -375,5 +377,22 @@ private fun PrivacyScreen(onClear: () -> Unit) = Page(
     Text("• مسح بيانات الموبايل مش بيمسح اللي الطرف التاني احتفظ بيه أو أوضة أونلاين لسه شغالة.")
     Button(onClick = onClear, modifier = Modifier.fillMaxWidth()) {
         Text("امسح بياناتي الخاصة")
+    }
+}
+
+@Composable
+private fun GameSettingsScreen(onPrivacy: () -> Unit) {
+    val effects = rememberGameEffects()
+    Page("ظبّطها على مزاجك", "الاختيارات دي بتتطبق على الألعاب اللي بتدعم المؤثرات.") {
+        MysteryHeader("تجربتك ليك", "كل تفصيلة بإيدك.", "صوت، حركة، اهتزاز… خليك على راحتك.", "✦")
+        EffectPreferencesPanel(effects, initiallyExpanded = true)
+        Text(
+            "لو سكّنت الصوت من هنا، مؤثرات اللعبة مش هتشتغل. الأغاني اللي بتختارها بنفسك في الهمسات ليها زر تشغيل وإيقاف مستقل.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Muted
+        )
+        OutlinedButton(onClick = onPrivacy, modifier = Modifier.fillMaxWidth()) {
+            Text("خصوصيتك ومسح بياناتك")
+        }
     }
 }
