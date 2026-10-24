@@ -43,3 +43,14 @@ This runs catalog sync, UI-source guards, and Node backend tests only. First inv
 6. Test Node + Android + browser protocols and contentVersion 4 separately for remote multiplayer.
 
 **PR stays Draft; no merge into main.**
+
+
+## Continued M8 refinement — interactive quality review
+
+- Converted scratch from isolated transparent points to connected finger-shaped `drawPath` strokes. Brush coverage now uses a fixed 16×12 cell hitmap that matches a 34dp-wide visible stroke (17dp radius); recomposition is driven by one covered-cell counter rather than a snapshot state write for every cell. Stored stroke-count bookkeeping is O(1).
+- Replaced seven identical quiz-topic cards with seven accent-colored `QuizTopicTile` scenes in `SirrDiscovery.kt`; existing Q&A logic and privacy remain unchanged.
+- Changed home ordering: instantly playable couple/party/scratch/dice/quizzes/whispers appear before the server-dependent remote-room feature.
+- Added a dedicated `settings` destination accessible from home for optional sounds, haptics and cinematic motion. Advanced in-game settings still work. The settings page explicitly distinguishes separate, user-initiated whisper music playback.
+- Expanded `tools/check_m8_ui_source.py` to guard the updated scratch algorithm, seven quiz doors and global settings. Repository source inspection confirmed **8/8 targeted integration conditions**, but this is not execution of the Python test script on the owner PC.
+
+**Important:** The updated scratch painting and screen-layout behavior have not been observed on a real Android device. No APK, Gradle invocation, backend deployment or emulator was run in this iteration. `startup_failure` in GitHub Actions was not resolved. The owner's product rating remains 65/100; target remains >=90/100, measured after on-device acceptance.
