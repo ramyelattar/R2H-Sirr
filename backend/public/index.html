@@ -16,9 +16,22 @@
 <section id="game" hidden>
   <p id="connect">جارِ الاتصال…</p>
   <h1 id="title">جلسة مشتركة</h1>
-  <p id="round"></p>
+  <p id="round" aria-live="polite"></p>
+  <progress id="roundProgress" max="100" value="0" aria-label="تقدم الجولات"></progress>
+  <p id="sessionSettings" class="settings-summary"></p>
+  <label class="check"><input type="checkbox" id="effects" checked> تأثيرات انتقال لطيفة (يمكن إيقافها)</label>
   <article id="challenge" class="challenge"></article>
   <ul id="participants"></ul>
+  <section id="hostSettings" hidden aria-label="تخصيص الجلسة">
+    <h2>تخصيص الجلسة قبل البدء</h2>
+    <label>عدد الجولات <select id="settingsRounds"><option>6</option><option selected>10</option><option>12</option><option>18</option></select></label>
+    <label class="check"><input id="settingsVariety" type="checkbox"> امزج التحديات بمستوى أقل</label>
+    <label class="check"><input id="settingsRepeat" type="checkbox" checked> لا تكرر التحديات داخل الجلسة</label>
+    <label>تحدياتك المخصصة (سطر لكل تحدٍ، حتى 30 تحديًا)
+      <textarea id="settingsPrompts" rows="4" maxlength="6500" placeholder="اكتب تحديًا عربيًا واحدًا في كل سطر"></textarea></label>
+    <button class="secondary" id="saveSettings">حفظ إعدادات الجلسة</button>
+    <p class="privacy-note">التحديات المخصصة تُرسل نصيًا للخادم والمشاركين، وليست مشفرة طرفيًا.</p>
+  </section>
   <div id="actor" hidden>
     <label>رد نصي اختياري <textarea id="reply" rows="2" maxlength="500" placeholder="لن يظهر الرد إلا للمشاركين في الجلسة"></textarea></label>
     <button id="send">إرسال النص للمشاركين</button>

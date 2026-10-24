@@ -41,3 +41,13 @@ Date: 2026-10-23. Baseline: M3 copied unchanged first, then extended.
 - Server has access to regular chat/quiz data; shared image/audio/video and card payloads are AES-GCM ciphertext if clients correctly execute encryption.
 - The invite URL contains access to the 256-bit content key in its fragment. Sharing the URL with untrusted recipients compromises privacy.
 - No claim of prevention of screen recording, camera captures, or forwarding.
+
+## M7.1 — Remote customization and effects (2026-10-24)
+
+- Node suite: **25 passed, 0 failed** (five M7.1-focused tests).
+- Canonical content integrity: **PASS** (230 challenges / 175 questions, v3 unchanged).
+- JS syntax checks: **PASS**.
+- Pure Kotlin-core smoke tests: `ContentSmokeTestKt` **PASS**, `M7SmokeTestKt` **PASS** (standalone `kotlinc`, NOT Android compile).
+- Chromium navigation attempt: **blocked** by `ERR_BLOCKED_BY_ADMINISTRATOR`, hence no browser visual pass.
+- Android Gradle / APK / device / relay HTTP/WSS / 2-client E2E: **NOT RUN**, still not accepted.
+- Important privacy boundary: remote custom prompts and replies are not E2EE; server sessions are RAM-only.
