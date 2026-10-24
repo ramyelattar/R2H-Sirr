@@ -70,3 +70,19 @@ This is not release-ready. The earlier M7 device build succeeds, but that result
 - Tests amended for v4. Created `.github/workflows/m8-source-tests.yml` to run Python catalog checks and Node tests without Gradle.
 - **CI startup status:** the first run ended `startup_failure` with zero jobs. No passing tests or Kotlin build should be inferred from that.
 - **Screen validation:** updated Arabic type scale for Android, but no new Android build or user-device runtime check was run.
+
+
+## Gameplay QA follow-up (24 Oct 2026)
+
+The M8 refinement pass made the following source changes **without generating or installing an APK**:
+
+1. **First-run friction:** user confirmation of being 18+ and agreeing to the rules is stored in encrypted local `LocalVault` after explicit opt-in; later launches do not repeat the same declaration. The Privacy screen's Clear Data action erases it. This remains self-attestation, **not independent age verification**.
+2. **Scratch:** finger drags interpolate intermediate points (no longer leave long skipped gaps), the scratch-progress approximation uses a 16×12 grid, and gesture recognition is rebound after the canvas receives its real dimensions. The amount of cover cleared is indicated in the Arabic interface.
+3. **Two-player quiz handoff:** fixed the condition that made the second player's consent screen disappear immediately after checking “أنا موافق أبدأ”; it now remains visible until Start is pressed. Results reveal one shared question and both answers at a time, instead of presenting raw choice tallies as compatibility results. Agreement remains purely descriptive.
+4. **Dice:** every preset face text uses Egyptian colloquial speech; three dice are identified as action / idea / manner and produce **one complete, prominent prompt** instead of three separate word cards. Custom image faces remain supported.
+5. **Small screens:** quiz round-count chips scroll horizontally and the top back arrow points in the RTL direction.
+6. **Regression checks:** `tools/check_m8_ui_source.py` guards these previously defective source paths and has been added to `.github/workflows/m8-source-tests.yml`.
+
+**Verification:** GitHub-file static checks for these exact changes were carried out. This is **not** Compose type-checking or an actual device test. GitHub Actions previously returned `startup_failure`; until Actions runs jobs successfully, new checks are **not CI-approved**. Neither `main` nor M7's installed APK was changed.
+
+Acceptance still requires Android compilation and layout/device runtime inspection on narrow and larger displays.
