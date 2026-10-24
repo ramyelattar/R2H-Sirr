@@ -42,6 +42,8 @@ internal fun DiceScreenV2() {
         imagesFor = null
     }
     var rolled by remember { mutableStateOf<List<Int>?>(null) }
+    // Freeze the visible result at roll time; editing the dice must not rewrite past results.
+    var rolledFaces by remember { mutableStateOf<List<DieFace>?>(null) }
     var rolling by remember { mutableStateOf(false) }
     var nonce by remember { mutableIntStateOf(0) }
     var error by remember { mutableStateOf("") }
@@ -56,6 +58,7 @@ internal fun DiceScreenV2() {
             delay(125)
         }
         rolled = final
+        rolledFaces = final.mapIndexed { i, index -> config.dice[i][index] }
         rolling = false
         effects.cue(GameCue.REVEAL)
     }
@@ -82,7 +85,7 @@ internal fun DiceScreenV2() {
             color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.titleMedium)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Intensity.entries.forEach { level ->
-                FilterChip(selected == level, onClick = {
+                FilterChip(selected == level, enabled = !rolling, onClick = {
                     selected = level
                     if (level != Intensity.CUSTOM) {
                         val preset = DiceCatalog.preset(level)
@@ -92,7 +95,7 @@ internal fun DiceScreenV2() {
                         dice.clear(); dice.addAll(saved.dice)
                         duration = saved.durationSeconds
                     }
-                    rolled = null; error = ""; success = ""
+                    rolled = null; rolledFaces = null; error = ""; success = ""
                 }, label = { Text(level.arabic) })
             }
         }
@@ -108,7 +111,7 @@ internal fun DiceScreenV2() {
             Text("النرد يلف قد إيه؟", color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.Bold)
             Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(5.dp)) {
                 listOf(2,3,5,7,10,13,20).forEach { seconds ->
-                    FilterChip(duration==seconds,onClick={duration=seconds},label={Text("$seconds ث")})
+                    FilterChip(duration==seconds,enabled=!rolling,onClick={duration=seconds},label={Text("$seconds ث")})
                 }
             }
         if (selected == Intensity.CUSTOM) {
@@ -118,17 +121,17 @@ internal fun DiceScreenV2() {
                 repeat(6) { face ->
                     val item = dice[die][face]
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(value = item.text, onValueChange = { text ->
+                        OutlinedTextField(value = item.text, enabled = !rolling, onValueChange = { text ->
                             dice[die] = dice[die].toMutableList().also { it[face] = item.copy(text = text.take(72)) }
                         }, label = { Text("الوجه ${face + 1}") }, modifier = Modifier.weight(2f), singleLine = true)
-                        OutlinedTextField(value = item.weight.toString(), onValueChange = { number ->
+                        OutlinedTextField(value = item.weight.toString(), enabled = !rolling, onValueChange = { number ->
                             val parsed = number.toIntOrNull()?.coerceIn(0, 100) ?: 0
                             dice[die] = dice[die].toMutableList().also { it[face] = item.copy(weight = parsed) }
                         }, label = { Text("النسبة") }, modifier = Modifier.weight(1f), singleLine = true)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { imagesFor = die to face; chooseImage.launch("image/*") }) { Text("صورة لهذا الوجه") }
-                        if (item.imageId != null) TextButton(onClick = {
+                        OutlinedButton(enabled=!rolling,onClick = { imagesFor = die to face; chooseImage.launch("image/*") }) { Text("صورة لهذا الوجه") }
+                        if (item.imageId != null) TextButton(enabled=!rolling,onClick = {
                             vault.delete(item.imageId)
                             dice[die] = dice[die].toMutableList().also { it[face] = item.copy(imageId = null) }
                         }) { Text("حذف الصورة") }
@@ -140,16 +143,16 @@ internal fun DiceScreenV2() {
                 runCatching { DiceStorage.save(vault, config) }.onSuccess { success = "اتحفظت إعداداتك مشفّرة على الموبايل"; error = "" }
                     .onFailure { error = "معرفناش نحفظ. اتأكد من مجموع النسب" }
             }, modifier = Modifier.fillMaxWidth(), enabled = !rolling) { Text("احفظ النرد بتاعي") }
-            OutlinedButton(onClick = {
+            OutlinedButton(enabled=!rolling,onClick = {
                 val preset = DiceCatalog.preset(Intensity.CUSTOM)
                 dice.clear(); dice.addAll(preset.dice)
-                error = ""; success = ""
+                rolled = null;rolledFaces = null;error = ""; success = ""
             }) { Text("رجّع الإعدادات الأصلية") }
         }
         }
         if (rolled != null && !rolling) {
             val outcome = requireNotNull(rolled)
-            val faces = outcome.mapIndexed { i, faceIndex -> dice[i][faceIndex] }
+            val faces = rolledFaces ?: outcome.mapIndexed { i, faceIndex -> dice[i][faceIndex] }
             ChallengeRevealCard(faces.joinToString(" ") { it.text })
             if (selected == Intensity.CUSTOM) {
                 faces.forEachIndexed { index, face ->

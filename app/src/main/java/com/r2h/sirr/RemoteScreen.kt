@@ -109,19 +109,19 @@ private class RemoteTransport(private val client:OkHttpClient) {
         pendingActions.clear();authenticated=false;open()
     }
     private fun stopAckRetry(){ackRetry?.let(main::removeCallbacks);ackRetry=null}
-    private fun sendPending(){
+    private fun sendPending(forceRetry:Boolean=false){
         if(!authenticated || disconnected)return
         val socket=ws?:return
         val expired=mutableListOf<String>()
         for((eventId,item) in pendingActions){
             if(item.attempts>=4){expired.add(eventId);continue}
-            if(socket.send(item.payload))item.attempts++ else break
+            if((forceRetry || item.attempts==0) && socket.send(item.payload))item.attempts++
         }
         expired.forEach{pendingActions.remove(it)}
         if(expired.isNotEmpty())onStatus?.invoke("تعذر تأكيد بعض الأوامر. راجع حالة الغرفة قبل إعادة المحاولة")
         stopAckRetry()
         if(pendingActions.isNotEmpty()){
-            val tick=Runnable{ackRetry=null;sendPending()}
+            val tick=Runnable{ackRetry=null;sendPending(forceRetry=true)}
             ackRetry=tick;main.postDelayed(tick,5000L)
         }
     }
@@ -142,7 +142,7 @@ private class RemoteTransport(private val client:OkHttpClient) {
                 main.post{
                     if(seq!=generation||disconnected)return@post
                     when(data.optString("type")){
-                        "authenticated"->{authenticated=true;reconnectAttempt=0;onStatus?.invoke("متصل — التزامن نشط");sendPending()}
+                        "authenticated"->{authenticated=true;reconnectAttempt=0;onStatus?.invoke("متصل — التزامن نشط");sendPending(forceRetry=true)}
                         "state"->onState?.invoke(data.getJSONObject("data"))
                         "ack"->{pendingActions.remove(data.optString("eventId"));if(pendingActions.isEmpty())stopAckRetry()}
                         "error"->{pendingActions.remove(data.optString("eventId"));onStatus?.invoke(data.optString("message","تعذر تنفيذ الأمر"))}
