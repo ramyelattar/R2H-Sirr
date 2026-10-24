@@ -128,7 +128,7 @@ internal fun EffectPreferencesPanel(effects:GameEffects){
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 internal fun CinematicChallenge(text:String,effects:GameEffects){
-    if(!effects.animate){Card(Modifier.fillMaxWidth()){Text(text,Modifier.padding(18.dp),style=MaterialTheme.typography.titleLarge)};return}
+    if(!effects.animate){ChallengeRevealCard(text);return}
     Box(Modifier.fillMaxWidth()) {
     AnimatedContent(targetState=text,transitionSpec={
         (fadeIn(tween(350))+scaleIn(initialScale=.92f,animationSpec=tween(350))+
@@ -136,7 +136,7 @@ internal fun CinematicChallenge(text:String,effects:GameEffects){
             (fadeOut(tween(150))+scaleOut(targetScale=.98f,animationSpec=tween(150))+
             slideOutVertically(tween(150)){-it/8})
     },label="سينما التحديات"){value->
-        Card(Modifier.fillMaxWidth()){Text(value,Modifier.padding(18.dp),style=MaterialTheme.typography.titleLarge)}
+        ChallengeRevealCard(value)
     }
     val fraction=remember{Animatable(1f)}
     LaunchedEffect(effects.burstNonce){
