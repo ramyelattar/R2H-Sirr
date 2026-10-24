@@ -8,7 +8,7 @@ const catalog=JSON.parse(readFileSync(new URL('../public/challenges.json',import
 let i=0;const command=(type,extra={})=>({type,eventId:`m7_event_${++i}_unique`,...extra});
 
 test('M7 canonical Arabic content expanded in all packages and 8-of-25 indices',()=>{
- assert.equal(quiz.version,3);assert.equal(catalog.version,3);
+ assert.equal(quiz.version,4);assert.equal(catalog.version,4);
  assert.equal(quiz.packs.length,7);assert.ok(quiz.packs.every(p=>p.questions.length===25));
  assert.equal(new Set(quiz.packs.flatMap(p=>p.questions.map(q=>q.text))).size,175);
  for(const level of ['SOFT','NORMAL','SEXY','HOT','HARD']) {
@@ -34,5 +34,5 @@ test('M7 private quiz result exposes agreement without plaintext answer distribu
  assert.equal(result.counts,undefined);
  assert.equal(result.agreement,5);
  assert.deepEqual(room.quiz.submissions.map(x=>Object.keys(x)),[['id'],['id']]);
- assert.equal(publicState(room,1025).contentVersion,3);
+ assert.equal(publicState(room,1025).contentVersion,4);
 });
