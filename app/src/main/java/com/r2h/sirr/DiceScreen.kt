@@ -20,8 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.r2h.sirr.core.*
 import kotlinx.coroutines.delay
-import android.media.ToneGenerator
-import android.media.AudioManager
 
 @Composable
 internal fun DiceScreenV2() {
@@ -32,7 +30,6 @@ internal fun DiceScreenV2() {
     val dice = remember { mutableStateListOf<List<DieFace>>().apply { addAll(DiceCatalog.preset(Intensity.SOFT).dice) } }
     var duration by remember { mutableIntStateOf(3) }
     var advanced by remember { mutableStateOf(false) }
-    var sound by remember { mutableStateOf(false) }
     var imagesFor by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val chooseImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         val index = imagesFor
@@ -49,7 +46,7 @@ internal fun DiceScreenV2() {
     var nonce by remember { mutableIntStateOf(0) }
     var error by remember { mutableStateOf("") }
     var success by remember { mutableStateOf("") }
-    val config = DiceConfiguration(dice.toList(), duration, sound)
+    val config = DiceConfiguration(dice.toList(), duration, effects.preferences.sound)
     LaunchedEffect(nonce) {
         if (nonce == 0) return@LaunchedEffect
         val final = runCatching { config.roll() }.getOrElse { error = "راجع إعدادات النرد الأول"; rolling = false; return@LaunchedEffect }
@@ -61,13 +58,6 @@ internal fun DiceScreenV2() {
         rolled = final
         rolling = false
         effects.cue(GameCue.REVEAL)
-        if (sound) {
-            val tone = runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 35) }.getOrNull()
-            if (tone != null) try {
-                tone.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
-                delay(150)
-            } finally { tone.release() }
-        }
     }
     Page("سيبها على النرد", "3 نردات هتقرروا تعملوا إيه… خليك جاهز.") {
         MysteryHeader("مود الليلة", "مين قال إن الحظ بريء؟", "كل رمية بتفتح حكاية جديدة.", "◇")
@@ -100,7 +90,7 @@ internal fun DiceScreenV2() {
                     } else {
                         val saved = DiceStorage.load(vault) ?: DiceCatalog.preset(Intensity.CUSTOM)
                         dice.clear(); dice.addAll(saved.dice)
-                        duration = saved.durationSeconds; sound = saved.sound
+                        duration = saved.durationSeconds
                     }
                     rolled = null; error = ""; success = ""
                 }, label = { Text(level.arabic) })
@@ -120,10 +110,6 @@ internal fun DiceScreenV2() {
                 listOf(2,3,5,7,10,13,20).forEach { seconds ->
                     FilterChip(duration==seconds,onClick={duration=seconds},label={Text("$seconds ث")})
                 }
-            }
-            Row(verticalAlignment=Alignment.CenterVertically) {
-                Checkbox(sound,onCheckedChange={sound=it})
-                Text("صوت خفيف آخر الرمية")
             }
         if (selected == Intensity.CUSTOM) {
             Text("اكتب الأوجه على مزاجك. لازم مجموع نسب كل نرد يبقى 100٪.")
