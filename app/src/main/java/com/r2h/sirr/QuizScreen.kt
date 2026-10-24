@@ -1,6 +1,8 @@
 package com.r2h.sirr
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -66,7 +68,10 @@ internal fun QuizScreenV2() {
                     Text("هنلعب إحنا الاتنين")
                 }
                 Text("نختار كام سؤال؟", style = MaterialTheme.typography.titleMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     listOf(8, 12, 20, 25).forEach { n ->
                         FilterChip(questionCount == n, onClick = { questionCount = n }, label = { Text("$n") })
                     }
