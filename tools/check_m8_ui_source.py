@@ -27,9 +27,12 @@ assert 'else if (phase == 2 && pairing)' in quiz
 assert 'phase == 2 && pairing && !acceptedB' not in quiz, "Don't hide consent handoff before start"
 assert 'selectedIndices[revealStep]' in quiz
 assert 'answersB[revealStep]' in quiz
-assert 'trace(change.position - dragAmount, change.position)' in scratch
+assert 'drawPath(path, color = Color.Transparent' in scratch
+assert 'StrokeCap.Round' in scratch
+assert 'append(change.position)' in scratch
+assert 'mark(Offset(previous.x + dx * t, previous.y + dy * t))' in scratch
 assert '.pointerInput(dimensions)' in scratch
-assert 'coverage = (touched.size / 192f)' in scratch
+assert 'coverage = (cells.size / 192f)' in scratch
 assert 'ChallengeRevealCard(faces.joinToString(" ") { it.text })' in dice
 assert 'MysteryDie(' in dice and 'MysteryHeader(' in dice
 assert 'ChallengeRevealCard(' in visuals
@@ -46,6 +49,7 @@ assert 'Modifier.fillMaxWidth().heightIn(min = 184.dp)' in main
 assert 'محتاج سيرفر آمن خاص' in main
 
 assert 'DiscoveryTile(' in main and 'DiscoveryMotif.DICE' in main
+assert 'QuizTopicTile(' in quiz and 'internal fun QuizTopicTile(' in artwork
 assert 'DiscoveryMotif.WHISPER' in main and 'Canvas(' in artwork
 assert 'SoundPool.Builder()' in sound
 assert 'ToneGenerator' not in sound and 'ToneGenerator' not in dice
