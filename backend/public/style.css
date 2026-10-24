@@ -9,3 +9,12 @@
 @keyframes sirr-reveal { from { opacity:.55;transform:translateY(7px) scale(.98); } to {opacity:1;transform:none;} }
 .reveal-pop { animation:sirr-reveal .32s ease-out; }
 @media (prefers-reduced-motion:reduce) { #round::after {transition:none;} .reveal-pop { animation:none; } }
+
+/* M7 cinematic feedback with explicit user controls and motion accessibility. */
+#fxParticles{position:relative;height:0;pointer-events:none;z-index:2}
+.fx-spark{position:absolute;top:-60px;right:50%;height:7px;width:7px;border-radius:50%;
+ background:#dec18d;animation:fx-spark .55s ease-out forwards;opacity:0}
+@keyframes fx-spark{from{opacity:1;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--fx-x),var(--fx-y)) scale(.1)}}
+body.fx-motion-off .reveal-pop{animation:none!important}
+body.fx-motion-off #round::after{transition:none!important}
+@media (prefers-reduced-motion:reduce){.fx-spark{animation:none;display:none}}
