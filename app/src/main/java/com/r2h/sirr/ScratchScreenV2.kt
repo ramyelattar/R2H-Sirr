@@ -119,6 +119,7 @@ internal fun ScratchScreenV2() {
 
 @Composable
 internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
+    val effects = rememberGameEffects()
     val points = remember { mutableStateListOf<Offset>() }
     val touched = remember { mutableStateMapOf<Int, Boolean>() }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
@@ -126,7 +127,13 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     // A 16x12 area map approximates actual scratched coverage instead of a few taps.
     val coverage = (touched.size / 192f).coerceIn(0f, 1f)
     val revealed = coverage >= 0.55f
-    LaunchedEffect(revealed) { if (revealed && !alreadyRevealed) { alreadyRevealed = true; onRevealed() } }
+    LaunchedEffect(revealed) {
+        if (revealed && !alreadyRevealed) {
+            alreadyRevealed = true
+            effects.cue(GameCue.REVEAL)
+            onRevealed()
+        }
+    }
     fun touch(p: Offset) {
         val w = dimensions.width.toFloat(); val h = dimensions.height.toFloat()
         if (w <= 0 || h <= 0 || p.x !in 0f..w || p.y !in 0f..h) return
@@ -174,6 +181,15 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             drawRect(Brush.linearGradient(listOf(Color(0xFFDCB98D),Color(0xFF8C5169),Color(0xFF50283A))))
             drawCircle(Color.White.copy(alpha=.1f),radius=size.minDimension*.3f,
                 center=Offset(size.width*.83f,size.height*.27f))
+            for (i in 0..19) {
+                val x = (i*41 % 97) / 97f * size.width
+                val y = (i*73 % 97) / 97f * size.height
+                drawCircle(
+                    color = Color(0xFFFFEDCF).copy(alpha = if(i%2==0) .38f else .2f),
+                    radius = (if(i%3==0) 2.3f else 1.3f).dp.toPx(),
+                    center = Offset(x, y)
+                )
+            }
             drawPoints(points = points.toList(), pointMode = PointMode.Points, color = Color.Transparent,
                 strokeWidth = 45.dp.toPx(), cap = StrokeCap.Round, blendMode = BlendMode.Clear)
         }
