@@ -3,12 +3,16 @@ package com.r2h.sirr
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -26,7 +30,8 @@ internal fun DiceScreenV2() {
     val vault = remember { LocalVault(context.applicationContext) }
     var selected by remember { mutableStateOf(Intensity.SOFT) }
     val dice = remember { mutableStateListOf<List<DieFace>>().apply { addAll(DiceCatalog.preset(Intensity.SOFT).dice) } }
-    var duration by remember { mutableIntStateOf(7) }
+    var duration by remember { mutableIntStateOf(3) }
+    var advanced by remember { mutableStateOf(false) }
     var sound by remember { mutableStateOf(false) }
     var imagesFor by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val chooseImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -64,8 +69,15 @@ internal fun DiceScreenV2() {
             } finally { tone.release() }
         }
     }
-    Page("سيبها على النرد", "3 نردات، ومفاجأة كل مرة. اختار المود وارمي.") {
-        EffectPreferencesPanel(effects)
+    Page("سيبها على النرد", "3 نردات هتقرروا تعملوا إيه… خليك جاهز.") {
+        MysteryHeader("مود الليلة", "مين قال إن الحظ بريء؟", "كل رمية بتفتح حكاية جديدة.", "◇")
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically) {
+            repeat(3){ i ->
+                MysteryDie((rolled?.getOrNull(i)?:i)+1,rolling,Modifier.weight(1f))
+            }
+        }
+        Text(if(rolling) "استنى المفاجأة…" else if(rolled==null) "اختار المود وارمي أول رمية." else "أهي الرمية اختارت لكم!",
+            color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.titleMedium)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Intensity.entries.forEach { level ->
                 FilterChip(selected == level, onClick = {
@@ -82,13 +94,25 @@ internal fun DiceScreenV2() {
                 }, label = { Text(level.arabic) })
             }
         }
-        Text("النرد يلف قد إيه؟", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            listOf(5, 7, 10, 13, 20).forEach { s ->
-                FilterChip(duration == s, onClick = { duration = s }, label = { Text("$s ث") })
-            }
+        Button(enabled=!rolling,onClick={error="";nonce++},modifier=Modifier.fillMaxWidth().height(56.dp),
+            shape=RoundedCornerShape(18.dp)) {
+            Text(if(rolling)"النرد بيلف…" else if(rolled==null)"ارمي النرد ✦" else "ارمي كمان مرة ✦",fontWeight=FontWeight.Bold)
         }
-        Row { Checkbox(sound, onCheckedChange = { sound = it }); Text("صوت خفيف آخر الرمية") }
+        OutlinedButton(onClick={advanced=!advanced},modifier=Modifier.fillMaxWidth()) {
+            Text(if(advanced)"اقفل الإعدادات" else "عايز تغيّر الوقت أو تعمل نرد مخصوص؟")
+        }
+        if(advanced) {
+            EffectPreferencesPanel(effects)
+            Text("النرد يلف قد إيه؟", color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.Bold)
+            Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(5.dp)) {
+                listOf(2,3,5,7,10,13,20).forEach { seconds ->
+                    FilterChip(duration==seconds,onClick={duration=seconds},label={Text("$seconds ث")})
+                }
+            }
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Checkbox(sound,onCheckedChange={sound=it})
+                Text("صوت خفيف آخر الرمية")
+            }
         if (selected == Intensity.CUSTOM) {
             Text("اكتب الأوجه على مزاجك. لازم مجموع نسب كل نرد يبقى 100٪.")
             repeat(3) { die ->
@@ -124,12 +148,18 @@ internal fun DiceScreenV2() {
                 error = ""; success = ""
             }) { Text("رجّع الإعدادات الأصلية") }
         }
+        }
         rolled?.forEachIndexed { i, selectedFace ->
             val face = dice[i][selectedFace]
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("النرد ${i + 1}", color = MaterialTheme.colorScheme.primary)
-                    Text(face.text, style = MaterialTheme.typography.titleLarge)
+            Card(
+                Modifier.fillMaxWidth(),
+                shape=RoundedCornerShape(22.dp),
+                colors=CardDefaults.cardColors(containerColor=Color(0xFF2F1E2D))
+            ) {
+                Column(Modifier.padding(18.dp), verticalArrangement=Arrangement.spacedBy(9.dp)) {
+                    Text("✦  ${listOf("اعمل","إيه","إزاي")[i]}",
+                        color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelLarge)
+                    Text(face.text,style=MaterialTheme.typography.headlineSmall,color=Color.White)
                     val bitmap = remember(face.imageId) { vault.readPhoto(face.imageId) }
                     if (bitmap != null) Image(bitmap, contentDescription = "صورة الوجه", modifier = Modifier.fillMaxWidth().height(125.dp), contentScale = ContentScale.Fit)
                 }
@@ -137,9 +167,7 @@ internal fun DiceScreenV2() {
         }
         if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
         if (success.isNotBlank()) Text(success)
-        Button(enabled = !rolling, onClick = { error = ""; nonce++ }, modifier = Modifier.fillMaxWidth()) {
-            Text(if (rolling) "النرد بيلف..." else "ارمي تاني")
-        }
-        Text("تقدر توقف الرمية وترجع. صورك الخاصة بتفضل مشفّرة على الموبايل.", style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
+        Text("تقدر تقفل في أي لحظة. صورك الخاصة بتفضل مشفّرة على الموبايل.",
+            style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
