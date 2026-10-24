@@ -52,17 +52,17 @@ internal fun ScratchScreenV2() {
             close()
         }
     }
-    Page("الكشط والكشف", "كشف فردي أو متتابع حتى ثلاث طبقات، مع رسالة وصورة نهائية اختيارية.") {
+    Page("اكشف اللي مستخبي", "امسح الغطا بإيدك… كل طبقة وراها حاجة مستخبية.") {
         if (editing) {
-            Text("عدد طبقات الكشف")
+            Text("هتخبّي كام مفاجأة؟")
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 (1..3).forEach { n -> FilterChip(stages == n, onClick = { stages = n }, label = { Text("$n") }) }
             }
             repeat(stages) { i ->
-                OutlinedTextField(texts[i], { texts[i] = it.take(280) }, label = { Text("الرسالة المخفية ${i+1}") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(texts[i], { texts[i] = it.take(280) }, label = { Text("السر المستخبي ${i+1}") }, minLines = 2, modifier = Modifier.fillMaxWidth())
             }
-            OutlinedButton(onClick = { pickPhoto.launch("image/*") }) { Text("إضافة صورة نهائية") }
-            if (photoId != null) TextButton(onClick = { vault.delete(photoId); photoId = null }) { Text("حذف الصورة") }
+            OutlinedButton(onClick = { pickPhoto.launch("image/*") }) { Text("حط صورة في الآخر") }
+            if (photoId != null) TextButton(onClick = { vault.delete(photoId); photoId = null }) { Text("امسح الصورة") }
             Text("انتهاء العرض:")
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 listOf(3, 6, 24).forEach { hours -> FilterChip(ttlHours == hours, onClick = { ttlHours = hours }, label = { Text("$hours ساعات") }) }
@@ -71,20 +71,20 @@ internal fun ScratchScreenV2() {
             Button(enabled = texts.take(stages).all { it.isNotBlank() }, onClick = {
                 editing = false; stage = 0; stageRevealed = false; reset++
                 expiresAt = System.currentTimeMillis() + ttlHours * 3_600_000L
-            }, modifier = Modifier.fillMaxWidth()) { Text("إخفاء وبدء الكشط") }
+            }, modifier = Modifier.fillMaxWidth()) { Text("خبّي المفاجأة") }
         } else {
             Text("الطبقة ${stage + 1} من $stages")
             key(reset, stage) {
                 ScratchPanel(texts[stage]) { stageRevealed = true }
             }
             if (stage < stages-1) {
-                Button(onClick = { stage++; stageRevealed = false; reset++ }, enabled = stageRevealed, modifier = Modifier.fillMaxWidth()) { Text("الطبقة التالية بعد إتمام الكشف") }
+                Button(onClick = { stage++; stageRevealed = false; reset++ }, enabled = stageRevealed, modifier = Modifier.fillMaxWidth()) { Text("اكشف اللي بعدها") }
             } else {
                 val photo = remember(photoId) { vault.readPhoto(photoId) }
-                if (photo != null && stageRevealed) Image(photo, contentDescription = "الصورة النهائية", modifier = Modifier.fillMaxWidth().height(180.dp), contentScale = ContentScale.Fit)
+                if (photo != null && stageRevealed) Image(photo, contentDescription = "المفاجأة الأخيرة", modifier = Modifier.fillMaxWidth().height(180.dp), contentScale = ContentScale.Fit)
             }
-            OutlinedButton(onClick = { stageRevealed = false; reset++ }, modifier = Modifier.fillMaxWidth()) { Text("إعادة الغطاء") }
-            TextButton(onClick = { close() }) { Text("إغلاق ومسح الصورة") }
+            OutlinedButton(onClick = { stageRevealed = false; reset++ }, modifier = Modifier.fillMaxWidth()) { Text("خبّيها تاني") }
+            TextButton(onClick = { close() }) { Text("اقفل وامسح الصورة") }
         }
     }
 }
@@ -127,5 +127,5 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
                 strokeWidth = 48.dp.toPx(), cap = StrokeCap.Round, blendMode = BlendMode.Clear)
         }
     }
-    if (revealed) Text("اكتمل الكشف", color = MaterialTheme.colorScheme.primary)
+    if (revealed) Text("بان السر!", color = MaterialTheme.colorScheme.primary)
 }
