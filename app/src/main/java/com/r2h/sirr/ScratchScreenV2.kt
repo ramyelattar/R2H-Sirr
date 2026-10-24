@@ -126,12 +126,13 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     val brushRadiusPx = with(LocalDensity.current) { 17.dp.toPx() }
     val strokes = remember { mutableStateListOf<List<Offset>>() }
     var savedPoints by remember { mutableIntStateOf(0) }
-    val cells = remember { mutableStateMapOf<Int, Boolean>() }
+    val cells = remember { BooleanArray(192) }
+    var coveredCells by remember { mutableIntStateOf(0) }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
     var alreadyRevealed by remember { mutableStateOf(false) }
     // Coverage measures the same brush-sized trail that is visibly cleared.
     // 16×12 cells are sampled along the line and inside the brush radius.
-    val coverage = (cells.size / 192f).coerceIn(0f, 1f)
+    val coverage = (coveredCells / 192f).coerceIn(0f, 1f)
     val revealed = coverage >= .58f
     LaunchedEffect(revealed) {
         if (revealed && !alreadyRevealed) {
@@ -157,7 +158,11 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             val midY = (y + .5f) * h / 12f
             val dx = midX - center.x
             val dy = midY - center.y
-            if (dx * dx + dy * dy <= radius * radius) cells[y * 16 + x] = true
+            val index = y * 16 + x
+            if (dx * dx + dy * dy <= radius * radius && !cells[index]) {
+                cells[index] = true
+                coveredCells++
+            }
         }
     }
     fun begin(p: Offset) {
