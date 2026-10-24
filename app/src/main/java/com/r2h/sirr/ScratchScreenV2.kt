@@ -125,6 +125,7 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     val effects = rememberGameEffects()
     val brushRadiusPx = with(LocalDensity.current) { 17.dp.toPx() }
     val strokes = remember { mutableStateListOf<List<Offset>>() }
+    var savedPoints by remember { mutableIntStateOf(0) }
     val cells = remember { mutableStateMapOf<Int, Boolean>() }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
     var alreadyRevealed by remember { mutableStateOf(false) }
@@ -160,7 +161,7 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
         }
     }
     fun begin(p: Offset) {
-        if (strokes.sumOf { it.size } < 2400) strokes.add(listOf(p))
+        if (savedPoints < 2400) { strokes.add(listOf(p)); savedPoints++ }
         mark(p)
     }
     fun append(p: Offset) {
@@ -175,8 +176,9 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             val t = i.toFloat() / count
             mark(Offset(previous.x + dx * t, previous.y + dy * t))
         }
-        if (strokes.sumOf { it.size } < 2400) {
+        if (savedPoints < 2400 && strokes.isNotEmpty()) {
             strokes[strokes.lastIndex] = strokes.last() + p
+            savedPoints++
         }
     }
     Text(if(revealed) "السر بان! ✦" else "امسح بإيدك لحد ما يظهر السر — ${(coverage * 100).toInt()}٪",
