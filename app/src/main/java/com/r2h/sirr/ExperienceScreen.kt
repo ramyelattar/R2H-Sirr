@@ -21,6 +21,7 @@ internal fun ExperienceScreen(group: Boolean) {
     val consent = remember { mutableStateListOf(false, false, false, false) }
     var game by remember { mutableStateOf<LocalGame?>(null) }
     var reply by remember { mutableStateOf("") }
+    val effects=rememberGameEffects()
     val context = LocalContext.current
     val vault = remember { LocalVault(context.applicationContext) }
     val storageName = if (group) "custom-party" else "custom-couple"
@@ -31,6 +32,7 @@ internal fun ExperienceScreen(group: Boolean) {
     val customValid = customEntries.size <= 60 && customEntries.all { it.length in 6..200 } &&
         customEntries.distinct().size == customEntries.size
     Page(if (group) "تحديات المجموعة" else "تحديات الشريكين", "${roundCount} جولات محلية. يستطيع كل مشارك الرفض أو الإنهاء في أي وقت.") {
+        EffectPreferencesPanel(effects)
         if (game == null) {
             if (group) {
                 Text("عدد المقاعد: $seats")
@@ -96,6 +98,7 @@ internal fun ExperienceScreen(group: Boolean) {
             val current = game!!
             if (!current.finished) {
                 val turn = current.turns[current.round]
+                LaunchedEffect(current.round){effects.cue(GameCue.ROUND)}
                 LinearProgressIndicator(
                     progress = { current.round.toFloat() / current.turns.size },
                     modifier=Modifier.fillMaxWidth()
