@@ -92,7 +92,12 @@ private fun SirrApp() {
     ) }
     var route by remember { mutableStateOf("home") }
     var sessionVersion by remember { mutableIntStateOf(0) }
-    BackHandler(enabled = confirmedAdult && route != "home") { route = "home" }
+    var askToLeave by remember { mutableStateOf(false) }
+    val immersiveRoutes = remember { setOf("couple","party","dice","quiz","scratch","whispers","remote") }
+    fun navigateHome() {
+        if (route in immersiveRoutes) askToLeave = true else route = "home"
+    }
+    BackHandler(enabled = confirmedAdult && route != "home") { navigateHome() }
     MaterialTheme(colorScheme = Palette, typography = SirrType) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             Box(Modifier.fillMaxSize().background(Night)) {
@@ -110,9 +115,26 @@ private fun SirrApp() {
                         if (route == "home") {
                             Text("سِرّ", style = MaterialTheme.typography.headlineMedium, color = Gold, fontWeight = FontWeight.Bold)
                         } else {
-                            TextButton(onClick = { route = "home" }) { Text("→ رجوع", color = Gold) }
+                            TextButton(onClick = { navigateHome() }) { Text("→ رجوع", color = Gold) }
                         }
                         Text("خاص بينكم  ·  18+", style = MaterialTheme.typography.labelSmall, color = Muted)
+                    }
+                    if (askToLeave && route in immersiveRoutes) {
+                        AlertDialog(
+                            onDismissRequest = { askToLeave = false },
+                            title = { Text("عايز تخرج من اللعبة؟") },
+                            text = { Text("الجولة اللي مفتوحة ممكن تروح، وأي وسائط مؤقتة ممكن تتمسح.") },
+                            confirmButton = {
+                                TextButton(onClick = { askToLeave = false; route = "home" }) {
+                                    Text("أيوه، اخرج")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { askToLeave = false }) {
+                                    Text("كمّل اللعبة")
+                                }
+                            }
+                        )
                     }
                     key(sessionVersion, route) {
                         when (route) {
@@ -366,18 +388,34 @@ private fun HomeScreen(onGo: (String) -> Unit) {
 }
 
 @Composable
-private fun PrivacyScreen(onClear: () -> Unit) = Page(
-    "خصوصيتك أولًا", "الألعاب المحلية بتشتغل على موبايلك من غير إنترنت."
-) {
+private fun PrivacyScreen(onClear: () -> Unit) {
+    var confirmClear by remember { mutableStateOf(false) }
+    Page("خصوصيتك أولًا", "الألعاب المحلية بتشتغل على موبايلك من غير إنترنت.") {
     Text("• الصور اللي بتختارها بتتخزن مشفرة على الموبايل، ومش بتترفع لوحدها.")
     Text("• اللعب أونلاين محتاج سيرفر HTTPS خاص.")
     Text("• الرسايل الخاصة مشفرة بين المشاركين، ومقارنة إجابات الاختبار بتستخدم رموز HMAC بدل الإجابات الأصلية.")
     Text("• تشغيل الصوت والفيديو ممكن يعمل ملفات مؤقتة، والتطبيق بيحاول يمسحها لما تقفل العرض أو تفتح التطبيق تاني.")
     Text("• محدش يقدر يمنع تصوير الشاشة بموبايل تاني.")
     Text("• مسح بيانات الموبايل مش بيمسح اللي الطرف التاني احتفظ بيه أو أوضة أونلاين لسه شغالة.")
-    Button(onClick = onClear, modifier = Modifier.fillMaxWidth()) {
+    OutlinedButton(onClick = { confirmClear = true }, modifier = Modifier.fillMaxWidth()) {
         Text("امسح بياناتي الخاصة")
     }
+    }
+    if (confirmClear) AlertDialog(
+        onDismissRequest = { confirmClear = false },
+        title = { Text("متأكد إنك عايز تمسح بياناتك؟") },
+        text = { Text("ده هيمسح الصور والتحديات والإعدادات الخاصة الموجودة على الموبايل. مش هتقدر ترجعها من التطبيق، ومش هيمسح أي نسخ عند الطرف التاني.") },
+        confirmButton = {
+            TextButton(onClick = { confirmClear = false; onClear() }) {
+                Text("امسح البيانات")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { confirmClear = false }) {
+                Text("خليها زي ما هي")
+            }
+        }
+    )
 }
 
 @Composable
