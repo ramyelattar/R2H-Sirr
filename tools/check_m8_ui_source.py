@@ -18,6 +18,7 @@ artwork = source("SirrDiscovery.kt")
 sound = source("GameEffects.kt")
 experience = source("ExperienceScreen.kt")
 whispers = source("WhispersScreen.kt")
+manifest = (ROOT / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
 
 assert 'readPrivate("adult-consent-v1")' in main
 assert 'writePrivate("adult-consent-v1", "accepted")' in main
@@ -75,5 +76,24 @@ for event in ("round", "reveal", "success", "skip", "complete"):
         assert cue.getnchannels() == 1 and cue.getsampwidth() == 2
         assert cue.getframerate() == 16000
         assert .12 <= cue.getnframes() / cue.getframerate() <= 1.3
+
+# P0: avoid accidental loss of active rounds and encrypted local records.
+assert 'BackHandler(enabled = confirmedAdult && route != "home") { navigateHome() }' in main
+assert 'if (route in immersiveRoutes) askToLeave = true' in main
+assert 'onClick = { navigateHome() }' in main
+assert 'title = { Text("عايز تخرج من اللعبة؟") }' in main
+assert 'var confirmClear by remember { mutableStateOf(false) }' in main
+assert 'onClick = { confirmClear = true }' in main
+assert 'title = { Text("متأكد إنك عايز تمسح بياناتك؟") }' in main
+assert 'LocalVault(appContext).clear()' in main
+assert 'it.name.startsWith("sirr_media_")' in main
+assert 'android:allowBackup="false"' in manifest
+assert 'android:usesCleartextTraffic="false"' in manifest
+
+# No user-selected soundtrack must survive Android backgrounding.
+assert 'LifecycleEventObserver' in whispers
+assert 'event == Lifecycle.Event.ON_STOP' in whispers
+assert 'player.pause()' in whispers
+assert 'activity?.lifecycle?.removeObserver(observer)' in whispers
 
 print("M8 UI source regression guards PASS (static checks only, NOT Android build)")
