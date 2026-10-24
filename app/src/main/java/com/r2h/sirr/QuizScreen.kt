@@ -36,26 +36,22 @@ internal fun QuizScreenV2() {
         if (packIndex < 0) {
             Text("اختاروا موضوع", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold)
-            packs.forEachIndexed { index, quiz ->
-                Surface(
-                    onClick = {
-                        packIndex = index; phase = 0; step = 0; revealStep = 0
-                        answersA.clear(); answersB.clear(); selectedIndices = emptyList()
-                    },
-                    shape = RoundedCornerShape(22.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Text("${index + 1}", color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(moodTitles[index], style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text("اختار اللي على مزاجك… وبعدين نبدأ",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                        }
-                        Text("←", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
-                    }
+            MysteryHeader(
+                "سبع أبواب",
+                "كل باب وراه سؤال مختلف",
+                "في حاجات بتتقال لما نسأل السؤال الصح.",
+                "؟"
+            )
+            packs.forEachIndexed { index, _ ->
+                QuizTopicTile(number = index + 1, title = moodTitles[index]) {
+                    packIndex = index
+                    phase = 0
+                    step = 0
+                    revealStep = 0
+                    answersA.clear()
+                    answersB.clear()
+                    acceptedB = false
+                    selectedIndices = emptyList()
                 }
             }
         } else {
