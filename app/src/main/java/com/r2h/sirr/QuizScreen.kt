@@ -48,7 +48,8 @@ internal fun QuizScreenV2() {
                 overline = "7 أبواب · 25 سؤال في كل باب",
                 title = "إيه اللي لسه متقالش؟",
                 description = "اختاروا باب… وكل إجابة ممكن تفتح كلام جديد.",
-                accent = Color(0xFF64538A)
+                accent = Color(0xFF64538A),
+                motif = "quiz"
             )
             SirrSection("01", "اختاروا الباب", "كل باب ليه جو مختلف")
             packs.forEachIndexed { index, _ ->

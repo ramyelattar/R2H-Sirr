@@ -70,7 +70,8 @@ internal fun ScratchScreenV2() {
             SirrIntro(
                 overline = "مفاجأة لا تتكشف إلا بإيدك",
                 title = "الغطا مخبّي إيه؟",
-                description = "جهّزوا سر، خبّوه تحت الغطا، وسيبوا المفاجأة تتكشف خطوة خطوة."
+                description = "جهّزوا سر، خبّوه تحت الغطا، وسيبوا المفاجأة تتكشف خطوة خطوة.",
+                accent = Color(0xFF93604B), motif = "scratch"
             )
             SirrSection("01", "حضّروا المفاجأة", "اكتبوا سر أو اختاروا سر جاهز")
             OutlinedButton(

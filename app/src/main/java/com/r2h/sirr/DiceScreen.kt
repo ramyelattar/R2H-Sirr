@@ -66,7 +66,8 @@ internal fun DiceScreenV2() {
         SirrIntro(
             "3 نردات · اختيار واحد",
             "الحظ ليه كلمة… والباقي عليكم.",
-            "اختاروا المود، ارْموا النرد، وشوفوا التحدي اللي طلع."
+            "اختاروا المود، ارْموا النرد، وشوفوا التحدي اللي طلع.",
+            accent = Color(0xFFAD6450), motif = "dice"
         )
         Row(
             Modifier.fillMaxWidth(),

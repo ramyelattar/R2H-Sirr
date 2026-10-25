@@ -1,7 +1,14 @@
 package com.r2h.sirr
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // M10: one shared visual language for all game entry/decision surfaces.
-private val M10Cream = Color(0xFFFFE0C6)
+private val M10Cream = Color(0xFFFFD2A4)
 private val M10Ink = Color(0xFF23121B)
 private val M10Faint = Color(0xFFE7CCD7)
 private val M10Panel = Color(0xFF201621)
@@ -36,8 +43,8 @@ internal fun SirrAction(
             shape = RoundedCornerShape(18.dp),
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = M10Cream,
-                contentColor = M10Ink,
+                containerColor = Color(0xFFFA76B9),
+                contentColor = Color(0xFF150915),
                 disabledContainerColor = Color(0xFF473640),
                 disabledContentColor = Color(0xFFFFE1DC)
             ),
@@ -96,9 +103,9 @@ internal fun SirrOption(
         onClick = onClick,
         modifier = modifier.heightIn(min = 60.dp),
         shape = RoundedCornerShape(17.dp),
-        color = if (selected) Color(0xFF65415C) else M10Panel,
+        color = if (selected) Color(0xFF7D255C) else Color(0xE91C1227),
         border = BorderStroke(if (selected) 1.7.dp else 1.dp,
-            if (selected) M10Cream else Color(0xFF5F4556))
+            if (selected) Color(0xFFFFA6D1) else Color(0xFF74536A))
     ) {
         Column(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 13.dp),
@@ -145,28 +152,111 @@ internal fun SirrConsent(
     }
 }
 
+/** A distinctive illustrated scene, not the same pink rectangle on every page. */
 @Composable
 internal fun SirrIntro(
     overline: String,
     title: String,
     description: String,
-    accent: Color = Color(0xFF9F4F79)
+    accent: Color = Color(0xFF9F4F79),
+    motif: String = ""
 ) {
     Box(
         Modifier.fillMaxWidth()
-            .background(Brush.linearGradient(listOf(Color(0xFF2C1929),accent.copy(alpha=.52f),Color(0xFF1A1424))),
-                RoundedCornerShape(24.dp))
+            .background(Brush.linearGradient(listOf(
+                Color(0xFE1A101F), accent.copy(alpha = .29f), Color(0xFD100B19))),
+                RoundedCornerShape(23.dp))
+            .border(BorderStroke(1.dp, accent.copy(alpha = .56f)),
+                RoundedCornerShape(23.dp))
     ) {
+        Canvas(Modifier.matchParentSize()) {
+            val c = Offset(size.width * .18f, size.height * .43f)
+            val r = size.minDimension * .24f
+            drawCircle(accent.copy(alpha = .13f), r * 1.4f, c)
+            when(motif) {
+                "couple" -> {
+                    val heart = Path().apply {
+                        moveTo(c.x,c.y+r*.82f)
+                        cubicTo(c.x-r*1.35f,c.y+r*.02f,c.x-r*.95f,c.y-r*.94f,c.x,c.y-r*.27f)
+                        cubicTo(c.x+r*.95f,c.y-r*.94f,c.x+r*1.35f,c.y+r*.02f,c.x,c.y+r*.82f)
+                        close()
+                    }
+                    drawPath(heart, Color(0xFFFFA2C8).copy(alpha=.65f))
+                }
+                "party" -> {
+                    for(i in 0..2) {
+                        val cx=c.x+(i-1)*r*.53f
+                        drawCircle(Color(0xFFE4C0FF).copy(alpha=.82f),
+                            r*.19f, Offset(cx,c.y-r*.34f+(i%2)*r*.08f))
+                        drawRoundRect(Color(0xFF9C7CDE).copy(alpha=.71f),
+                            topLeft=Offset(cx-r*.19f,c.y), size=Size(r*.38f,r*.65f),
+                            cornerRadius=CornerRadius(r*.15f))
+                    }
+                }
+                "dice" -> {
+                    drawRoundRect(
+                        Color(0xFFE9A383).copy(alpha=.49f),
+                        topLeft=Offset(c.x-r*.68f,c.y-r*.68f),
+                        size=Size(r*1.35f,r*1.35f),
+                        cornerRadius=CornerRadius(r*.26f))
+                    for ((dx,dy) in listOf(-.32f to -.32f, .3f to .3f, -.3f to .32f)) {
+                        drawCircle(Color(0xFFFFEACA).copy(alpha=.92f),
+                            radius=r*.07f,center=Offset(c.x+r*dx,c.y+r*dy))
+                    }
+                }
+                "quiz" -> {
+                    for(i in 1..3) {
+                        drawCircle(Color(0xFFB5B3FA).copy(alpha=.57f/i),
+                            radius=r*(.4f+i*.28f),center=c,
+                            style=Stroke(width=2.dp.toPx()))
+                    }
+                    drawCircle(Color(0xFFFDDAFA),r*.085f,
+                        Offset(c.x+r*.44f,c.y-r*.35f))
+                }
+                "whispers" -> {
+                    val x=c.x-r*.88f; val y=c.y-r*.48f
+                    drawRoundRect(Color(0xFFFA9BCA).copy(alpha=.66f),
+                        Offset(x,y),Size(r*1.75f,r*1.1f),
+                        CornerRadius(r*.13f))
+                    val flap=Path().apply {
+                        moveTo(x,y)
+                        lineTo(c.x,c.y+r*.17f)
+                        lineTo(x+r*1.75f,y)
+                    }
+                    drawPath(flap,Color(0xFF32162C),style=Stroke(width=2.dp.toPx()))
+                }
+                "scratch" -> {
+                    for(i in 0..2) {
+                        val shift=i*r*.13f
+                        drawRoundRect(
+                            Color(0xFFFFD3A2).copy(alpha=.64f-(i*.16f)),
+                            Offset(c.x-r*.63f+shift,c.y-r*.77f+shift),
+                            Size(r*1.25f,r*1.48f),
+                            CornerRadius(r*.11f),
+                            style=Stroke(width=3.dp.toPx()))
+                    }
+                }
+                else -> {
+                    for(i in 1..3) {
+                        drawCircle(Color(0xFFFFD8B0).copy(alpha=.28f/i),
+                            r*(.43f+i*.22f),c,
+                            style=Stroke(width=2.dp.toPx()))
+                    }
+                }
+            }
+        }
         Column(
-            Modifier.fillMaxWidth().padding(horizontal = 21.dp, vertical = 21.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            Modifier.fillMaxWidth().padding(horizontal=19.dp, vertical=20.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp)
         ) {
-            Text(overline, color = M10Cream, style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold)
-            Text(title, color = Color.White,
-                style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text(description, color = Color(0xFFF4DEE8),
-                style = MaterialTheme.typography.bodyMedium)
+            Text(overline.uppercase(), color=Color(0xFFFFD1A6),
+                style=MaterialTheme.typography.labelMedium,
+                fontWeight=FontWeight.Bold)
+            Text(title, color=Color.White,
+                style=MaterialTheme.typography.titleLarge,
+                fontWeight=FontWeight.ExtraBold)
+            Text(description, color=Color(0xFFF1D8E7),
+                style=MaterialTheme.typography.bodyMedium)
         }
     }
 }

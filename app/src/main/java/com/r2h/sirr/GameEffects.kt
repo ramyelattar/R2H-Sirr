@@ -33,16 +33,16 @@ import org.json.JSONObject
 
 internal enum class GameCue { ROUND, SUCCESS, SKIP, REVEAL, COMPLETE }
 internal data class EffectPreferences(
-    val sound: Boolean = false,
+    val sound: Boolean = true,
     val haptic: Boolean = false,
     val cinematic: Boolean = true,
     val volume: Int = 35,
     val music: Boolean = true,
-    val musicVolume: Int = 21
+    val musicVolume: Int = 55
 ) {
     fun normalized() = copy(
         volume = volume.coerceIn(0, 80),
-        musicVolume = musicVolume.coerceIn(0, 45)
+        musicVolume = musicVolume.coerceIn(0, 100)
     )
 }
 
@@ -98,12 +98,12 @@ internal class GameEffects(private val context:Context){
     private fun load():EffectPreferences=runCatching{
         val x=JSONObject(LocalVault(context.applicationContext).readPrivate("game-effects")?:return@runCatching EffectPreferences())
         EffectPreferences(
-            sound = x.optBoolean("sound"),
+            sound = x.optBoolean("sound", true),
             haptic = x.optBoolean("haptic"),
             cinematic = x.optBoolean("cinematic", true),
             volume = x.optInt("volume", 35),
             music = x.optBoolean("music", true),
-            musicVolume = x.optInt("musicVolume", 21)
+            musicVolume = x.optInt("musicVolume", 55)
         ).normalized()
     }.getOrDefault(EffectPreferences())
     fun change(next:EffectPreferences){
@@ -174,9 +174,14 @@ internal fun EffectPreferencesPanel(effects:GameEffects, initiallyExpanded:Boole
                 Slider(
                     value = p.musicVolume.toFloat(),
                     onValueChange = { apply(p.copy(musicVolume = it.toInt())) },
-                    valueRange = 0f..45f
+                    valueRange = 0f..100f
                 )
             }
+            Text("اتأكد إن صوت الوسائط في الموبايل مش مكتوم.",
+                style = MaterialTheme.typography.bodySmall)
+            Text(LocalSirrMusicStatus.current,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium)
             HorizontalDivider()
             Text("مؤثرات اللعب والاهتزاز",
                 style = MaterialTheme.typography.titleMedium)
