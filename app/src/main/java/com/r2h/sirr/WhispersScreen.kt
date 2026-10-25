@@ -27,6 +27,9 @@ internal fun WhispersScreenV2() {
     val messages = remember { mutableStateListOf("", "", "") }
     var composeStep by remember { mutableIntStateOf(0) }
     var extras by remember { mutableStateOf(false) }
+    val whisperStages = remember { listOf(
+        "أول همسة", "الكلام اللي وراها", "المفاجأة الأخيرة"
+    ) }
     val suggestions=remember { listOf(
         "كنت عايز أقولك حاجة من زمان… وجودك بيفرق.",
         "في لحظات بتعدّي بسرعة، بس بتفضل في البال.",
@@ -109,40 +112,56 @@ internal fun WhispersScreenV2() {
         clear()
     }
     Page("همسة ليك وبس", "كل سر هيوصل في وقته… وملوش إعادة بعد ما يتفتح.") {
-        MysteryHeader("رسالة من ورا الستار", "سيب همسة تفضل في البال.", "3 رسايل ورا بعض، والسر الأخير اختيارك.", "♡")
+        SirrIntro(
+            overline = "رسالة مش هتتقري مرتين",
+            title = "3 همسات. سر واحد.",
+            description = "اكتب 3 رسائل متتابعة. كل رسالة بتختفي بعد ما تعدّيها.",
+            accent = Color(0xFF9F4D72)
+        )
         if(page == -1) {
-            Text("حضّر المفاجأة في 3 خطوات",style=MaterialTheme.typography.titleLarge,
-                color=MaterialTheme.colorScheme.primary)
-            LinearProgressIndicator(progress={(composeStep+1).toFloat()/3f},modifier=Modifier.fillMaxWidth())
-            Text("همسة ${composeStep+1} من 3",style=MaterialTheme.typography.labelLarge)
+            SirrSection("0${composeStep + 1}", whisperStages[composeStep],
+                "الخطوة ${composeStep + 1} من 3 · اكتب أو اختار من الاقتراحات")
+            LinearProgressIndicator(
+                progress = { (composeStep + 1).toFloat() / 3f },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedButton(onClick = {
+                val base = suggestions.indices.random()
+                repeat(3) { i -> messages[i] = suggestions[(base + i) % suggestions.size] }
+                composeStep = 2
+            }, modifier = Modifier.fillMaxWidth()) {
+                Text("✦  مش عارف تكتب إيه؟ اختار 3 همسات جاهزين")
+            }
             OutlinedTextField(
                 messages[composeStep],
-                {messages[composeStep]=it.take(350)},
-                label={Text("اكتب اللي جواك")},
-                placeholder={Text("مثلاً: عندي حاجة عايز أقولهالك…")},
-                modifier=Modifier.fillMaxWidth(),minLines=3,maxLines=5
+                { messages[composeStep] = it.take(350) },
+                label = { Text(whisperStages[composeStep]) },
+                placeholder = { Text("مثلاً: عندي حاجة عايز أقولهالك…") },
+                modifier = Modifier.fillMaxWidth(), minLines = 4, maxLines = 6
             )
             if(composeStep<2) {
-                Button(
-                    enabled=messages[composeStep].isNotBlank(),
-                    onClick={composeStep++},modifier=Modifier.fillMaxWidth()
-                ){Text("الهمسة اللي بعدها ←")}
+                SirrAction(
+                    text = "اكتب الهمسة اللي بعدها",
+                    onClick = { composeStep++ },
+                    enabled = messages[composeStep].isNotBlank(),
+                    explanation = if (messages[composeStep].isBlank())
+                        "اكتب همسة واحدة على الأقل علشان تكمل" else null
+                )
             } else {
-                Button(
-                    enabled=messages.all{it.isNotBlank()},
-                    onClick={
-                        val now=System.currentTimeMillis()
-                        envelope=EphemeralEnvelope(now,now+ttlHours*3_600_000L)
-                        page=0
-                    },modifier=Modifier.fillMaxWidth()
-                ){Text("افتحوا السر ✦")}
+                SirrAction(
+                    text = "افتحوا أول همسة  ✦",
+                    enabled = messages.all { it.isNotBlank() },
+                    onClick = {
+                        val now = System.currentTimeMillis()
+                        envelope = EphemeralEnvelope(now, now + ttlHours * 3_600_000L)
+                        page = 0
+                    },
+                    explanation = if (messages.any { it.isBlank() })
+                        "لازم التلات همسات يكونوا جاهزين" else
+                        "متأكد؟ كل همسة مش هتظهر تاني بعد ما تعدّيها"
+                )
             }
             if(composeStep>0)TextButton(onClick={composeStep--}){Text("أرجع للهمسة اللي قبلها")}
-            OutlinedButton(onClick={
-                val base=suggestions.indices.random()
-                repeat(3){i->messages[i]=suggestions[(base+i)%suggestions.size]}
-                composeStep=2
-            },modifier=Modifier.fillMaxWidth()){Text("اقترحلي 3 همسات جاهزين")}
             OutlinedButton(onClick={extras=!extras},modifier=Modifier.fillMaxWidth()){
                 Text(if(extras)"اقفل الإضافات" else "حط اسم أو صورة أو أغنية في المفاجأة")
             }
@@ -173,20 +192,29 @@ internal fun WhispersScreenV2() {
             if(error.isNotBlank())Text(error,color=MaterialTheme.colorScheme.error)
         } else if (page < 3) {
             if (receiver.isNotBlank()) Text("إلى $receiver", color = MaterialTheme.colorScheme.primary)
-            Text("الرسالة ${page + 1} من ٣")
+            SirrSection("0${page + 1}", whisperStages[page],
+                "الهمسة دي هتختفي أول ما تكمل")
             SecretLetter(messages[page],page+1,3)
             if (audioUri != null) {
                 OutlinedButton(onClick = { toggleAudio() },modifier=Modifier.fillMaxWidth()) {
                     Text(if (playing) "وقّف الموسيقى" else "شغّل موسيقى المفاجأة")
                 }
             }
-            Button(onClick = {
-                messages[page] = "" // Destroy each message immediately after advancing.
-                page++
-            }) { Text(if (page == 2) "ورّيني المفاجأة" else "الهمسة اللي بعدها") }
+            SirrAction(
+                text = if (page == 2) "افتح النهاية  ✦" else "افتح الهمسة اللي بعدها",
+                onClick = {
+                    messages[page] = "" // Destroy each message immediately after advancing.
+                    page++
+                },
+                explanation = "الرسالة الحالية هتتمسح ومش هتترجع"
+            )
             TextButton(onClick = { clear() }) { Text("اقفل وامسح") }
         } else {
-            MysteryHeader("آخر صفحة", "ده كان آخر سر…", "اللي اتقال هنا، فضل بينكم.", "♡")
+            SirrIntro(
+                "نهاية الحكاية",
+                "ده كان آخر سر…",
+                "اللي اتقال هنا فضل بينكم. تقدر تمسح الجلسة كلها دلوقتي."
+            )
             if (sender.isNotBlank()) Text("من: $sender")
             if (signature.isNotBlank()) Text(signature)
             if (audioUri != null) {
@@ -197,7 +225,7 @@ internal fun WhispersScreenV2() {
             val photo = remember(photoId) { vault.readPhoto(photoId) }
             if (photo != null) Image(photo, contentDescription = "الصورة الختامية", modifier = Modifier.fillMaxWidth().height(260.dp), contentScale = ContentScale.Fit)
             Text("لما تقفل، الرسائل والصورة هيتمسحوا من الجلسة دي.", color = Color.LightGray)
-            Button(onClick = { clear() }) { Text("اقفل وامسح السر") }
+            SirrAction(text = "اقفل وامسح السر", onClick = { clear() })
         }
     }
 }
