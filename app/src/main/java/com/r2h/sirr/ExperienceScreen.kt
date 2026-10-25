@@ -67,7 +67,8 @@ internal fun ExperienceScreen(group: Boolean) {
                 description = if (group)
                     "اختاروا المود وعدد الجولات. اللعبة هتوزّع الأدوار عليكم واحدة واحدة."
                 else "مود واحد، جولات قصيرة، وتحدي يتكشف لما تبقوا جاهزين.",
-                accent = if (group) Color(0xFF605080) else Color(0xFFA04A74)
+                accent = if (group) Color(0xFF605080) else Color(0xFFA04A74),
+                motif = if (group) "party" else "couple"
             )
             SirrSection("01", "اختاروا المود", "من كلام خفيف لجرأة على مزاجكم")
             Intensity.entries.filter { it != Intensity.CUSTOM }.chunked(2).forEach { pair ->

@@ -125,7 +125,8 @@ internal fun WhispersScreenV2() {
                 overline = "رسالة مش هتتقري مرتين",
                 title = "3 همسات. سر واحد.",
                 description = "اكتب 3 رسائل متتابعة. كل رسالة بتختفي بعد ما تعدّيها.",
-                accent = Color(0xFF9F4D72)
+                accent = Color(0xFF9F4D72),
+                motif = "whispers"
             )
             SirrSection("0${composeStep + 1}", whisperStages[composeStep],
                 "الخطوة ${composeStep + 1} من 3 · اكتب أو اختار من الاقتراحات")
