@@ -1,0 +1,210 @@
+{
+  "audit_version": "M21",
+  "threshold": {
+    "measure": "token-set Jaccard",
+    "jaccard_gte": 0.73,
+    "normalization": "remove Arabic diacritics and tatweel; normalize Alef, Ya, Ta Marbuta; strip punctuation; collapse spaces",
+    "note": "proxy only; counts are candidate review pairs and not semantic proof"
+  },
+  "challenges": {
+    "total": 230,
+    "exact_unique": 230,
+    "near_pairs": 62,
+    "per_intensity_cues": [
+      {
+        "intensity": "SOFT",
+        "explicitCueCount": 0,
+        "forceCueCount": 0
+      },
+      {
+        "intensity": "NORMAL",
+        "explicitCueCount": 9,
+        "forceCueCount": 1
+      },
+      {
+        "intensity": "SEXY",
+        "explicitCueCount": 16,
+        "forceCueCount": 3
+      },
+      {
+        "intensity": "HOT",
+        "explicitCueCount": 22,
+        "forceCueCount": 8
+      },
+      {
+        "intensity": "HARD",
+        "explicitCueCount": 22,
+        "forceCueCount": 19
+      }
+    ],
+    "adjacent_intensity_position_alignment": {
+      "couple": [
+        {
+          "from": "SOFT",
+          "to": "NORMAL",
+          "total": 26,
+          "jaccard_ge_073": 0,
+          "mean_jaccard": 0.11
+        },
+        {
+          "from": "NORMAL",
+          "to": "SEXY",
+          "total": 26,
+          "jaccard_ge_073": 3,
+          "mean_jaccard": 0.454
+        },
+        {
+          "from": "SEXY",
+          "to": "HOT",
+          "total": 26,
+          "jaccard_ge_073": 5,
+          "mean_jaccard": 0.619
+        },
+        {
+          "from": "HOT",
+          "to": "HARD",
+          "total": 26,
+          "jaccard_ge_073": 17,
+          "mean_jaccard": 0.788
+        }
+      ],
+      "party": [
+        {
+          "from": "SOFT",
+          "to": "NORMAL",
+          "total": 20,
+          "jaccard_ge_073": 3,
+          "mean_jaccard": 0.419
+        },
+        {
+          "from": "NORMAL",
+          "to": "SEXY",
+          "total": 20,
+          "jaccard_ge_073": 2,
+          "mean_jaccard": 0.459
+        },
+        {
+          "from": "SEXY",
+          "to": "HOT",
+          "total": 20,
+          "jaccard_ge_073": 8,
+          "mean_jaccard": 0.622
+        },
+        {
+          "from": "HOT",
+          "to": "HARD",
+          "total": 20,
+          "jaccard_ge_073": 7,
+          "mean_jaccard": 0.641
+        }
+      ]
+    }
+  },
+  "quizzes": {
+    "total_questions": 175,
+    "question_unique": 175,
+    "near_question_pairs": 11,
+    "answer_count": 525,
+    "answer_exact_unique": 403,
+    "answer_at_most_4_chars": 78,
+    "question_starts_eyh_aktar": 48,
+    "question_starts_eyh_elly": 34,
+    "pack_stats": [
+      {
+        "id": "quiz_01",
+        "name": "إنت من جوّه",
+        "questions": 25,
+        "choice_count": 75,
+        "unique_choices": 75,
+        "choices_at_most_4": 1
+      },
+      {
+        "id": "quiz_02",
+        "name": "الحب على مزاجك",
+        "questions": 25,
+        "choice_count": 75,
+        "unique_choices": 74,
+        "choices_at_most_4": 0
+      },
+      {
+        "id": "quiz_03",
+        "name": "إحنا شبه بعض؟",
+        "questions": 25,
+        "choice_count": 75,
+        "unique_choices": 70,
+        "choices_at_most_4": 13
+      },
+      {
+        "id": "quiz_04",
+        "name": "الجاذبية والإشارات",
+        "questions": 25,
+        "choice_count": 75,
+        "unique_choices": 66,
+        "choices_at_most_4": 10
+      },
+      {
+        "id": "quiz_05",
+        "name": "أمنيات متخبية",
+        "questions": 25,
+        "choice_count": 75,
+        "unique_choices": 64,
+        "choices_at_most_4": 16
+      },
+      {
+        "id": "quiz_06",
+        "name": "راحة وحدود",
+        "questions": 25,
+        "choice_count": 75,
+        "unique_choices": 46,
+        "choices_at_most_4": 34
+      },
+      {
+        "id": "quiz_07",
+        "name": "جرأة ولا صراحة؟",
+        "questions": 25,
+        "choice_count": 75,
+        "unique_choices": 53,
+        "choices_at_most_4": 4
+      }
+    ]
+  },
+  "whispers": {
+    "total": 60,
+    "exact_unique": 60,
+    "near_pairs": 0
+  },
+  "scratch": {
+    "total": 60,
+    "exact_unique": 60,
+    "near_pairs": 3,
+    "selected_group_resets_stage_to_one": true
+  },
+  "dice": {
+    "five_levels_plus_custom": true,
+    "total_six_face_literal_rows": 15,
+    "preset_possible_combinations_per_level": 216,
+    "all_presets_show_joined_sentence": true,
+    "known_sentence_mismatch": "NORMAL face verb 'قول له إن' combined with six object variants; some do not form grammatical clauses",
+    "has_per_combination_validator": false
+  },
+  "ux": {
+    "age_gate": true,
+    "challenge_per_player_consent": true,
+    "challenge_per_turn_skip": true,
+    "quiz_second_player_consent": true,
+    "quiz_has_per_question_skip": false,
+    "whispers_one_use_delete": true,
+    "scratch_expiry_clear": true
+  },
+  "source_sha": {
+    "content/challenges_ar_v2.json": "dd54bb12ead55b36976e39fe8fb8e67563ad445c",
+    "content/quizzes_ar_v4.json": "be5b4e990281c384bc04b630d71c612639e879cd",
+    "app/src/main/java/com/r2h/sirr/WhispersScreen.kt": "6e7a4751a2535b9cdbbdf0e95837aacd217f7d2b",
+    "app/src/main/java/com/r2h/sirr/ScratchScreenV2.kt": "e6467803b048512902ffc3563f6d14c945926539",
+    "app/src/main/java/com/r2h/sirr/core/ExperienceLogic.kt": "436e9ab74022ddaf46722623db0883b542d820b6",
+    "app/src/main/java/com/r2h/sirr/QuizScreen.kt": "b2cfa864f69d86a144acb4a057f80b45a00412de",
+    "app/src/main/java/com/r2h/sirr/DiceScreen.kt": "d456a59cc5ab2c492589812ca13e93c9f578ba54",
+    "app/src/main/java/com/r2h/sirr/ExperienceScreen.kt": "3bbeaf07073f9d2647d5e630f92276e63a62438e",
+    "app/src/main/java/com/r2h/sirr/MainActivity.kt": "33369afb773501548f789d406858e8a984b0df4d"
+  }
+}
