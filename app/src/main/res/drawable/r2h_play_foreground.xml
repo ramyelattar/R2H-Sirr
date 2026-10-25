@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- R2H-Play: luminous monogram/play symbol, legible at a 48dp launcher size. -->
+    <!-- Diamond silhouette and soft halo, no delicate keyhole details. -->
+    <path android:pathData="M54,11 L87,28 L96,54 L87,80 L54,98 L21,80 L12,54 L21,28 Z"
+        android:fillColor="#48213E" android:fillAlpha="0.38" />
+    <path android:pathData="M54,16 L83,31 L91,54 L83,77 L54,92 L25,77 L17,54 L25,31 Z"
+        android:fillColor="#140B21" android:strokeColor="#7B315F"
+        android:strokeWidth="1.7" />
+    <path android:pathData="M54,19 L81,33 L88,54 L81,75"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#F15DAD" android:strokeAlpha="0.48"
+        android:strokeWidth="3.2" android:strokeLineCap="round" />
+    <path android:pathData="M26,73 L21,54 L27,34"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#FAACC7" android:strokeWidth="1.8"
+        android:strokeAlpha="0.9" />
+    <!-- Bloom silhouettes behind the clean R; deliberately stronger than M11. -->
+    <path android:pathData="M35,29 L35,79 M35,30 L57,30 C75,30 76,56 57,56 L35,56"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#B8297F" android:strokeAlpha="0.44"
+        android:strokeWidth="13" android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path android:pathData="M52,57 L74,80"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#D22F88" android:strokeAlpha="0.48"
+        android:strokeWidth="14" android:strokeLineCap="round"/>
+    <!-- Razor-sharp golden R: the brand mark, not an existing third-party logo. -->
+    <path android:pathData="M35,29 L35,79"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#FFC782" android:strokeWidth="8.0"
+        android:strokeLineCap="round" />
+    <path android:pathData="M35,29 L57,29 C76,29 76,56 57,56 L35,56"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#FFD49B" android:strokeWidth="8.0"
+        android:strokeLineCap="round" android:strokeLineJoin="round"/>
+    <path android:pathData="M52,57 L73,79"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#FF6FB4" android:strokeWidth="9"
+        android:strokeLineCap="round" />
+    <path android:pathData="M36,28 L56,28 C68,29 70,36 69,40"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#FFF0CE" android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+    <!-- Play triangle inserted into the R counter, as bright contrasting focal point. -->
+    <path android:pathData="M47,38 L59.6,44.5 L47,51 Z"
+        android:fillColor="#FF469E" android:strokeColor="#FFF2E9"
+        android:strokeWidth="1.1" android:strokeLineJoin="round"/>
+    <path android:pathData="M79,19 L80.8,24.2 L86,26 L80.8,27.8 L79,33 L77.2,27.8 L72,26 L77.2,24.2 Z"
+        android:fillColor="#FFB6DC" />
+    <path android:pathData="M26,76 L27.2,79.8 L31,81 L27.2,82.2 L26,86 L24.8,82.2 L21,81 L24.8,79.8 Z"
+        android:fillColor="#E8A9FC" />
+</vector>
