@@ -13,6 +13,7 @@ import org.json.JSONObject
 internal val LocalSirrAudioRefresh = compositionLocalOf<() -> Unit> { {} }
 internal val LocalSirrUserAudioOverride = compositionLocalOf<(Boolean) -> Unit> { {} }
 internal val LocalSirrMusicStatus = compositionLocalOf<String> { "" }
+internal val LocalSirrAudioRetry = compositionLocalOf<() -> Unit> { {} }
 
 internal data class SirrMusicPreferences(
     val enabled: Boolean = true,

@@ -147,7 +147,10 @@ private fun SirrApp() {
             LocalLayoutDirection provides LayoutDirection.Rtl,
             LocalSirrAudioRefresh provides { musicRevision++ },
             LocalSirrUserAudioOverride provides { isPlaying -> userMediaPlaying = isPlaying },
-            LocalSirrMusicStatus provides music.status.value
+            LocalSirrMusicStatus provides music.status.value,
+            LocalSirrAudioRetry provides {
+                music.playScene(scene, musicPrefs.volume)
+            }
         ) {
             Box(Modifier.fillMaxSize().background(Night)) {
                 SirrAmbientBackground(scene, musicPrefs.cinematic)
@@ -563,6 +566,10 @@ private fun GameSettingsScreen(onPrivacy: () -> Unit) {
             "جرّب موسيقى الصفحة حالًا، وعدّل الصوت أو اقفلها تمامًا.")
         Text(LocalSirrMusicStatus.current, color = Gold,
             style = MaterialTheme.typography.bodyMedium)
+        val retrySound = LocalSirrAudioRetry.current
+        OutlinedButton(onClick = retrySound, modifier = Modifier.fillMaxWidth()) {
+            Text("♫  جرّب الموسيقى دلوقتي", color = Gold)
+        }
         EffectPreferencesPanel(effects, initiallyExpanded = true)
         Text(
             "لو قفلت الصوت من هنا، مؤثرات اللعبة مش هتشتغل. الأغاني اللي بتختارها بنفسك في الهمسات ليها زر تشغيل وإيقاف مستقل.",
