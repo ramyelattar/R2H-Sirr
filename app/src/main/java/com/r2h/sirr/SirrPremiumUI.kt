@@ -94,7 +94,7 @@ internal fun SirrOption(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.heightIn(min = 60.dp),
         shape = RoundedCornerShape(17.dp),
         color = if (selected) Color(0xFF65415C) else M10Panel,
         border = BorderStroke(if (selected) 1.7.dp else 1.dp,
