@@ -66,20 +66,28 @@ internal fun ScratchScreenV2() {
         }
     }
     Page("اكشف اللي مستخبي", "مفيش طريقة تعرف اللي جاي… غير لما تكشفه بنفسك.") {
-        MysteryHeader("مفاجأة من ورا الستار", "جرّب تكتشف السر.", "مرّر صباعك على الغطا… وشوف اللي مستنيك.", "✦")
+        SirrIntro(
+            overline = "مفاجأة لا تتكشف إلا بإيدك",
+            title = "الغطا مخبّي إيه؟",
+            description = "جهّزوا سر، خبّوه تحت الغطا، وسيبوا المفاجأة تتكشف خطوة خطوة."
+        )
         if (editing) {
+            SirrSection("01", "حضّروا المفاجأة", "اكتبوا سر أو اختاروا سر جاهز")
             OutlinedButton(
-                onClick={
-                    val start=ideas.indices.random()
-                    repeat(3){ i->texts[i]=ideas[(start+i)%ideas.size] }
-                    stages=1
+                onClick = {
+                    val start = ideas.indices.random()
+                    repeat(3) { i -> texts[i] = ideas[(start + i) % ideas.size] }
+                    stages = 1
                 },
-                modifier=Modifier.fillMaxWidth()
-            ){Text("اختارلي سر جاهز ✦")}
-            Text("أو اكتب مفاجأة مخصوص:",color=MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("هتخبّي كام مفاجأة؟")
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                (1..3).forEach { n -> FilterChip(stages == n, onClick = { stages = n }, label = { Text("$n") }) }
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("✦  اختارلي سر جاهز") }
+            SirrSection("02", "كام غطا هيتكشف؟", "من مفاجأة واحدة لتلات مفاجآت ورا بعض")
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                (1..3).forEach { n ->
+                    SirrOption("$n", stages == n, onClick = { stages = n },
+                        modifier = Modifier.weight(1f),
+                        subtitle = if (n == 1) "سر واحد" else "$n أسرار")
+                }
             }
             repeat(stages) { i ->
                 OutlinedTextField(texts[i], { texts[i] = it.take(280) }, label = { Text("السر المستخبي ${i+1}") }, minLines = 2, modifier = Modifier.fillMaxWidth())
@@ -98,21 +106,42 @@ internal fun ScratchScreenV2() {
                 }
             }
             if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
-            Button(enabled = texts.take(stages).all { it.isNotBlank() }, onClick = {
-                editing = false; stage = 0; stageRevealed = false; reset++
-                expiresAt = System.currentTimeMillis() + ttlHours * 3_600_000L
-            }, modifier = Modifier.fillMaxWidth()) { Text("خبّي المفاجأة") }
+            SirrAction(
+                text = "خبّي المفاجأة  ✦",
+                enabled = texts.take(stages).all { it.isNotBlank() },
+                onClick = {
+                    editing = false; stage = 0; stageRevealed = false; reset++
+                    expiresAt = System.currentTimeMillis() + ttlHours * 3_600_000L
+                },
+                explanation = if (texts.take(stages).any { it.isBlank() })
+                    "كمّل الكلام المستخبي علشان تبدأ"
+                else "جاهزة… سلّم الموبايل للشخص اللي هيكشفها"
+            )
         } else {
-            Text("ورا الغطا ${stage + 1} من $stages…",
-                style=MaterialTheme.typography.titleLarge,color=MaterialTheme.colorScheme.primary)
+            SirrSection("0${stage + 1}", "الغطا ${stage + 1} من $stages",
+                if (stageRevealed) "المفاجأة اتكشفت!" else
+                    "مرّر صباعك على الكارت لحد ما يبان السر")
             key(reset, stage) {
                 ScratchPanel(texts[stage]) { stageRevealed = true }
             }
             if (stage < stages-1) {
-                Button(onClick = { stage++; stageRevealed = false; reset++ }, enabled = stageRevealed, modifier = Modifier.fillMaxWidth()) { Text("اكشف اللي بعدها") }
+                SirrAction(
+                    text = "اكشف اللي بعدها  ✦",
+                    enabled = stageRevealed,
+                    onClick = { stage++; stageRevealed = false; reset++ },
+                    explanation = if (!stageRevealed)
+                        "اكشف جزء كفاية من الغطا الأول" else null
+                )
             } else {
                 val photo = remember(photoId) { vault.readPhoto(photoId) }
                 if (photo != null && stageRevealed) Image(photo, contentDescription = "المفاجأة الأخيرة", modifier = Modifier.fillMaxWidth().height(180.dp), contentScale = ContentScale.Fit)
+                if (stageRevealed) {
+                    SirrAction(
+                        text = "كده السر اتكشف  ✦",
+                        onClick = { close() },
+                        explanation = "هتقفل الجلسة وتمسح الصورة الخاصة بيها"
+                    )
+                }
             }
             OutlinedButton(onClick = { stageRevealed = false; reset++ }, modifier = Modifier.fillMaxWidth()) { Text("خبّيها تاني") }
             TextButton(onClick = { close() }) { Text("اقفل وامسح الصورة") }
