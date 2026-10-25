@@ -32,8 +32,18 @@ import androidx.compose.ui.unit.dp
 import org.json.JSONObject
 
 internal enum class GameCue { ROUND, SUCCESS, SKIP, REVEAL, COMPLETE }
-internal data class EffectPreferences(val sound:Boolean=false,val haptic:Boolean=false,val cinematic:Boolean=true,val volume:Int=35) {
-    fun normalized()=copy(volume=volume.coerceIn(0,80))
+internal data class EffectPreferences(
+    val sound: Boolean = false,
+    val haptic: Boolean = false,
+    val cinematic: Boolean = true,
+    val volume: Int = 35,
+    val music: Boolean = true,
+    val musicVolume: Int = 21
+) {
+    fun normalized() = copy(
+        volume = volume.coerceIn(0, 80),
+        musicVolume = musicVolume.coerceIn(0, 45)
+    )
 }
 
 /** Local-only generated tones and user-controlled vibration; no background recording. */
@@ -87,13 +97,21 @@ internal class GameEffects(private val context:Context){
         private set
     private fun load():EffectPreferences=runCatching{
         val x=JSONObject(LocalVault(context.applicationContext).readPrivate("game-effects")?:return@runCatching EffectPreferences())
-        EffectPreferences(x.optBoolean("sound"),x.optBoolean("haptic"),x.optBoolean("cinematic",true),x.optInt("volume",35)).normalized()
+        EffectPreferences(
+            sound = x.optBoolean("sound"),
+            haptic = x.optBoolean("haptic"),
+            cinematic = x.optBoolean("cinematic", true),
+            volume = x.optInt("volume", 35),
+            music = x.optBoolean("music", true),
+            musicVolume = x.optInt("musicVolume", 21)
+        ).normalized()
     }.getOrDefault(EffectPreferences())
     fun change(next:EffectPreferences){
         preferences=next.normalized()
         runCatching{vault.writePrivate("game-effects",JSONObject()
             .put("sound",preferences.sound).put("haptic",preferences.haptic)
-            .put("cinematic",preferences.cinematic).put("volume",preferences.volume).toString())}
+            .put("cinematic",preferences.cinematic).put("volume",preferences.volume)
+            .put("music",preferences.music).put("musicVolume",preferences.musicVolume).toString())}
         pendingCue = null
     }
     val animate:Boolean get()=preferences.cinematic && runCatching{
@@ -129,7 +147,12 @@ internal fun rememberGameEffects():GameEffects{
 @Composable
 internal fun EffectPreferencesPanel(effects:GameEffects, initiallyExpanded:Boolean=false){
     val p=effects.preferences
+    val notifyBackground = LocalSirrAudioRefresh.current
     var expanded by remember { mutableStateOf(initiallyExpanded) }
+    fun apply(next: EffectPreferences) {
+        effects.change(next)
+        notifyBackground()
+    }
     OutlinedButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.fillMaxWidth()
@@ -137,25 +160,45 @@ internal fun EffectPreferencesPanel(effects:GameEffects, initiallyExpanded:Boole
     if(expanded) Card(Modifier.fillMaxWidth()){
         Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
             Text("اختار اللي يناسبك",style=MaterialTheme.typography.titleMedium)
+            Text(
+                "موسيقى خلفية لكل صفحة — شغالة بهدوء ومش محتاجة إنترنت",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Switch(checked = p.music, onCheckedChange = { apply(p.copy(music = it)) })
+                Spacer(Modifier.width(12.dp))
+                Text("موسيقى الصفحات")
+            }
+            if (p.music) {
+                Text("مستوى الموسيقى: ${p.musicVolume}٪")
+                Slider(
+                    value = p.musicVolume.toFloat(),
+                    onValueChange = { apply(p.copy(musicVolume = it.toInt())) },
+                    valueRange = 0f..45f
+                )
+            }
+            HorizontalDivider()
+            Text("مؤثرات اللعب والاهتزاز",
+                style = MaterialTheme.typography.titleMedium)
             Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
-                Switch(checked=p.cinematic,onCheckedChange={effects.change(p.copy(cinematic=it))})
+                Switch(checked=p.cinematic,onCheckedChange={apply(p.copy(cinematic=it))})
                 Spacer(Modifier.width(12.dp))
                 Text("حركات وظهور ناعم")
             }
             Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
-                Switch(checked=p.sound,onCheckedChange={effects.change(p.copy(sound=it))})
+                Switch(checked=p.sound,onCheckedChange={apply(p.copy(sound=it))})
                 Spacer(Modifier.width(12.dp))
-                Text("أصوات وقت اللعب")
+                Text("أصوات التحديات (مستقلة عن الموسيقى)")
             }
             Row(verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
-                Switch(checked=p.haptic,onCheckedChange={effects.change(p.copy(haptic=it))})
+                Switch(checked=p.haptic,onCheckedChange={apply(p.copy(haptic=it))})
                 Spacer(Modifier.width(12.dp))
                 Text("اهتزازات خفيفة")
             }
             if(p.sound){
                 Text("صوت المؤثرات: ${p.volume}٪")
                 Slider(value=p.volume.toFloat(),
-                    onValueChange={effects.change(p.copy(volume=it.toInt()))},valueRange=0f..80f)
+                    onValueChange={apply(p.copy(volume=it.toInt()))},valueRange=0f..80f)
             }
             OutlinedButton(onClick={effects.cue(GameCue.REVEAL)}){Text("جرّب المؤثرات")}
             if(!effects.animate)Text("الحركة متوقفة من هنا أو من إعدادات الموبايل",

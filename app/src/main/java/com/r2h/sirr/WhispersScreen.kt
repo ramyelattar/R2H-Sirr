@@ -46,6 +46,7 @@ internal fun WhispersScreenV2() {
     var audioUri by remember { mutableStateOf<String?>(null) }
     var page by remember { mutableIntStateOf(-1) }
     var playing by remember { mutableStateOf(false) }
+    val overrideBackgroundMusic = LocalSirrUserAudioOverride.current
     val player = remember { MediaPlayer() }
     // User-selected soundtrack must not continue playing after the app is backgrounded.
     val activity = context as? ComponentActivity
@@ -54,6 +55,7 @@ internal fun WhispersScreenV2() {
             if (event == Lifecycle.Event.ON_STOP) {
                 runCatching { if (player.isPlaying) player.pause() }
                 playing = false
+                overrideBackgroundMusic(false)
             }
         }
         activity?.lifecycle?.addObserver(observer)
@@ -61,6 +63,7 @@ internal fun WhispersScreenV2() {
             activity?.lifecycle?.removeObserver(observer)
             runCatching { player.stop() }
             runCatching { player.release() }
+            overrideBackgroundMusic(false)
         }
     }
     DisposableEffect(photoId) { val activeId = photoId; onDispose { vault.delete(activeId) } }
@@ -75,7 +78,10 @@ internal fun WhispersScreenV2() {
                 player.stop()
                 player.reset()
                 playing = false
+                overrideBackgroundMusic(false)
             } else {
+                // Stop generated page music before starting the chosen personal soundtrack.
+                overrideBackgroundMusic(true)
                 player.reset()
                 player.setDataSource(context, Uri.parse(selectedAudio))
                 player.prepare()
@@ -86,6 +92,7 @@ internal fun WhispersScreenV2() {
             runCatching { player.reset() }
             error = "مش قادرين نشغّل الأغنية"
             playing = false
+            overrideBackgroundMusic(false)
         }
     }
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -102,6 +109,7 @@ internal fun WhispersScreenV2() {
         sender = ""; receiver = ""; signature = ""; page = -1; envelope = null
         composeStep=0; extras=false
         runCatching { player.reset() }; playing = false
+        overrideBackgroundMusic(false)
         vault.delete(photoId); photoId = null; audioUri = null; error = ""
     }
     LaunchedEffect(envelope, page) {
