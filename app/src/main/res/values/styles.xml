@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Sirr" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/sirr_window_bg</item>
+        <item name="android:statusBarColor">@color/sirr_window_bg</item>
+        <item name="android:navigationBarColor">@color/sirr_window_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>
