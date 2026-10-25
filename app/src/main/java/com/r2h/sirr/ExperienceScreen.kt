@@ -28,7 +28,6 @@ internal fun ExperienceScreen(group: Boolean) {
     var intensity by remember { mutableStateOf(Intensity.SOFT) }
     val names = remember { mutableStateListOf("إنت", "اللي معاك", "صاحبكم ٣", "صاحبكم ٤") }
     val consent = remember { mutableStateListOf(false, false, false, false) }
-    var game by remember { mutableStateOf<LocalGame?>(null) }
     var reply by remember { mutableStateOf("") }
     var advanced by remember { mutableStateOf(false) }
     var mediaOpen by remember { mutableStateOf(false) }
@@ -36,6 +35,19 @@ internal fun ExperienceScreen(group: Boolean) {
     val effects = rememberGameEffects()
     val context = LocalContext.current
     val vault = remember { LocalVault(context.applicationContext) }
+    val gameName = if (group) "game-party" else "game-couple"
+    val replyName = if (group) "replies-party" else "replies-couple"
+    // Sensitive randomized challenges are stored encrypted, never in saved-instance-state.
+    var game by remember(group) { mutableStateOf(LocalSessionStore.load(vault, gameName, group)) }
+    // Save each game transition synchronously; a delayed Compose effect can be lost
+    // if Android destroys the Activity immediately after a user action.
+    var replyStatus by remember { mutableStateOf("") }
+    LaunchedEffect(game?.round) {
+        reply = game?.takeIf { !it.finished }?.let {
+            LocalSessionStore.readReply(vault, replyName, it.round)
+        }.orEmpty()
+        replyStatus = ""
+    }
     val storageName = if (group) "custom-party" else "custom-couple"
     val historyName = if (group) "recent-party" else "recent-couple"
     var customText by remember(group) { mutableStateOf(vault.readPrivate(storageName).orEmpty()) }
@@ -145,9 +157,14 @@ internal fun ExperienceScreen(group: Boolean) {
                             roundCount = roundCount, variety = variety, recentlySeen = recent
                         )
                     }.onSuccess { newGame ->
-                        game = newGame
-                        runCatching { vault.writePrivate(historyName, newGame.turns.joinToString("\n") { it.prompt.text }) }
-                        reply = ""
+                        runCatching {
+                            LocalSessionStore.save(vault, gameName, newGame)
+                            vault.deletePrivate(replyName)
+                        }.onSuccess {
+                            game = newGame
+                            runCatching { vault.writePrivate(historyName, newGame.turns.joinToString("\n") { it.prompt.text }) }
+                            reply = ""
+                        }.onFailure { formError = "تعذر حفظ الجولة بأمان؛ لم تبدأ اللعبة. تأكد إن مساحة التخزين كافية." }
                     }.onFailure { formError = "حصلت مشكلة في تجهيز الجولة. جرّب اختيار مود تاني." }
                 },
                 enabled = (intensity != Intensity.CUSTOM || (customValid && customEntries.isNotEmpty())) &&
@@ -193,21 +210,53 @@ internal fun ExperienceScreen(group: Boolean) {
                             label = { Text("رد خاص… لو حابب") },
                             modifier = Modifier.fillMaxWidth(), minLines = 2)
                         LocalResponseMedia(current.round)
+                        OutlinedButton(onClick = {
+                            runCatching { LocalSessionStore.writeReply(vault, replyName, current.round, reply) }
+                                .onSuccess { replyStatus = "ردك اتحفظ مشفّر على الموبايل" }
+                                .onFailure { replyStatus = "معرفناش نحفظ الرد؛ حاول تاني قبل ما تكمل" }
+                        }, enabled = reply.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+                            Text("احفظ ردك عندك")
+                        }
+                        if (replyStatus.isNotBlank()) Text(replyStatus)
                     }
                     }
                 }
+                fun finishRound(completed:Boolean) {
+                    if (reply.isNotBlank() && runCatching {
+                        LocalSessionStore.writeReply(vault, replyName, current.round, reply)
+                    }.isFailure) {
+                        replyStatus = "فشل حفظ الرد؛ النص لسه موجود علشان متفقدوش"
+                        return
+                    }
+                    val next = current.resolve(completed = completed)
+                    runCatching { LocalSessionStore.save(vault, gameName, next) }
+                        .onSuccess {
+                            effects.cue(if (completed) GameCue.SUCCESS else GameCue.SKIP)
+                            game = next
+                            reply = ""; mediaOpen = false; replyStatus = ""
+                        }.onFailure {
+                            replyStatus = "الجولة متقدمتش لأن حفظها فشل؛ ردك لسه موجود"
+                        }
+                }
                 if (isRevealed) {
                     Button(
-                        onClick = { effects.cue(GameCue.SUCCESS); game = current.resolve(completed = true); reply = ""; mediaOpen = false },
+                        onClick = { finishRound(true) },
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         shape = RoundedCornerShape(17.dp)
                     ) { Text("خلصت التحدي ✦", fontWeight = FontWeight.Bold) }
                 }
                 OutlinedButton(
-                    onClick = { effects.cue(GameCue.SKIP); game = current.resolve(completed = false); reply = ""; mediaOpen = false },
+                    onClick = { finishRound(false) },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("مش دلوقتي… عَدّي") }
-                TextButton(onClick = { game = current.leave(); reply = "" }) { Text("وقّف اللعبة") }
+                TextButton(onClick = {
+                    runCatching { LocalSessionStore.save(vault, gameName, current.leave()) }
+                        .onSuccess { game = current.leave(); reply = "" }
+                        .onFailure { replyStatus = "تعذر حفظ إيقاف اللعبة، حاول تاني" }
+                }) { Text("وقّف اللعبة") }
+                if (replyStatus.isNotBlank() && !mediaOpen) {
+                    Text(replyStatus, color = MaterialTheme.colorScheme.error)
+                }
             } else {
                 Text(if (current.ended) "وقفنا هنا… براحتكم" else "كده الليلة خلصت ✦",
                     style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
@@ -215,10 +264,30 @@ internal fun ExperienceScreen(group: Boolean) {
                 current.playerNames.forEachIndexed { index, name ->
                     Text("${name} — ${current.scores[index]} تحدي اتعمل، ${current.skipped[index]} اتعدّى")
                 }
+                val pastReplies = remember(current, replyName) {
+                    current.turns.indices.mapNotNull { index ->
+                        LocalSessionStore.readReply(vault, replyName, index)?.let { index to it }
+                    }
+                }
+                if (pastReplies.isNotEmpty()) {
+                    Text("ردودكم الخاصة — محفوظة على الموبايل بس",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary)
+                    pastReplies.forEach { (index, text) ->
+                        Text("الجولة ${index + 1}: $text", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
                 Button(onClick = {
-                    game = null
-                    consent.indices.forEach { consent[it] = false }
+                    runCatching {
+                        vault.deletePrivate(gameName)
+                        vault.deletePrivate(replyName)
+                    }.onSuccess {
+                        game = null
+                        consent.indices.forEach { consent[it] = false }
+                        formError = ""
+                    }.onFailure { formError = "تعذر مسح الجولة القديمة؛ حاول تاني" }
                 }, modifier = Modifier.fillMaxWidth()) { Text("نبدأ واحدة جديدة؟") }
+                if (formError.isNotBlank()) Text(formError, color = MaterialTheme.colorScheme.error)
             }
         }
     }

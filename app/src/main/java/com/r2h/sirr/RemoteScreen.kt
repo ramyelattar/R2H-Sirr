@@ -46,6 +46,11 @@ private class RemoteTransport(private val client:OkHttpClient) {
     private val chunks=RemoteChunkTransfer(client)
     private val main=Handler(Looper.getMainLooper())
     private var ws:WebSocket?=null
+    private var authenticated=false
+    // Bounded in-memory retry queue; eventId is constant across reconnects for server idempotency.
+    private data class PendingAction(val payload:String,var attempts:Int=0)
+    private val pendingActions=LinkedHashMap<String,PendingAction>()
+    private var ackRetry:Runnable?=null
     private var disconnected=false
     private var generation=0
     private var reconnectAttempt=0
@@ -100,13 +105,32 @@ private class RemoteTransport(private val client:OkHttpClient) {
         }
     }
     fun connect(identity:RemoteIdentity,state:(JSONObject)->Unit,status:(String)->Unit){
-        disconnected=false;current=identity;onState=state;onStatus=status;reconnectAttempt=0;open()
+        disconnected=false;current=identity;onState=state;onStatus=status;reconnectAttempt=0
+        pendingActions.clear();authenticated=false;open()
+    }
+    private fun stopAckRetry(){ackRetry?.let(main::removeCallbacks);ackRetry=null}
+    private fun sendPending(forceRetry:Boolean=false){
+        if(!authenticated || disconnected)return
+        val socket=ws?:return
+        val expired=mutableListOf<String>()
+        for((eventId,item) in pendingActions){
+            if(item.attempts>=4){expired.add(eventId);continue}
+            if((forceRetry || item.attempts==0) && socket.send(item.payload))item.attempts++
+        }
+        expired.forEach{pendingActions.remove(it)}
+        if(expired.isNotEmpty())onStatus?.invoke("تعذر تأكيد بعض الأوامر. راجع حالة الغرفة قبل إعادة المحاولة")
+        stopAckRetry()
+        if(pendingActions.isNotEmpty()){
+            val tick=Runnable{ackRetry=null;sendPending(forceRetry=true)}
+            ackRetry=tick;main.postDelayed(tick,5000L)
+        }
     }
     private fun open(){
         val id=current?:return
         if(disconnected)return
         reconnectTask?.let(main::removeCallbacks);reconnectTask=null
         val seq=++generation
+        authenticated=false;stopAckRetry()
         ws?.cancel()
         val address=id.server.replaceFirst("https://","wss://")+"/ws"
         ws=client.newWebSocket(Request.Builder().url(address).build(),object:WebSocketListener(){
@@ -118,9 +142,10 @@ private class RemoteTransport(private val client:OkHttpClient) {
                 main.post{
                     if(seq!=generation||disconnected)return@post
                     when(data.optString("type")){
-                        "authenticated"->{reconnectAttempt=0;onStatus?.invoke("متصل — التزامن نشط")}
+                        "authenticated"->{authenticated=true;reconnectAttempt=0;onStatus?.invoke("متصل — التزامن نشط");sendPending(forceRetry=true)}
                         "state"->onState?.invoke(data.getJSONObject("data"))
-                        "error"->onStatus?.invoke(data.optString("message","تعذر تنفيذ الأمر"))
+                        "ack"->{pendingActions.remove(data.optString("eventId"));if(pendingActions.isEmpty())stopAckRetry()}
+                        "error"->{pendingActions.remove(data.optString("eventId"));onStatus?.invoke(data.optString("message","تعذر تنفيذ الأمر"))}
                     }
                 }
             }
@@ -130,26 +155,28 @@ private class RemoteTransport(private val client:OkHttpClient) {
     }
     private fun retry(seq:Int,code:Int){
         if(disconnected||seq!=generation)return
-        if(code==4000||code==4003||code==4009){onStatus?.invoke(if(code==4009) "إصدار المحتوى لا يطابق الخادم، يلزم تحديث التطبيق" else "الجلسة منتهية أو الدخول مرفوض");return}
+        authenticated=false;stopAckRetry()
+        if(code==4000||code==4003||code==4009){
+            pendingActions.clear();onStatus?.invoke(if(code==4009) "إصدار المحتوى لا يطابق الخادم، يلزم تحديث التطبيق" else "الجلسة منتهية أو الدخول مرفوض");return}
         val delay=min(30_000L,1000L*(1 shl min(reconnectAttempt++,5)))
         onStatus?.invoke("انقطع الاتصال — إعادة المحاولة تلقائيًا")
         reconnectTask=Runnable{open()}.also{main.postDelayed(it,delay)}
     }
     fun reconnect(){reconnectAttempt=0;open()}
-    fun privateMessage(text:String){
-        val id=current?:return
+    fun privateMessage(text:String):Boolean{
+        val id=current?:return false
         val sealed=SecureGameProtocol.seal(id.roomId,id.sessionKey,"message",text)
-        action("message",JSONObject().put("iv",sealed.iv).put("cipher",sealed.cipher))
+        return action("message",JSONObject().put("iv",sealed.iv).put("cipher",sealed.cipher))
     }
-    fun configure(rounds:Int,variety:String,level:Intensity,custom:List<String>){
-        val id=current?:return
+    fun configure(rounds:Int,variety:String,level:Intensity,custom:List<String>):Boolean{
+        val id=current?:return false
         require(custom.size<=20 && custom.all{it.length in 6..200} && custom.distinct().size==custom.size)
         val sealed=JSONArray()
         custom.forEach { line->
             val encrypted=SecureGameProtocol.seal(id.roomId,id.sessionKey,"challenge",line)
             sealed.put(JSONObject().put("iv",encrypted.iv).put("cipher",encrypted.cipher))
         }
-        action("configure",JSONObject().put("rounds",rounds).put("variety",variety).put("level",level.name).put("custom",sealed))
+        return action("configure",JSONObject().put("rounds",rounds).put("variety",variety).put("level",level.name).put("custom",sealed))
     }
     fun sendPrivateQuiz(quiz:JSONObject,answers:List<Int>){
         val id=current?:return
@@ -166,10 +193,16 @@ private class RemoteTransport(private val client:OkHttpClient) {
         return SecureGameProtocol.open(id.roomId,id.sessionKey,domain,
             SecureGameProtocol.Sealed(sealed.getString("iv"),sealed.getString("cipher")))
     }
-    fun action(type:String,extra:JSONObject=JSONObject()){
-        val data=JSONObject().put("type",type).put("eventId",UUID.randomUUID().toString().replace("-",""))
+    fun action(type:String,extra:JSONObject=JSONObject()):Boolean{
+        if(disconnected || current==null || pendingActions.size>=32){
+            onStatus?.invoke("تعذر حفظ الأمر للإرسال — تحقق من اتصال الغرفة");return false
+        }
+        val eventId=UUID.randomUUID().toString().replace("-","")
+        val data=JSONObject().put("type",type).put("eventId",eventId)
         val keys=extra.keys();while(keys.hasNext()){val key=keys.next();data.put(key,extra.get(key))}
-        ws?.send(data.toString())
+        pendingActions[eventId]=PendingAction(data.toString())
+        if(authenticated)sendPending() else onStatus?.invoke("الأمر في انتظار عودة الاتصال — لم يتم تأكيده بعد")
+        return true
     }
     fun upload(context:android.content.Context,uri:Uri,status:(String)->Unit,
                onUploaded:(String)->Unit={}){
@@ -253,7 +286,8 @@ private class RemoteTransport(private val client:OkHttpClient) {
             }
         })
     }
-    fun close(){disconnected=true;generation++;current=null;ws?.close(1000,"leaving screen");ws=null
+    fun close(){disconnected=true;generation++;current=null;authenticated=false;pendingActions.clear();stopAckRetry()
+        ws?.close(1000,"leaving screen");ws=null
         reconnectTask?.let(main::removeCallbacks);reconnectTask=null}
 }
 
@@ -411,7 +445,7 @@ internal fun RemoteScreen(){
                         val valid=customLines.size<=20 && customLines.distinct().size==customLines.size && customLines.all{it.length in 6..200}
                         Text("${customLines.size} من ٢٠ تحديًا. الطول من ٦ إلى ٢٠٠ حرف، دون تكرار.")
                         Button(enabled=valid,onClick={runCatching{transport.configure(lobbyRounds,lobbyVariety,lobbyLevel,customLines)}
-                            .onSuccess{status="أُرسلت الإعدادات والتحديات المشفرة للغرفة"}
+                            .onSuccess{accepted->status=if(accepted)"تم إدراج الإعدادات في طابور الإرسال؛ انتظر تأكيد الغرفة" else "تعذر إدراج الإعدادات للإرسال"}
                             .onFailure{status="تعذر إرسال الإعدادات: ${it.message}"}}){Text("احفظ التعديلات")}
                         }
                     }
@@ -432,7 +466,9 @@ internal fun RemoteScreen(){
                     CinematicChallenge(prompt,effects)
                     if(snapshot.optString("actorId")==id.participantId){
                         OutlinedTextField(draft,{draft=it.take(500)},label={Text("قول اللي عندك… الرسالة مشفّرة")},modifier=Modifier.fillMaxWidth())
-                        OutlinedButton(enabled=draft.isNotBlank(),onClick={runCatching{transport.privateMessage(draft)}.onFailure{status="فشل تشفير الرسالة"};draft=""}){Text("ابعت الرسالة")}
+                        OutlinedButton(enabled=draft.isNotBlank(),onClick={runCatching{transport.privateMessage(draft)}
+                            .onSuccess{queued->if(queued)draft="" else status="الرسالة لم تُرسل؛ محتفظين بالنص"}
+                            .onFailure{status="فشل تشفير الرسالة؛ النص ما زال موجود"}}){Text("ابعت الرسالة")}
                         OutlinedButton(onClick={actorExtras=!actorExtras},modifier=Modifier.fillMaxWidth()){
                             Text(if(actorExtras)"اقفل الإضافات" else "ابعت صورة أو همسة مخصوص")
                         }

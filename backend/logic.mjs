@@ -102,7 +102,6 @@ export function applyAction(room, member, command, clock=now()) {
   if (typeof eventId!=='string' || !/^[A-Za-z0-9_-]{8,80}$/.test(eventId)) throw Error('event id missing');
   if (room.events.has(eventId)) return false;
   if (room.expiresAt<=clock || ['EXPIRED','REVOKED','ENDED'].includes(room.status)) throw Error('room unavailable');
-  if (room.events.size>1000) room.events.clear();
   switch(type) {
     case 'consent':
       if (room.status!=='WAITING' || command.value!==true) throw Error('invalid consent');
@@ -162,5 +161,8 @@ export function applyAction(room, member, command, clock=now()) {
       room.status='REVOKED'; room.closedAt=clock; room.actorId=null; room.prompt=null; room.messages=[]; room.quiz=null; room.media=[]; break;
     default: throw Error('unknown action');
   }
-  room.events.add(eventId); room.seq++; return true;
+  room.events.add(eventId);
+  // FIFO eviction retains recent duplicate protection instead of clearing the full set.
+  if(room.events.size>2048) room.events.delete(room.events.values().next().value);
+  room.seq++; return true;
 }

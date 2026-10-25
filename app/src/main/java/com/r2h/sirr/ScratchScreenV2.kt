@@ -124,7 +124,8 @@ internal fun ScratchScreenV2() {
 internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     val effects = rememberGameEffects()
     val brushRadiusPx = with(LocalDensity.current) { 17.dp.toPx() }
-    val strokes = remember { mutableStateListOf<List<Offset>>() }
+    // Nested observable lists append in O(1), avoiding quadratic copy-on-each-pointer-event.
+    val strokes = remember { mutableStateListOf<androidx.compose.runtime.snapshots.SnapshotStateList<Offset>>() }
     var savedPoints by remember { mutableIntStateOf(0) }
     val cells = remember { BooleanArray(192) }
     var coveredCells by remember { mutableIntStateOf(0) }
@@ -166,7 +167,7 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
         }
     }
     fun begin(p: Offset) {
-        if (savedPoints < 2400) { strokes.add(listOf(p)); savedPoints++ }
+        if (savedPoints < 2400) { strokes.add(mutableStateListOf(p)); savedPoints++ }
         mark(p)
     }
     fun append(p: Offset) {
@@ -182,7 +183,7 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             mark(Offset(previous.x + dx * t, previous.y + dy * t))
         }
         if (savedPoints < 2400 && strokes.isNotEmpty()) {
-            strokes[strokes.lastIndex] = strokes.last() + p
+            strokes.last().add(p)
             savedPoints++
         }
     }
@@ -228,7 +229,7 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
                         if (stroke.size == 1) {
                             lineTo(stroke.first().x + .1f, stroke.first().y)
                         } else {
-                            stroke.drop(1).forEach { lineTo(it.x, it.y) }
+                            for (i in 1 until stroke.size) lineTo(stroke[i].x, stroke[i].y)
                         }
                     }
                     drawPath(path, color = Color.Transparent, style = Stroke(

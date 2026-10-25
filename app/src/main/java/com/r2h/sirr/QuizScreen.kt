@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -14,22 +15,22 @@ import com.r2h.sirr.core.*
 
 @Composable
 internal fun QuizScreenV2() {
-    var packIndex by remember { mutableIntStateOf(-1) }
-    var pairing by remember { mutableStateOf(false) }
-    var questionCount by remember { mutableIntStateOf(8) }
-    var selectedIndices by remember { mutableStateOf<List<Int>>(emptyList()) }
-    var phase by remember { mutableIntStateOf(0) }
-    var step by remember { mutableIntStateOf(0) }
-    var revealStep by remember { mutableIntStateOf(0) }
-    val answersA = remember { mutableStateListOf<Int>() }
-    val answersB = remember { mutableStateListOf<Int>() }
-    var acceptedB by remember { mutableStateOf(false) }
+    var packIndex by rememberSaveable { mutableIntStateOf(-1) }
+    var pairing by rememberSaveable { mutableStateOf(false) }
+    var questionCount by rememberSaveable { mutableIntStateOf(8) }
+    var selectedIndices by rememberSaveable { mutableStateOf<List<Int>>(emptyList()) }
+    var phase by rememberSaveable { mutableIntStateOf(0) }
+    var step by rememberSaveable { mutableIntStateOf(0) }
+    var revealStep by rememberSaveable { mutableIntStateOf(0) }
+    var answersA by rememberSaveable { mutableStateOf<List<Int>>(emptyList()) }
+    var answersB by rememberSaveable { mutableStateOf<List<Int>>(emptyList()) }
+    var acceptedB by rememberSaveable { mutableStateOf(false) }
     val packs = ExpandedQuizzes.packs
     val moodTitles = listOf("إنت من جوّه", "الحب على مزاجك", "إحنا شبه بعض؟",
         "الجاذبية والإشارات", "أمنيات متخبية", "راحة وحدود", "جرأة ولا صراحة؟")
     fun reset() {
         packIndex = -1; phase = 0; step = 0; revealStep = 0
-        answersA.clear(); answersB.clear()
+        answersA = emptyList(); answersB = emptyList()
         acceptedB = false; selectedIndices = emptyList()
     }
     Page("هتعرفوا بعض أكتر؟", "أسئلة خفيفة تفتح كلام مكنش على البال.") {
@@ -48,8 +49,8 @@ internal fun QuizScreenV2() {
                     phase = 0
                     step = 0
                     revealStep = 0
-                    answersA.clear()
-                    answersB.clear()
+                    answersA = emptyList()
+                    answersB = emptyList()
                     acceptedB = false
                     selectedIndices = emptyList()
                 }
@@ -113,7 +114,7 @@ internal fun QuizScreenV2() {
                         question.choices.forEachIndexed { i, answer ->
                             OutlinedButton(
                                 onClick = {
-                                    if (phase == 1) answersA.add(i) else answersB.add(i)
+                                    if (phase == 1) answersA = answersA + i else answersB = answersB + i
                                     if (step + 1 == selectedIndices.size) {
                                         phase = if (phase == 1 && pairing) 2 else 4
                                     } else step++
@@ -197,7 +198,7 @@ internal fun QuizScreenV2() {
                 OutlinedButton(
                     onClick = {
                         phase = 0; step = 0; revealStep = 0
-                        answersA.clear(); answersB.clear()
+                        answersA = emptyList(); answersB = emptyList()
                         acceptedB = false; selectedIndices = emptyList()
                     },
                     modifier = Modifier.fillMaxWidth()
