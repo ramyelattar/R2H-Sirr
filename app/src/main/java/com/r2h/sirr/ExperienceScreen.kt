@@ -80,6 +80,12 @@ internal fun ExperienceScreen(group: Boolean) {
                     if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
+            Text(
+                if (intensity == Intensity.SOFT) "المود ده أخف في المحتوى. لو مش مناسب، اختاروا غيره."
+                else "تنبيه للكبار: كل ما المود يعلى، التحديات ممكن تبقى شديدة الخصوصية وصريحة. اختاروا مستوى يناسب كل المشاركين.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
+            )
             SirrSection("02", "اختاروا عدد الجولات", "الاختيار ده ينفع يتكرر في ليلة تانية")
             listOf(6, 10, 12, 18).chunked(2).forEach { pair ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -201,6 +207,8 @@ internal fun ExperienceScreen(group: Boolean) {
             if (!current.finished) {
                 val turn = current.turns[current.round]
                 var isRevealed by remember(current.round) { mutableStateOf(false) }
+                // Opt-in is renewed for the current actor after each new reveal.
+                var roundConsent by remember(current.round) { mutableStateOf(false) }
                 LaunchedEffect(current.round) { effects.cue(GameCue.ROUND) }
                 SirrSection("${current.round + 1}", "جولة جديدة · السر مستنيكم",
                     "لو مش مناسب، عدّوه من غير أي حسابات.")
@@ -264,8 +272,20 @@ internal fun ExperienceScreen(group: Boolean) {
                         }
                 }
                 if (isRevealed) {
+                    Text(
+                        "المشاركة اختيارية في كل تحدي. لو فيه شخص تاني هيشارك في أي تلامس أو نشاط، لازم تسأل وتتأكد من موافقته دلوقتي. الرفض أو تغيير الرأي يوقف النشاط فورًا.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    SirrConsent(
+                        name = "${current.playerNames[turn.actorIndex]} — موافق على التحدي ده",
+                        checked = roundConsent,
+                        onChange = { roundConsent = it }
+                    )
                     SirrAction(
                         text = "التحدي اتعمل  ✦",
+                        enabled = roundConsent,
+                        explanation = if (roundConsent) null else "محتاج موافقة صاحب الدور بعد ما شاف التحدي",
                         onClick = { finishRound(true) }
                     )
                 }

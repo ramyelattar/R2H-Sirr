@@ -25,6 +25,7 @@ internal fun QuizScreenV2() {
     var answersA by rememberSaveable { mutableStateOf<List<Int>>(emptyList()) }
     var answersB by rememberSaveable { mutableStateOf<List<Int>>(emptyList()) }
     var acceptedB by rememberSaveable { mutableStateOf(false) }
+    var acceptedContent by rememberSaveable { mutableStateOf(false) }
     val packs = ExpandedQuizzes.packs
     val moodTitles = listOf("إنت من جوّه", "الحب على مزاجك", "إحنا شبه بعض؟",
         "الجاذبية والإشارات", "أمنيات متخبية", "راحة وحدود", "جرأة ولا صراحة؟")
@@ -40,9 +41,9 @@ internal fun QuizScreenV2() {
     fun reset() {
         packIndex = -1; phase = 0; step = 0; revealStep = 0
         answersA = emptyList(); answersB = emptyList()
-        acceptedB = false; selectedIndices = emptyList()
+        acceptedB = false; acceptedContent = false; selectedIndices = emptyList()
     }
-    Page("هتعرفوا بعض أكتر؟", "أسئلة خفيفة تفتح كلام مكنش على البال.") {
+    Page("هتعرفوا بعض أكتر؟", "أسئلة من الخفيف للجريء — اختاروا اللي يناسبكم.") {
         if (packIndex < 0) {
             SirrIntro(
                 overline = "7 أبواب · 25 سؤال في كل باب",
@@ -62,6 +63,7 @@ internal fun QuizScreenV2() {
                     answersA = emptyList()
                     answersB = emptyList()
                     acceptedB = false
+                    acceptedContent = false
                     selectedIndices = emptyList()
                 }
             }
@@ -76,6 +78,18 @@ internal fun QuizScreenV2() {
                     SirrOption("إحنا الاتنين", pairing, onClick = { pairing = true },
                         modifier = Modifier.weight(1f))
                 }
+                Text(
+                    if (packIndex == 0 || packIndex == 6)
+                        "تنبيه: الباب ده ممكن يحتوي أسئلة شخصية جدًا وصريحة للكبار. تقدر تتخطى أي سؤال أو تنهي الجولة."
+                    else "بعض الأسئلة شخصية وقد تكون محرجة. مفيش إجابة إجبارية، والتخطي متاح في أي وقت.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                SirrConsent(
+                    name = "أنا موافق أبدأ أسئلة الباب ده بعد ما عرفت طبيعتها",
+                    checked = acceptedContent,
+                    onChange = { acceptedContent = it }
+                )
                 SirrSection("03", "كام سؤال تحبوا؟", "ابدأوا بقليل… وكملوا لو حبيتوا")
                 listOf(8, 12, 20, 25).chunked(2).forEach { pair ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -87,6 +101,8 @@ internal fun QuizScreenV2() {
                 }
                 SirrAction(
                     text = "افتح أول سؤال  ✦",
+                    enabled = acceptedContent,
+                    explanation = if (acceptedContent) null else "لازم توافق على طبيعة الأسئلة قبل ما تبدأ",
                     onClick = {
                         selectedIndices = quiz.questions.indices.shuffled().take(questionCount)
                         phase = 1; step = 0
@@ -233,7 +249,7 @@ internal fun QuizScreenV2() {
                     onClick = {
                         phase = 0; step = 0; revealStep = 0
                         answersA = emptyList(); answersB = emptyList()
-                        acceptedB = false; selectedIndices = emptyList()
+                        acceptedB = false; acceptedContent = false; selectedIndices = emptyList()
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("نلعب جولة جديدة؟") }
