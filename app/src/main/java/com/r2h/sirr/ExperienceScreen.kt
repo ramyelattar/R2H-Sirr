@@ -61,27 +61,42 @@ internal fun ExperienceScreen(group: Boolean) {
         if (group) "اختاروا المود، واللعبة هتبدأ." else "شوية أسئلة ومفاجآت… براحتكم ومن غير ضغط."
     ) {
         if (game == null) {
-            Text("مود الليلة", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            Row(
-                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Intensity.entries.filter { it != Intensity.CUSTOM }.forEach { level ->
-                    FilterChip(selected = intensity == level, onClick = { intensity = level },
-                        label = { Text(level.arabic) })
+            SirrIntro(
+                overline = if (group) "من اتنين لأربعة" else "حكاية لشخصين",
+                title = if (group) "كل واحد ليه دوره." else "خلي الليلة مختلفة.",
+                description = if (group)
+                    "اختاروا المود وعدد الجولات. اللعبة هتوزّع الأدوار عليكم واحدة واحدة."
+                else "مود واحد، جولات قصيرة، وتحدي يتكشف لما تبقوا جاهزين.",
+                accent = if (group) Color(0xFF605080) else Color(0xFFA04A74)
+            )
+            SirrSection("01", "اختاروا المود", "من كلام خفيف لجرأة على مزاجكم")
+            Intensity.entries.filter { it != Intensity.CUSTOM }.chunked(2).forEach { pair ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    pair.forEach { level ->
+                        SirrOption(title = level.arabic, selected = intensity == level,
+                            onClick = { intensity = level }, modifier = Modifier.weight(1f))
+                    }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
-            Text("قد إيه عندكم وقت؟", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(6, 10, 12, 18).forEach { count ->
-                    FilterChip(selected = roundCount == count, onClick = { roundCount = count },
-                        label = { Text("${count} جولات") })
+            SirrSection("02", "اختاروا عدد الجولات", "الاختيار ده ينفع يتكرر في ليلة تانية")
+            listOf(6, 10, 12, 18).chunked(2).forEach { pair ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    pair.forEach { count ->
+                        SirrOption(title = "$count جولات", selected = roundCount == count,
+                            onClick = { roundCount = count }, modifier = Modifier.weight(1f))
+                    }
                 }
             }
             if (group) {
-                Text("عدد اللي بيلعبوا: ${seats}", style = MaterialTheme.typography.titleMedium)
-                Slider(value = seats.toFloat(), onValueChange = { seats = it.toInt().coerceIn(2,4) },
-                    valueRange = 2f..4f, steps = 1)
+                Text("كام واحد هيلعب؟", style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    (2..4).forEach { count ->
+                        SirrOption(title = "$count لاعبين", selected = seats == count,
+                            onClick = { seats = count }, modifier = Modifier.weight(1f))
+                    }
+                }
             }
             OutlinedButton(
                 onClick = { advanced = !advanced },
@@ -135,17 +150,26 @@ internal fun ExperienceScreen(group: Boolean) {
                 }
                 EffectPreferencesPanel(effects)
             }
-            HorizontalDivider()
-            Text("كله بموافقتكم", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            Text("كل واحد يوافق بنفسه قبل ما تبدأوا. وتقدروا تعدّوا أي تحدي أو توقفوا في أي وقت.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            HorizontalDivider(color = Color(0xFF5C4153))
+            SirrSection("03", "الكل موافق؟",
+                "كل واحد يوافق بنفسه. تخطي التحدي أو وقف اللعبة متاح في أي وقت.")
             repeat(seats) { i ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = consent[i], onCheckedChange = { consent[i] = it })
-                    Text("${names[i]} موافق يلعب", style = MaterialTheme.typography.bodyMedium)
-                }
+                SirrConsent(name = names[i], checked = consent[i],
+                    onChange = { consent[i] = it })
             }
-            Button(
+            val waiting = (0 until seats).filter { !consent[it] }
+            val invalidNames = (0 until seats).any { names[it].isBlank() }
+            val invalidCustom = intensity == Intensity.CUSTOM &&
+                (!customValid || customEntries.isEmpty())
+            val startHint = when {
+                invalidNames -> "اكتبوا اسم لكل لاعب من الاختيارات الإضافية"
+                invalidCustom -> "كمّل التحديات المخصوصة الأول"
+                waiting.isNotEmpty() -> "مستنيين موافقة ${waiting.size} من اللاعبين"
+                else -> "جاهزين؟ السر الأول مستنيكم."
+            }
+            SirrAction(
+                text = "افتح أول سر  ✦",
+                explanation = startHint,
                 onClick = {
                     formError = ""
                     val recent = if (avoidRepeat) vault.readPrivate(historyName)
@@ -167,11 +191,9 @@ internal fun ExperienceScreen(group: Boolean) {
                         }.onFailure { formError = "تعذر حفظ الجولة بأمان؛ لم تبدأ اللعبة. تأكد إن مساحة التخزين كافية." }
                     }.onFailure { formError = "حصلت مشكلة في تجهيز الجولة. جرّب اختيار مود تاني." }
                 },
-                enabled = (intensity != Intensity.CUSTOM || (customValid && customEntries.isNotEmpty())) &&
-                    (0 until seats).all { consent[it] && names[it].isNotBlank() },
-                modifier = Modifier.fillMaxWidth().height(54.dp),
-                shape = RoundedCornerShape(17.dp)
-            ) { Text("يلا نبدأ اللعبة", fontWeight = FontWeight.Bold) }
+                enabled = !invalidNames && !invalidCustom && waiting.isEmpty(),
+                modifier = Modifier.fillMaxWidth()
+            )
             if (formError.isNotEmpty()) Text(formError, color = MaterialTheme.colorScheme.error)
         } else {
             val current = game!!
@@ -179,6 +201,11 @@ internal fun ExperienceScreen(group: Boolean) {
                 val turn = current.turns[current.round]
                 var isRevealed by remember(current.round) { mutableStateOf(false) }
                 LaunchedEffect(current.round) { effects.cue(GameCue.ROUND) }
+                SirrIntro(
+                    overline = "جولة ${current.round + 1} من ${current.turns.size}",
+                    title = "السر الجاي لمين؟",
+                    description = "خدوا راحتكم. لو مش مناسب، عدّوه من غير أي حسابات."
+                )
                 LinearProgressIndicator(
                     progress = { current.round.toFloat() / current.turns.size },
                     modifier = Modifier.fillMaxWidth()
@@ -239,16 +266,15 @@ internal fun ExperienceScreen(group: Boolean) {
                         }
                 }
                 if (isRevealed) {
-                    Button(
-                        onClick = { finishRound(true) },
-                        modifier = Modifier.fillMaxWidth().height(54.dp),
-                        shape = RoundedCornerShape(17.dp)
-                    ) { Text("خلصت التحدي ✦", fontWeight = FontWeight.Bold) }
+                    SirrAction(
+                        text = "التحدي اتعمل  ✦",
+                        onClick = { finishRound(true) }
+                    )
                 }
                 OutlinedButton(
                     onClick = { finishRound(false) },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("مش دلوقتي… عَدّي") }
+                ) { Text("مش مناسب؟ عَدّي من غير إحراج") }
                 TextButton(onClick = {
                     runCatching { LocalSessionStore.save(vault, gameName, current.leave()) }
                         .onSuccess { game = current.leave(); reply = "" }
