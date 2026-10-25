@@ -73,9 +73,9 @@ internal fun QuizScreenV2() {
                 Text(moodTitles[packIndex], style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                 SirrSection("02", "مين هيجاوب؟", "اللعب الفردي أو مقارنة من غير درجات توافق")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SirrOption("أنا لوحدي", !pairing, onClick = { pairing = false },
+                    SirrOption("أنا لوحدي", !pairing, onClick = { pairing = false; acceptedContent = false },
                         modifier = Modifier.weight(1f))
-                    SirrOption("إحنا الاتنين", pairing, onClick = { pairing = true },
+                    SirrOption("إحنا الاتنين", pairing, onClick = { pairing = true; acceptedContent = false },
                         modifier = Modifier.weight(1f))
                 }
                 Text(

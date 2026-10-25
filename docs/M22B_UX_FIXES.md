@@ -7,6 +7,10 @@
 4. `DiceScreen.kt`: the random three face strings are shown as independently labeled **action / topic / manner** components, instead of asserting their concatenation is a grammatical sentence. Optional reroll, custom dice and results preserved; M22-C still needs a language/content rewrite for fully coherent combinations.
 5. `QuizInsightsSkipTest.kt`: source-level JVM regression tests for skip+match, all skipped, and invalid answer indices. **Not executed.**
 
+## Additional consent-state hardening
+- Beginning-of-session participant confirmations are cleared if intensity, player count, planned rounds, challenge mixing, custom challenge content or custom mode is changed; a renamed player must agree again.
+- Quiz pack acknowledgement resets when switching solo/pair mode, because the expected sharing context changes.
+
 ## Protected
 - No edits to canonical challenges/quizzes JSON, generated Kotlin content, original whisper/scratch user text, dice face text, backend/web protocols, save keys, private media data, sound or scoring rules.
 - Challenge per-round and quiz start opt-in from M22-A retained.
