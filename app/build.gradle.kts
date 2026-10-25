@@ -11,8 +11,8 @@ android {
         applicationId = "com.r2h.sirr"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.6.0-m11-preview"
+        versionCode = 7
+        versionName = "0.7.0-m12-preview"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }
