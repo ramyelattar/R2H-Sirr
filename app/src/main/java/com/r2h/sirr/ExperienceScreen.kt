@@ -201,11 +201,8 @@ internal fun ExperienceScreen(group: Boolean) {
                 val turn = current.turns[current.round]
                 var isRevealed by remember(current.round) { mutableStateOf(false) }
                 LaunchedEffect(current.round) { effects.cue(GameCue.ROUND) }
-                SirrIntro(
-                    overline = "جولة ${current.round + 1} من ${current.turns.size}",
-                    title = "السر الجاي لمين؟",
-                    description = "خدوا راحتكم. لو مش مناسب، عدّوه من غير أي حسابات."
-                )
+                SirrSection("${current.round + 1}", "جولة جديدة · السر مستنيكم",
+                    "لو مش مناسب، عدّوه من غير أي حسابات.")
                 LinearProgressIndicator(
                     progress = { current.round.toFloat() / current.turns.size },
                     modifier = Modifier.fillMaxWidth()

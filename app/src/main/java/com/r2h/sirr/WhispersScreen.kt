@@ -112,13 +112,13 @@ internal fun WhispersScreenV2() {
         clear()
     }
     Page("همسة ليك وبس", "كل سر هيوصل في وقته… وملوش إعادة بعد ما يتفتح.") {
-        SirrIntro(
-            overline = "رسالة مش هتتقري مرتين",
-            title = "3 همسات. سر واحد.",
-            description = "اكتب 3 رسائل متتابعة. كل رسالة بتختفي بعد ما تعدّيها.",
-            accent = Color(0xFF9F4D72)
-        )
         if(page == -1) {
+            SirrIntro(
+                overline = "رسالة مش هتتقري مرتين",
+                title = "3 همسات. سر واحد.",
+                description = "اكتب 3 رسائل متتابعة. كل رسالة بتختفي بعد ما تعدّيها.",
+                accent = Color(0xFF9F4D72)
+            )
             SirrSection("0${composeStep + 1}", whisperStages[composeStep],
                 "الخطوة ${composeStep + 1} من 3 · اكتب أو اختار من الاقتراحات")
             LinearProgressIndicator(
