@@ -28,7 +28,7 @@ class GameLogicTest {
         assertTrue(GameLogic.interpretation(2, 6).isNotBlank())
     }
     @Test fun activeCanonicalContentIsConsistent() {
-        // The UI and remote flows use these v4 packs, not OriginalContent.
+        // Assert the v4 packs used by both local and remote quiz screens.
         val packs = ExpandedQuizzes.packs
         assertEquals(7, packs.size)
         assertTrue(packs.all { it.questions.size == 25 })
