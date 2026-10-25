@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -99,6 +100,25 @@ private fun SirrAmbientCanvas(scene: String, phase: Float) {
                 center = b, radius = unit * .92f),
             radius = unit * .92f, center = b
         )
+        // Soft, slow smoke ribbons. Drawn into the scene, never obscuring controls.
+        val lift = sin(theta * .66f) * height * .055f
+        val ribbon = Path().apply {
+            moveTo(-width * .24f, height * .28f + lift)
+            cubicTo(width * .22f, height * .16f + lift,
+                width * .34f, height * .56f + lift,
+                width * .78f, height * .36f + lift)
+            cubicTo(width * .99f, height * .26f + lift,
+                width * 1.14f, height * .28f + lift,
+                width * 1.20f, height * .35f + lift)
+            lineTo(width * 1.20f, height * .44f + lift)
+            cubicTo(width * .85f, height * .33f + lift,
+                width * .41f, height * .69f + lift,
+                -width * .24f, height * .40f + lift)
+            close()
+        }
+        drawPath(ribbon, Brush.linearGradient(listOf(
+            Color.Transparent, accent.copy(alpha = .095f),
+            Color(0xFFB067D4).copy(alpha = .125f), Color.Transparent)))
         for (i in 0 until 23) {
             val x = ((i * 73 + 11) % 101) / 101f
             val y = ((i * 47 + 29) % 97) / 97f
