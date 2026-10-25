@@ -43,6 +43,14 @@
 - `app/src/main/java/com/r2h/sirr/core/AdultChallengesV2.kt` و`EgyptianQuizCatalog.kt` — ملفات Kotlin المولدة.
 - `backend/public/challenges.json` و`quizzes.json` — الملفات المولدة للويب والخادم.
 
+### توضيح M20: المحتوى النشط مقابل الأرشيف
+
+- **المحتوى النشط:** `challenges_ar_v2.json` و`quizzes_ar_v4.json` (الإصدار الداخلي 4) هما المصدر المعتمد لشاشات Android وتجربة الويب/الجلسة البعيدة، ويتم توليد نسخ Kotlin والويب عبر `generate_content_v2.py`.
+- **محتوى محفوظ لكنه غير مستخدم:** `content/additional_quizzes_ar_v2.json` (الإصدار الداخلي 3، يحتوي على 119 سؤالًا) ونسخته `MoreQuizzesV2.kt`؛ لا تحذفهما أو تدمجهما تلقائيًا في 175 سؤالًا.
+- **عينات تاريخية:** `OriginalContent` داخل `GameLogic.kt` يحتوي على 21 سؤالًا نموذجيًا و12 تحديًا للشريكين و12 للمجموعة وقالب نرد. لا يمثل المحتوى المعروض حاليًا.
+- **كود نشط يجب الحفاظ عليه:** `GameLogic.weightedFace` و`evenWeights` ونوعا البيانات `Question` و`Quiz`. الاختبارات الحالية تفحص `ExpandedQuizzes.packs` و`Challenges.deck` و`DiceCatalog.preset` بدلًا من الاعتماد على عينات `OriginalContent`.
+- تدقيق مراجع المحتوى محفوظ في `docs/M19_CONTENT_USAGE_LEGACY_AUDIT.md`. تحديث M20 يغيّر الاختبارات والتوثيق وعلامات Deprecation فقط، **بدون تغيير نصوص المحتوى أو سلوك اللعب**.
+
 لتحديث الملفات المولدة بعد تعديل المحتوى، شغّل:
 
 ```bash

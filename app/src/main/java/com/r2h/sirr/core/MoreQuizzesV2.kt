@@ -1,6 +1,7 @@
 package com.r2h.sirr.core
 
-/** Generated from content/additional_quizzes_ar_v2.json. */
+/** Historical v3 additional bank; not referenced by active v4 quiz screens. */
+@Deprecated("Archived supplementary quiz bank; live questions come from ExpandedQuizzes.packs.")
 internal object MoreQuizzesV2 {
     val extra: List<List<Question>> = listOf(
         listOf(
