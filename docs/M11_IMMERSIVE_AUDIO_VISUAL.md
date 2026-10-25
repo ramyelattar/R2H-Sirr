@@ -35,7 +35,9 @@ The music is **locally synthesized original ambient music**, not licensed commer
 - No background music recording, no streaming and no forced microphone permissions.
 - Music enabled by default at a low `21%` user setting; users can mute or adjust independently of sound effects.
 - Stop/abandon audio focus on app background, focus changes and teardown.
-- Honor Android motion accessibility scale as well as own cinematic preference.
+- Honor Android motion accessibility scale as well as own cinematic preference, including the opening splash (reduced motion uses a shorter static reveal).
+- Live background has softly drifting smoke ribbons in addition to the orbital light pools, stars and color shifts.
+- A first image-generation exploration established the visual mood; the committed Android icon is a separate crisp original vector resource, not that conceptual montage.
 - User content, existing on-device app and earlier GitHub M9/M10 branches are not modified by this source change.
 - **No Gradle or Android device build, APK install, audio playback test, screenshot capture or 90/100 design sign-off was performed from this GitHub session.** Android compiler/device are the next verification gate; do not mark ready for production.
 - No GitHub Actions tests are needed for the owner acceptance route.
