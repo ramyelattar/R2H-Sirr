@@ -21,12 +21,14 @@ Respond to the owner's nine real-device screenshots from M9: repetitive pink gra
 | Dice | `DiceScreen.kt` | Result directly beneath roll action and before advanced settings |
 | Whispers | `WhispersScreen.kt` | Three-act composer with earlier suggestions, clear per-step copy, explicit ephemeral-message deletion, concise reveal experience |
 | Scratch | `ScratchScreenV2.kt` | Guided creation, larger 1–3-secret choice, explicit reveal progress and completion/cleanup |
+| Challenge reveal | `SirrVisuals.kt` | Replaces the generic circular reveal area with a full-tap sealed-keyhole card, stronger hierarchy and explicit reveal cue |
+| Touch targets | `SirrPremiumUI.kt` | Larger selectable options with a minimum 60dp height |
 | Local install | `tools/Build-Install-M10.ps1` | Official Gradle 8.13 bootstrap with SHA-256 verification and `adb install -r` update; never uninstalls or clears data |
 
 ## Verification and limits
 
 - Source edits pushed to the independent M10 branch, preserving M9 and `main`.
-- New composable references and branch-level code inspected. This is **source work, not an Android device validation**.
+- New composable references and branch-level code inspected. A lightweight source-only brace-balance check passed for all changed Kotlin source files; **this is not compiler validation or an Android device test**.
 - **Android build, visual acceptance, runtime feature checks, performance and 90/100 UX acceptance have not been performed** for M10.
 - GitHub Actions is intentionally excluded per owner's direction. Do not claim CI success or release approval.
 
