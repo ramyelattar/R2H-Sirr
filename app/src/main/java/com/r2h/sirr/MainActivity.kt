@@ -156,7 +156,10 @@ private fun SirrApp() {
             Box(Modifier.fillMaxSize().background(Night)) {
                 SirrAmbientBackground(scene, musicPrefs.cinematic)
                 if (showSplash) {
-                    SirrCinematicSplash(onFinished = { showSplash = false })
+                    SirrCinematicSplash(
+                        allowMotion = musicPrefs.cinematic,
+                        onFinished = { showSplash = false }
+                    )
                 } else if (!confirmedAdult) {
                     AdultGate(onConfirm = {
                         runCatching { vault.writePrivate("adult-consent-v1", "accepted") }

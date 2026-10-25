@@ -148,24 +148,37 @@ private fun SirrAmbientCanvas(scene: String, phase: Float) {
 
 /** This is a Compose entrance, distinct from Android's short operating-system splash. */
 @Composable
-internal fun SirrCinematicSplash(onFinished: () -> Unit) {
-    val movement = rememberInfiniteTransition(label = "sirr-entrance")
-    val pulse by movement.animateFloat(
-        initialValue = .90f, targetValue = 1.07f,
-        animationSpec = infiniteRepeatable(
-            tween(1150, easing = LinearEasing),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse),
-        label = "splash-heartbeat"
-    )
+internal fun SirrCinematicSplash(
+    allowMotion: Boolean,
+    onFinished: () -> Unit
+) {
+    val context = LocalContext.current
+    val canAnimate = remember(allowMotion) {
+        allowMotion && runCatching {
+            Settings.Global.getFloat(context.contentResolver,
+                Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+        }.getOrDefault(true)
+    }
+    val pulse = if (canAnimate) {
+        val movement = rememberInfiniteTransition(label = "sirr-entrance")
+        val animatedPulse by movement.animateFloat(
+            initialValue = .90f, targetValue = 1.07f,
+            animationSpec = infiniteRepeatable(
+                tween(1150, easing = LinearEasing),
+                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse),
+            label = "splash-heartbeat"
+        )
+        animatedPulse
+    } else 1f
     var show by remember { mutableStateOf(false) }
     val progress by animateFloatAsState(
         targetValue = if (show) 1f else 0f,
-        animationSpec = tween(2280, easing = LinearEasing),
+        animationSpec = tween(if (canAnimate) 2280 else 0, easing = LinearEasing),
         label = "splash-progress"
     )
-    LaunchedEffect(Unit) {
+    LaunchedEffect(canAnimate) {
         show = true
-        delay(2450L)
+        delay(if (canAnimate) 2450L else 850L)
         onFinished()
     }
     Box(
@@ -207,9 +220,11 @@ internal fun SirrCinematicSplash(onFinished: () -> Unit) {
             }
             androidx.compose.animation.AnimatedVisibility(
                 visible = show,
-                enter = androidx.compose.animation.fadeIn(tween(750)) +
-                    androidx.compose.animation.scaleIn(initialScale = .86f,
-                        animationSpec = tween(950))
+                enter = if (canAnimate)
+                    androidx.compose.animation.fadeIn(tween(750)) +
+                        androidx.compose.animation.scaleIn(initialScale = .86f,
+                            animationSpec = tween(950))
+                else androidx.compose.animation.EnterTransition.None
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
