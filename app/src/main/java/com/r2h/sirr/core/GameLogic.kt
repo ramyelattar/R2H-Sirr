@@ -42,7 +42,8 @@ data class Question(val text: String, val choices: List<String>) {
 
 data class Quiz(val name: String, val questions: List<Question>)
 
-/** Seven original small samples; expand to versioned content packs before release. */
+/** Archived pre-v4 sample data. Retained for history, not read by current game screens. */
+@Deprecated("Legacy sample content; use ExpandedQuizzes.packs, Challenges.deck and DiceCatalog.preset.")
 object OriginalContent {
     val quizPacks = listOf(
         Quiz("الهوية والمشاعر", listOf(
