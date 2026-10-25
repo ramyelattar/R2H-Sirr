@@ -371,94 +371,156 @@ private fun FeatureRow(title: String, detail: String, glyph: String, onClick: ()
     }
 }
 
+/** The six actual games are above the fold on most phones; no endless hero repetition. */
+@Composable
+private fun R2HModeCard(
+    title: String,
+    description: String,
+    monogram: String,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = Color(0xF51C1422),
+        shape = RoundedCornerShape(22.dp),
+        border = BorderStroke(1.dp, tint.copy(alpha = .70f)),
+        modifier = modifier.heightIn(min = 124.dp)
+    ) {
+        Box(
+            Modifier.fillMaxWidth().background(
+                Brush.linearGradient(listOf(
+                    tint.copy(alpha = .22f), Color(0xF91E1426), Color(0xFF100B19))))
+        ) {
+            Canvas(Modifier.matchParentSize()) {
+                val c = Offset(size.width * .20f, size.height * .25f)
+                val radius = size.minDimension * .33f
+                drawCircle(tint.copy(alpha = .18f), radius, c)
+                drawCircle(tint.copy(alpha = .38f), radius * .66f, c,
+                    style = Stroke(width = 1.dp.toPx()))
+            }
+            Column(
+                Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(monogram, color = tint, fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text("↗", color = Gold, fontSize = 18.sp)
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(title, color = Color.White,
+                    fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold)
+                Text(description, color = Color(0xFFEBCDDC),
+                    fontSize = 12.sp, lineHeight = 18.sp)
+            }
+        }
+    }
+}
+
 @Composable
 private fun HomeScreen(onGo: (String) -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(15.dp)
+            .padding(horizontal = 19.dp),
+        verticalArrangement = Arrangement.spacedBy(13.dp)
     ) {
-        Spacer(Modifier.height(6.dp))
-        Text("6 طرق للعب  ·  على مزاجكم", color = Gold,
-            style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        Text("الليلة مش عادية.", color = Color.White,
-            fontSize = 35.sp, lineHeight = 46.sp, fontWeight = FontWeight.Bold)
-        Text("اختاروا حاجة تضحككم… أو سؤال يفتح حكاية.",
+        Spacer(Modifier.height(4.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically) {
+            Text("اختاروا اللحظة.", fontSize = 31.sp, lineHeight = 39.sp,
+                color = Color.White, fontWeight = FontWeight.ExtraBold)
+            Text("✦  +18", color = Gold, style = MaterialTheme.typography.labelLarge)
+        }
+        Text("ست ألعاب مختلفة. الليلة كلها على مزاجكم.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
-
         Box(
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
+            Modifier.fillMaxWidth().heightIn(min = 173.dp)
+                .clip(RoundedCornerShape(26.dp))
                 .background(Brush.linearGradient(listOf(
-                    Color(0xFF77425C), Color(0xFF401D35), Color(0xFF1C1225))))
-                .border(1.dp, Gold.copy(alpha = .56f), RoundedCornerShape(28.dp))
+                    Color(0xFF61204B), Color(0xFF2D1838), Color(0xFF100C1D))))
+                .border(1.5.dp, Color(0xFFC76EAA), RoundedCornerShape(26.dp))
         ) {
             Canvas(Modifier.matchParentSize()) {
-                val c = Offset(size.width * .83f, size.height * .28f)
-                val r = size.minDimension * .17f
-                for (i in 1..4) {
-                    drawCircle(Gold.copy(alpha = .28f / i), r * (i * .52f + .60f),
-                        center = c, style = Stroke(width = 1.5.dp.toPx()))
+                val focus = Offset(size.width * .17f, size.height * .49f)
+                val r = size.minDimension * .21f
+                for(i in 1..4) {
+                    drawCircle(
+                        Color(0xFFFF95C1).copy(alpha = .39f/i),
+                        r * (.67f+i*.25f), focus,
+                        style = Stroke(width = 1.5.dp.toPx()))
                 }
-                val keyhole = Path().apply {
-                    moveTo(c.x, c.y-r*.67f)
-                    cubicTo(c.x-r*.75f,c.y-r*.65f,c.x-r*.70f,c.y+r*.15f,c.x-r*.21f,c.y+r*.28f)
-                    lineTo(c.x-r*.36f,c.y+r*.99f)
-                    lineTo(c.x+r*.36f,c.y+r*.99f)
-                    lineTo(c.x+r*.21f,c.y+r*.28f)
-                    cubicTo(c.x+r*.70f,c.y+r*.15f,c.x+r*.75f,c.y-r*.65f,c.x,c.y-r*.67f)
+                val jewel=Path().apply {
+                    moveTo(focus.x,focus.y-r*.61f)
+                    cubicTo(focus.x-r*.55f, focus.y-r*.6f,
+                        focus.x-r*.55f, focus.y+r*.24f,
+                        focus.x-r*.14f, focus.y+r*.38f)
+                    lineTo(focus.x-r*.28f,focus.y+r*.9f)
+                    lineTo(focus.x+r*.28f,focus.y+r*.9f)
+                    lineTo(focus.x+r*.14f,focus.y+r*.38f)
+                    cubicTo(focus.x+r*.55f,focus.y+r*.24f,
+                        focus.x+r*.55f,focus.y-r*.6f,focus.x,focus.y-r*.61f)
                     close()
                 }
-                drawPath(keyhole, Brush.verticalGradient(listOf(Gold.copy(alpha=.75f),Gold.copy(alpha=.14f))))
+                drawPath(jewel, Brush.verticalGradient(listOf(
+                    Color(0xFFFFD3A6),Color(0xFFDB4F9F))))
             }
             Column(
-                Modifier.fillMaxWidth().padding(22.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 15.dp),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
-                Text("01  /  حكاية لشخصين", color = Gold,
-                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(20.dp))
-                Text("اختاروا مين\nهيكشف السر الأول.",
-                    color = Color.White, fontSize = 28.sp,
-                    lineHeight = 37.sp, fontWeight = FontWeight.Bold)
-                Text("من ضحكة صغيرة لكلام مكنش بيتقال… كل جولة ليها حكاية.",
-                    color = Color(0xFFF3DEEB), style = MaterialTheme.typography.bodyMedium)
-                SirrAction(
-                    text = "ادخلوا اللعبة  ✦",
-                    onClick = { onGo("couple") }
-                )
+                Text("اللعبة الأساسية", color = Color(0xFFFFD0A0),
+                    fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("مين هيكشف\nالسر الأول؟", color = Color.White,
+                    textAlign = TextAlign.End, fontSize = 24.sp,
+                    lineHeight = 31.sp, fontWeight = FontWeight.ExtraBold)
+                Spacer(Modifier.height(6.dp))
+                Button(
+                    onClick = { onGo("couple") },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF84B9),
+                        contentColor = Color(0xFF200D1E)),
+                    modifier = Modifier.heightIn(min = 45.dp)
+                ) {
+                    Text("ابدأوا اللعبة  ←", fontWeight = FontWeight.Bold)
+                }
             }
         }
-
-        SirrSection("02", "اللّمة ليها جو مختلف", "تحديات ولحظات كل واحد ليه دور فيها")
-        SmallMode(
-            title = "اللّمة ليها حكاية",
-            hint = "من 2 لـ 4 لاعبين · كل واحد يختار",
-            glyph = "✳",
-            tint = Color(0xFF43365F),
-            modifier = Modifier.fillMaxWidth()
-        ) { onGo("party") }
-
-        SirrSection("03", "مش لازم تلعبوا بنفس الطريقة", "اختاروا واحدة وابدأوا فورًا")
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            DiscoveryTile("سيبها على النرد", "3 نردات وحكاية",
-                DiscoveryMotif.DICE, Modifier.weight(1f)) { onGo("dice") }
-            DiscoveryTile("إنتوا شبه بعض؟", "أسئلة تفتح كلام",
-                DiscoveryMotif.QUIZ, Modifier.weight(1f)) { onGo("quiz") }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically) {
+            Text("كل الألعاب", color = Color.White,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold)
+            Text("اختار وابدأ", color = Gold, style = MaterialTheme.typography.labelLarge)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            DiscoveryTile("اكشف السر", "الخدش يكشف المفاجأة",
-                DiscoveryMotif.SCRATCH, Modifier.weight(1f)) { onGo("scratch") }
-            DiscoveryTile("همسة مخصوص", "3 رسايل ورا بعض",
-                DiscoveryMotif.WHISPER, Modifier.weight(1f)) { onGo("whispers") }
+            R2HModeCard("شخصين", "أسئلة ومواقف", "♡",
+                Color(0xFFFF89BD), Modifier.weight(1f)) { onGo("couple") }
+            R2HModeCard("اللّمة", "كل واحد ليه دور", "✣",
+                Color(0xFFA798FB), Modifier.weight(1f)) { onGo("party") }
         }
-        SirrSection("04", "من بعيد برضه تنفع", "اتصلوا بأوضة خاصة لما يكون عندكم سيرفر آمن")
-        FeatureRow("أوضة خاصة أونلاين", "للعب من موبايلين مختلفين", "↗") { onGo("remote") }
-        FeatureRow("ظبّط تجربة اللعب", "الصوت · الاهتزاز · الحركة", "⚙") { onGo("settings") }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            R2HModeCard("النرد", "الصدفة تختار", "◆",
+                Color(0xFFFFAF86), Modifier.weight(1f)) { onGo("dice") }
+            R2HModeCard("الاختبارات", "25 سؤال وحكاية", "?",
+                Color(0xFFC4A7FD), Modifier.weight(1f)) { onGo("quiz") }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            R2HModeCard("الهمسات", "رسالة مش بتتكرر", "✉",
+                Color(0xFFFF9CC3), Modifier.weight(1f)) { onGo("whispers") }
+            R2HModeCard("اكشف السر", "اكشط وافتح", "✦",
+                Color(0xFFE9C08C), Modifier.weight(1f)) { onGo("scratch") }
+        }
+        HorizontalDivider(color = Color(0xFF634560))
+        FeatureRow("أوضة أونلاين", "للعب من موبايلين مختلفين", "↗") { onGo("remote") }
+        FeatureRow("الصوت والخصوصية", "اختبر الموسيقى والمظهر", "♫") { onGo("settings") }
         TextButton(onClick = { onGo("privacy") }, modifier = Modifier.fillMaxWidth()) {
-            Text("الخصوصية والتحكم في بياناتك", color = Gold)
+            Text("الخصوصية ومسح البيانات", color = Gold)
         }
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(24.dp))
     }
 }
 
