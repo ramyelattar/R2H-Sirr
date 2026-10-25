@@ -28,6 +28,15 @@ internal fun QuizScreenV2() {
     val packs = ExpandedQuizzes.packs
     val moodTitles = listOf("إنت من جوّه", "الحب على مزاجك", "إحنا شبه بعض؟",
         "الجاذبية والإشارات", "أمنيات متخبية", "راحة وحدود", "جرأة ولا صراحة؟")
+    val moodHints = listOf(
+        "أسئلة تكتشف بيها نفسك من غير أحكام",
+        "كلام عن الاهتمام والتفاصيل الصغيرة",
+        "الحاجات اللي بتجمعكم… واللي بتفرقكم",
+        "إشارات بنفهمها من غير كلام",
+        "أحلام صغيرة محدش سأل عنها",
+        "إزاي تقول آه أو لأ براحتك",
+        "اختار الصراحة… والباقي عليكم"
+    )
     fun reset() {
         packIndex = -1; phase = 0; step = 0; revealStep = 0
         answersA = emptyList(); answersB = emptyList()
@@ -35,16 +44,16 @@ internal fun QuizScreenV2() {
     }
     Page("هتعرفوا بعض أكتر؟", "أسئلة خفيفة تفتح كلام مكنش على البال.") {
         if (packIndex < 0) {
-            Text("اختاروا موضوع", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold)
-            MysteryHeader(
-                "سبع أبواب",
-                "كل باب وراه سؤال مختلف",
-                "في حاجات بتتقال لما نسأل السؤال الصح.",
-                "؟"
+            SirrIntro(
+                overline = "7 أبواب · 25 سؤال في كل باب",
+                title = "إيه اللي لسه متقالش؟",
+                description = "اختاروا باب… وكل إجابة ممكن تفتح كلام جديد.",
+                accent = Color(0xFF64538A)
             )
+            SirrSection("01", "اختاروا الباب", "كل باب ليه جو مختلف")
             packs.forEachIndexed { index, _ ->
-                QuizTopicTile(number = index + 1, title = moodTitles[index]) {
+                QuizTopicTile(number = index + 1, title = moodTitles[index],
+                    subtitle = moodHints[index]) {
                     packIndex = index
                     phase = 0
                     step = 0
@@ -59,38 +68,41 @@ internal fun QuizScreenV2() {
             val quiz = packs[packIndex]
             if (phase == 0) {
                 Text(moodTitles[packIndex], style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-                Text("تقدر تلعب لوحدك أو تقارن إجاباتك مع اللي معاك.", style = MaterialTheme.typography.bodyMedium)
-                Row {
-                    Checkbox(pairing, { pairing = it })
-                    Text("هنلعب إحنا الاتنين")
+                SirrSection("02", "مين هيجاوب؟", "اللعب الفردي أو مقارنة من غير درجات توافق")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SirrOption("أنا لوحدي", !pairing, onClick = { pairing = false },
+                        modifier = Modifier.weight(1f))
+                    SirrOption("إحنا الاتنين", pairing, onClick = { pairing = true },
+                        modifier = Modifier.weight(1f))
                 }
-                Text("نختار كام سؤال؟", style = MaterialTheme.typography.titleMedium)
-                Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf(8, 12, 20, 25).forEach { n ->
-                        FilterChip(questionCount == n, onClick = { questionCount = n }, label = { Text("$n") })
+                SirrSection("03", "كام سؤال تحبوا؟", "ابدأوا بقليل… وكملوا لو حبيتوا")
+                listOf(8, 12, 20, 25).chunked(2).forEach { pair ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        pair.forEach { n ->
+                            SirrOption("$n سؤال", questionCount == n,
+                                onClick = { questionCount = n }, modifier = Modifier.weight(1f))
+                        }
                     }
                 }
-                Button(
+                SirrAction(
+                    text = "افتح أول سؤال  ✦",
                     onClick = {
                         selectedIndices = quiz.questions.indices.shuffled().take(questionCount)
                         phase = 1; step = 0
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth().height(54.dp)
-                ) { Text("يلا نكتشف", fontWeight = FontWeight.Bold) }
+                    }
+                )
             } else if (phase == 2 && pairing) {
                 Text("الدور على الشخص التاني", style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary)
-                Text("الإجابات الأولى مخفية. سلّم الموبايل للطرف التاني لما يبقى جاهز.")
-                Row {
-                    Checkbox(acceptedB, { acceptedB = it })
-                    Text("أنا موافق أبدأ")
-                }
-                Button(onClick = { phase = 3; step = 0 }, enabled = acceptedB,
-                    modifier = Modifier.fillMaxWidth()) { Text("ابدأ دوري") }
+                SirrIntro("دور جديد", "اللي اتقال هيفضل سر.",
+                    "الإجابات الأولى مش هتظهر. سلّم الموبايل للشخص التاني.")
+                SirrConsent("الشخص التاني", acceptedB, onChange = { acceptedB = it })
+                SirrAction(
+                    text = "ابدأ دور الشخص التاني",
+                    onClick = { phase = 3; step = 0 },
+                    enabled = acceptedB,
+                    explanation = if (acceptedB) null else "محتاجين موافقة الشخص التاني"
+                )
             } else if (phase == 1 || phase == 3) {
                 val question = quiz.questions[selectedIndices[step]]
                 LinearProgressIndicator(
@@ -112,16 +124,37 @@ internal fun QuizScreenV2() {
                             fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(6.dp))
                         question.choices.forEachIndexed { i, answer ->
-                            OutlinedButton(
+                            Surface(
                                 onClick = {
                                     if (phase == 1) answersA = answersA + i else answersB = answersB + i
                                     if (step + 1 == selectedIndices.size) {
                                         phase = if (phase == 1 && pairing) 2 else 4
                                     } else step++
                                 },
+                                color = Color(0xFF362639),
                                 shape = RoundedCornerShape(17.dp),
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 55.dp)
-                            ) { Text(answer, style = MaterialTheme.typography.bodyLarge) }
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp, Color(0xFF8D637E)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(13.dp),
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(13.dp)
+                                ) {
+                                    Surface(
+                                        color = Color(0xFF5B3A51),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text("${i + 1}",
+                                            modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp),
+                                            color = Color(0xFFFFDBC6),
+                                            fontWeight = FontWeight.Bold)
+                                    }
+                                    Text(answer, style = MaterialTheme.typography.bodyLarge,
+                                        color = Color.White, modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
                     }
                 }
@@ -129,11 +162,11 @@ internal fun QuizScreenV2() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             } else if (phase == 4) {
                 val currentQuestion = quiz.questions[selectedIndices[revealStep]]
-                MysteryHeader(
-                    if (pairing) "مفاجأة الإجابات" else "آخر صفحة",
-                    if (pairing) "قد إيه كنتوا شبه بعض؟" else "دي إجاباتك… من غير أحكام.",
-                    "مفيش صح وغلط هنا. الحكاية في الكلام اللي هيبدأ بعد كل إجابة.",
-                    "✦"
+                SirrIntro(
+                    if (pairing) "حكاية مشتركة" else "إجاباتك ليك",
+                    if (pairing) "مش دايمًا لازم نتفق." else "إنت اخترت… والباقي حكاية.",
+                    "مفيش صح وغلط. اللي يهمنا الكلام اللي يبدأ بعد كل إجابة.",
+                    accent = Color(0xFF64538A)
                 )
                 if (pairing) {
                     val result = QuizInsights.compare(answersA, answersB)
