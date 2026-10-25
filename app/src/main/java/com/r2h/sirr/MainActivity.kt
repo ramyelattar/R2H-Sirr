@@ -2,6 +2,10 @@ package com.r2h.sirr
 
 import android.os.Bundle
 import android.view.WindowManager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -95,15 +99,60 @@ private fun SirrApp() {
     var route by rememberSaveable { mutableStateOf("home") }
     var sessionVersion by remember { mutableIntStateOf(0) }
     var askToLeave by remember { mutableStateOf(false) }
+    var showSplash by rememberSaveable { mutableStateOf(true) }
+    var musicRevision by remember { mutableIntStateOf(0) }
+    var userMediaPlaying by remember { mutableStateOf(false) }
+    val music = remember(context) { SirrPageMusic(context.applicationContext) }
+    val musicPrefs = remember(route, sessionVersion, musicRevision) {
+        SirrMusicPreferences.load(context)
+    }
+    val scene = when {
+        showSplash -> "splash"
+        !confirmedAdult -> "gate"
+        else -> route
+    }
+    DisposableEffect(music) {
+        val activity = context as? ComponentActivity
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> music.setForeground(true)
+                Lifecycle.Event.ON_STOP -> music.setForeground(false)
+                else -> Unit
+            }
+        }
+        activity?.lifecycle?.addObserver(observer)
+        onDispose {
+            activity?.lifecycle?.removeObserver(observer)
+            music.release()
+        }
+    }
+    LaunchedEffect(route) { userMediaPlaying = false }
+    LaunchedEffect(scene, musicPrefs, userMediaPlaying) {
+        if (!musicPrefs.enabled || musicPrefs.volume == 0 || userMediaPlaying) {
+            music.stop()
+        } else {
+            val samples = withContext(Dispatchers.Default) {
+                SirrSoundtrack.render(scene)
+            }
+            music.playScene(samples, musicPrefs.volume)
+        }
+    }
     val immersiveRoutes = remember { setOf("couple","party","dice","quiz","scratch","whispers","remote") }
     fun navigateHome() {
         if (route in immersiveRoutes) askToLeave = true else route = "home"
     }
     BackHandler(enabled = confirmedAdult && route != "home") { navigateHome() }
     MaterialTheme(colorScheme = Palette, typography = SirrType) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        CompositionLocalProvider(
+            LocalLayoutDirection provides LayoutDirection.Rtl,
+            LocalSirrAudioRefresh provides { musicRevision++ },
+            LocalSirrUserAudioOverride provides { isPlaying -> userMediaPlaying = isPlaying }
+        ) {
             Box(Modifier.fillMaxSize().background(Night)) {
-                if (!confirmedAdult) {
+                SirrAmbientBackground(scene, musicPrefs.cinematic)
+                if (showSplash) {
+                    SirrCinematicSplash(onFinished = { showSplash = false })
+                } else if (!confirmedAdult) {
                     AdultGate(onConfirm = {
                         runCatching { vault.writePrivate("adult-consent-v1", "accepted") }
                         confirmedAdult = true
@@ -175,7 +224,8 @@ private fun AdultGate(onConfirm: () -> Unit) {
     var consent by remember { mutableStateOf(false) }
     Box(
         Modifier.fillMaxSize().background(
-            Brush.verticalGradient(listOf(Color(0xFF300F22), Night, Night))
+            Brush.verticalGradient(listOf(
+                Color(0xDD300F22), Color(0x960B0711), Color(0x8809070D)))
         ).statusBarsPadding().navigationBarsPadding()
     ) {
         Column(
