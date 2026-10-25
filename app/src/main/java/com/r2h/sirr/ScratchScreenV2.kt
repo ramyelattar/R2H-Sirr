@@ -178,7 +178,7 @@ internal fun ScratchScreenV2() {
                 onClick = {
                     val group = secretGroups.random()
                     repeat(3) { i -> texts[i] = group[i] }
-                    stages = 1
+                    // Keep the user's selected layer count (1, 2 or 3).
                 },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("✦  اختارلي سر جاهز") }

@@ -122,6 +122,13 @@ internal fun QuizScreenV2() {
                 )
             } else if (phase == 1 || phase == 3) {
                 val question = quiz.questions[selectedIndices[step]]
+                // Keep one marker per selected question even when either player skips it.
+                fun answerOrSkip(choice: Int) {
+                    if (phase == 1) answersA = answersA + choice else answersB = answersB + choice
+                    if (step + 1 == selectedIndices.size) {
+                        phase = if (phase == 1 && pairing) 2 else 4
+                    } else step++
+                }
                 LinearProgressIndicator(
                     progress = { (step + 1).toFloat() / selectedIndices.size },
                     modifier = Modifier.fillMaxWidth()
@@ -142,12 +149,7 @@ internal fun QuizScreenV2() {
                         Spacer(Modifier.height(6.dp))
                         question.choices.forEachIndexed { i, answer ->
                             Surface(
-                                onClick = {
-                                    if (phase == 1) answersA = answersA + i else answersB = answersB + i
-                                    if (step + 1 == selectedIndices.size) {
-                                        phase = if (phase == 1 && pairing) 2 else 4
-                                    } else step++
-                                },
+                                onClick = { answerOrSkip(i) },
                                 color = Color(0xFF362639),
                                 shape = RoundedCornerShape(17.dp),
                                 border = androidx.compose.foundation.BorderStroke(
@@ -175,7 +177,11 @@ internal fun QuizScreenV2() {
                         }
                     }
                 }
-                Text("اختار على طول… مفيش إجابة صح أو غلط.",
+                OutlinedButton(
+                    onClick = { answerOrSkip(-1) },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("مش مرتاح؟ عدّي السؤال من غير إجابة") }
+                Text("مفيش إجابة صح أو غلط، والتخطي متاح من غير إحراج.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             } else if (phase == 4) {
                 val currentQuestion = quiz.questions[selectedIndices[revealStep]]
@@ -186,14 +192,16 @@ internal fun QuizScreenV2() {
                     accent = Color(0xFF64538A)
                 )
                 if (pairing) {
-                    val result = QuizInsights.compare(answersA, answersB)
+                    val result = QuizInsights.compareAnswered(answersA, answersB)
                     Text(
-                        "اتّفقتوا في ${result.agreement} من ${result.questions} إجابة",
+                        if (result != null)
+                            "اتّفقتوا في ${result.agreement} من ${result.questions} سؤال اتجاوب من الاتنين"
+                        else "مفيش أسئلة اتجاوبت من الاتنين علشان نقارن",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
-                    Text("مش درجة توافق ولا اختبار شخصية — مجرد لعبة كلام.",
+                    Text("الأسئلة المتخطّاة مش داخلة في المقارنة. مش درجة توافق ولا اختبار شخصية.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
                 }
@@ -216,21 +224,34 @@ internal fun QuizScreenV2() {
                         Text(currentQuestion.text,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold)
-                        Text("إنت اخترت: ${currentQuestion.choices[answersA[revealStep]]}",
-                            style = MaterialTheme.typography.bodyLarge)
+                        val first = answersA[revealStep]
+                        Text(
+                            if (first >= 0) "إنت اخترت: ${currentQuestion.choices[first]}"
+                            else "إنت عديت السؤال ده من غير إجابة",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
                         if (pairing) {
-                            Text("اللي معاك اختار: ${currentQuestion.choices[answersB[revealStep]]}",
-                                style = MaterialTheme.typography.bodyLarge)
+                            val second = answersB[revealStep]
                             Text(
-                                if (answersA[revealStep] == answersB[revealStep])
+                                if (second >= 0) "اللي معاك اختار: ${currentQuestion.choices[second]}"
+                                else "اللي معاك عدّى السؤال من غير إجابة",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                if (first < 0 || second < 0)
+                                    "السؤال ده مش داخل في المقارنة علشان فيه تخطي."
+                                else if (first == second)
                                     "✦  نفس الإجابة… افتحوا الكلام فيها!"
                                 else "إجابتين مختلفتين… اسألوا بعض ليه.",
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.titleMedium
                             )
                         } else {
-                            Text("ممكن تحكي للي معاك ليه اخترت الإجابة دي.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                if (first >= 0) "ممكن تحكي للي معاك ليه اخترت الإجابة دي."
+                                else "حقك تعدّي أي سؤال من غير ما تشرح السبب.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
