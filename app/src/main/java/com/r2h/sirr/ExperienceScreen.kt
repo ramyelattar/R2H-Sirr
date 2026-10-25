@@ -28,6 +28,7 @@ internal fun ExperienceScreen(group: Boolean) {
     var intensity by remember { mutableStateOf(Intensity.SOFT) }
     val names = remember { mutableStateListOf("إنت", "اللي معاك", "صاحبكم ٣", "صاحبكم ٤") }
     val consent = remember { mutableStateListOf(false, false, false, false) }
+    fun resetStartConsents() { consent.indices.forEach { consent[it] = false } }
     var reply by remember { mutableStateOf("") }
     var advanced by remember { mutableStateOf(false) }
     var mediaOpen by remember { mutableStateOf(false) }
@@ -75,7 +76,7 @@ internal fun ExperienceScreen(group: Boolean) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     pair.forEach { level ->
                         SirrOption(title = level.arabic, selected = intensity == level,
-                            onClick = { intensity = level }, modifier = Modifier.weight(1f))
+                            onClick = { intensity = level; resetStartConsents() }, modifier = Modifier.weight(1f))
                     }
                     if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
@@ -91,7 +92,7 @@ internal fun ExperienceScreen(group: Boolean) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     pair.forEach { count ->
                         SirrOption(title = "$count جولات", selected = roundCount == count,
-                            onClick = { roundCount = count }, modifier = Modifier.weight(1f))
+                            onClick = { roundCount = count; resetStartConsents() }, modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -101,7 +102,7 @@ internal fun ExperienceScreen(group: Boolean) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     (2..4).forEach { count ->
                         SirrOption(title = "$count لاعبين", selected = seats == count,
-                            onClick = { seats = count }, modifier = Modifier.weight(1f))
+                            onClick = { seats = count; resetStartConsents() }, modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -116,19 +117,19 @@ internal fun ExperienceScreen(group: Boolean) {
                 HorizontalDivider()
                 Text("خلّي المفاجآت أكتر", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                 ChallengeVariety.entries.forEach { option ->
-                    FilterChip(selected = variety == option, onClick = { variety = option },
+                    FilterChip(selected = variety == option, onClick = { variety = option; resetStartConsents() },
                         label = { Text(option.arabic) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(avoidRepeat, { avoidRepeat = it })
                     Text("بلاش نفس تحديات المرة اللي فاتت")
                 }
-                OutlinedButton(onClick = { intensity = Intensity.CUSTOM }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = { intensity = Intensity.CUSTOM; resetStartConsents() }, modifier = Modifier.fillMaxWidth()) {
                     Text("اكتب تحديات من عندك")
                 }
                 if (intensity == Intensity.CUSTOM) {
                     OutlinedTextField(
-                        value = customText, onValueChange = { customText = it.take(12_000) },
+                        value = customText, onValueChange = { customText = it.take(12_000); resetStartConsents() },
                         modifier = Modifier.fillMaxWidth(), minLines = 4, maxLines = 8,
                         label = { Text("كل تحدي في سطر") }
                     )
@@ -150,7 +151,7 @@ internal fun ExperienceScreen(group: Boolean) {
                 Text("الأسماء (اختياري)", style = MaterialTheme.typography.titleMedium)
                 repeat(seats) { i ->
                     OutlinedTextField(
-                        value = names[i], onValueChange = { names[i] = it.take(32) },
+                        value = names[i], onValueChange = { names[i] = it.take(32); consent[i] = false },
                         label = { Text("اللاعب ${i + 1}") },
                         singleLine = true, modifier = Modifier.fillMaxWidth()
                     )

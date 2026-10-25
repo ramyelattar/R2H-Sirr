@@ -114,8 +114,16 @@ internal fun DiceScreenV2() {
         if (rolled != null && !rolling) {
             val outcome = requireNotNull(rolled)
             val faces = rolledFaces ?: outcome.mapIndexed { i, faceIndex -> dice[i][faceIndex] }
-            SirrSection("02", "دي الرمية اللي طلعت", "كل نرد اختار جزء من الحكاية")
-            ChallengeRevealCard(faces.joinToString(" ") { it.text })
+            SirrSection("02", "دي الرمية اللي طلعت", "كل نرد اختار جزء مستقل من الحكاية")
+            val parts = listOf("الفعل", "الفكرة", "الطريقة")
+            ChallengeRevealCard(faces.mapIndexed { index, face ->
+                "${parts[index]}: ${face.text}"
+            }.joinToString("\n"))
+            Text(
+                "لو الأجزاء مش راكبة على بعض أو مش مناسبة ليكم، ارموا النرد تاني. مفيش حاجة إجبارية.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             if (selected == Intensity.CUSTOM) {
                 faces.forEachIndexed { index, face ->
                     val bitmap = remember(face.imageId) { vault.readPhoto(face.imageId) }

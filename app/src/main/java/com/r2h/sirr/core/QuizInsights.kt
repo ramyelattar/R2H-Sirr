@@ -30,4 +30,13 @@ object QuizInsights {
         require(a.isNotEmpty() && a.size == b.size)
         return ComparisonSummary(summary(a), summary(b), a.zip(b).count { it.first == it.second }, a.size)
     }
+
+    /** -1 means the player skipped a question. Only jointly answered items count. */
+    fun compareAnswered(a: List<Int>, b: List<Int>): ComparisonSummary? {
+        require(a.isNotEmpty() && a.size == b.size)
+        require(a.all { it in -1..2 } && b.all { it in -1..2 })
+        val bothAnswered = a.indices.filter { a[it] >= 0 && b[it] >= 0 }
+        if (bothAnswered.isEmpty()) return null
+        return compare(bothAnswered.map { a[it] }, bothAnswered.map { b[it] })
+    }
 }
