@@ -39,12 +39,8 @@ internal fun ExperienceScreen(group: Boolean) {
     val replyName = if (group) "replies-party" else "replies-couple"
     // Sensitive randomized challenges are stored encrypted, never in saved-instance-state.
     var game by remember(group) { mutableStateOf(LocalSessionStore.load(vault, gameName, group)) }
-    LaunchedEffect(game, gameName) {
-        runCatching {
-            if (game == null) vault.deletePrivate(gameName)
-            else LocalSessionStore.save(vault, gameName, requireNotNull(game))
-        }
-    }
+    // Save each game transition synchronously; a delayed Compose effect can be lost
+    // if Android destroys the Activity immediately after a user action.
     var replyStatus by remember { mutableStateOf("") }
     LaunchedEffect(game?.round) {
         reply = game?.takeIf { !it.finished }?.let {
@@ -161,10 +157,14 @@ internal fun ExperienceScreen(group: Boolean) {
                             roundCount = roundCount, variety = variety, recentlySeen = recent
                         )
                     }.onSuccess { newGame ->
-                        vault.deletePrivate(replyName)
-                        game = newGame
-                        runCatching { vault.writePrivate(historyName, newGame.turns.joinToString("\n") { it.prompt.text }) }
-                        reply = ""
+                        runCatching {
+                            LocalSessionStore.save(vault, gameName, newGame)
+                            vault.deletePrivate(replyName)
+                        }.onSuccess {
+                            game = newGame
+                            runCatching { vault.writePrivate(historyName, newGame.turns.joinToString("\n") { it.prompt.text }) }
+                            reply = ""
+                        }.onFailure { formError = "تعذر حفظ الجولة بأمان؛ لم تبدأ اللعبة. تأكد إن مساحة التخزين كافية." }
                     }.onFailure { formError = "حصلت مشكلة في تجهيز الجولة. جرّب اختيار مود تاني." }
                 },
                 enabled = (intensity != Intensity.CUSTOM || (customValid && customEntries.isNotEmpty())) &&
@@ -228,9 +228,15 @@ internal fun ExperienceScreen(group: Boolean) {
                         replyStatus = "فشل حفظ الرد؛ النص لسه موجود علشان متفقدوش"
                         return
                     }
-                    effects.cue(if (completed) GameCue.SUCCESS else GameCue.SKIP)
-                    game = current.resolve(completed = completed)
-                    reply = ""; mediaOpen = false; replyStatus = ""
+                    val next = current.resolve(completed = completed)
+                    runCatching { LocalSessionStore.save(vault, gameName, next) }
+                        .onSuccess {
+                            effects.cue(if (completed) GameCue.SUCCESS else GameCue.SKIP)
+                            game = next
+                            reply = ""; mediaOpen = false; replyStatus = ""
+                        }.onFailure {
+                            replyStatus = "الجولة متقدمتش لأن حفظها فشل؛ ردك لسه موجود"
+                        }
                 }
                 if (isRevealed) {
                     Button(
@@ -243,7 +249,14 @@ internal fun ExperienceScreen(group: Boolean) {
                     onClick = { finishRound(false) },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("مش دلوقتي… عَدّي") }
-                TextButton(onClick = { game = current.leave(); reply = "" }) { Text("وقّف اللعبة") }
+                TextButton(onClick = {
+                    runCatching { LocalSessionStore.save(vault, gameName, current.leave()) }
+                        .onSuccess { game = current.leave(); reply = "" }
+                        .onFailure { replyStatus = "تعذر حفظ إيقاف اللعبة، حاول تاني" }
+                }) { Text("وقّف اللعبة") }
+                if (replyStatus.isNotBlank() && !mediaOpen) {
+                    Text(replyStatus, color = MaterialTheme.colorScheme.error)
+                }
             } else {
                 Text(if (current.ended) "وقفنا هنا… براحتكم" else "كده الليلة خلصت ✦",
                     style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
@@ -251,11 +264,30 @@ internal fun ExperienceScreen(group: Boolean) {
                 current.playerNames.forEachIndexed { index, name ->
                     Text("${name} — ${current.scores[index]} تحدي اتعمل، ${current.skipped[index]} اتعدّى")
                 }
+                val pastReplies = remember(current, replyName) {
+                    current.turns.indices.mapNotNull { index ->
+                        LocalSessionStore.readReply(vault, replyName, index)?.let { index to it }
+                    }
+                }
+                if (pastReplies.isNotEmpty()) {
+                    Text("ردودكم الخاصة — محفوظة على الموبايل بس",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary)
+                    pastReplies.forEach { (index, text) ->
+                        Text("الجولة ${index + 1}: $text", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
                 Button(onClick = {
-                    game = null
-                    vault.deletePrivate(replyName)
-                    consent.indices.forEach { consent[it] = false }
+                    runCatching {
+                        vault.deletePrivate(gameName)
+                        vault.deletePrivate(replyName)
+                    }.onSuccess {
+                        game = null
+                        consent.indices.forEach { consent[it] = false }
+                        formError = ""
+                    }.onFailure { formError = "تعذر مسح الجولة القديمة؛ حاول تاني" }
                 }, modifier = Modifier.fillMaxWidth()) { Text("نبدأ واحدة جديدة؟") }
+                if (formError.isNotBlank()) Text(formError, color = MaterialTheme.colorScheme.error)
             }
         }
     }
