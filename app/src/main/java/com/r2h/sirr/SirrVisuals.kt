@@ -174,42 +174,66 @@ internal fun RoundChapter(current:Int,total:Int){
 }
 
 
-/** A sealed private challenge: deliberate one-tap reveal, skip/stop remains available. */
+/** Full-card one-tap reveal: the secret is visually sealed, not another input form. */
 @Composable
 internal fun SealedChallengeCard(onReveal: () -> Unit) {
     Surface(
         onClick = onReveal,
-        color = Color(0xFF231522),
+        color = Color(0xFF1B1222),
         shape = RoundedCornerShape(28.dp),
-        border = BorderStroke(1.dp, Amber.copy(alpha=.56f)),
-        modifier = Modifier.fillMaxWidth().heightIn(min=250.dp)
+        border = BorderStroke(1.5.dp, Amber.copy(alpha = .78f)),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 238.dp)
     ) {
-        Box(contentAlignment=Alignment.Center) {
+        Box(
+            Modifier.fillMaxWidth()
+                .background(
+                    Brush.linearGradient(listOf(
+                        Color(0xFF503048), Color(0xFF281627), Color(0xFF17121E)))
+                ),
+            contentAlignment = Alignment.Center
+        ) {
             Canvas(Modifier.matchParentSize()) {
-                val center=Offset(size.width*.50f,size.height*.48f)
-                val r=size.minDimension*.18f
-                drawCircle(Amber.copy(alpha=.08f),r*1.5f,center)
-                for(i in 1..3) {
-                    drawCircle(Amber.copy(alpha=.45f/i),r*(.82f+i*.29f),center,
-                        style=Stroke(width=1.5.dp.toPx()))
+                val center = Offset(size.width * .76f, size.height * .31f)
+                val r = size.minDimension * .16f
+                for (i in 1..4) {
+                    drawCircle(Amber.copy(alpha = .27f / i), r * (.72f + i * .35f),
+                        center, style = Stroke(width = 1.4.dp.toPx()))
                 }
-                drawCircle(Amber.copy(alpha=.23f),radius=3.dp.toPx(),
-                    center=Offset(size.width*.14f,size.height*.17f))
-                drawCircle(Amber.copy(alpha=.22f),radius=2.dp.toPx(),
-                    center=Offset(size.width*.82f,size.height*.75f))
+                val seal = Path().apply {
+                    moveTo(center.x, center.y - r * .7f)
+                    cubicTo(center.x-r*.67f,center.y-r*.56f,
+                        center.x-r*.6f,center.y+r*.26f,
+                        center.x-r*.18f,center.y+r*.35f)
+                    lineTo(center.x-r*.30f,center.y+r*.93f)
+                    lineTo(center.x+r*.30f,center.y+r*.93f)
+                    lineTo(center.x+r*.18f,center.y+r*.35f)
+                    cubicTo(center.x+r*.6f,center.y+r*.26f,
+                        center.x+r*.67f,center.y-r*.56f,
+                        center.x,center.y-r*.7f)
+                    close()
+                }
+                drawPath(seal, Brush.verticalGradient(listOf(
+                    Amber.copy(alpha = .78f), Amber.copy(alpha = .12f))))
+                val y = size.height * .86f
+                drawLine(Amber.copy(alpha = .20f),
+                    Offset(size.width * .09f, y), Offset(size.width * .91f, y),
+                    strokeWidth = 1.dp.toPx())
             }
             Column(
-                Modifier.padding(24.dp),
-                horizontalAlignment=Alignment.CenterHorizontally,
-                verticalArrangement=Arrangement.spacedBy(16.dp)
-            ){
-                Text("✦",color=Amber,fontSize=49.sp)
-                Text("السر لسه متفتحش",
-                    color=Color.White,fontSize=24.sp,lineHeight=34.sp,
-                    fontWeight=FontWeight.Bold,textAlign=TextAlign.Center)
-                Text("دوس هنا… واكشف تحدّي الجولة",
-                    color=Pale,style=MaterialTheme.typography.bodyMedium,
-                    textAlign=TextAlign.Center)
+                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 27.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(15.dp)
+            ) {
+                Text("✦  رسالة مقفولة", color = Amber,
+                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(24.dp))
+                Text("كل سر ليه\nلحظة يتقال فيها.",
+                    color = Color.White, fontSize = 29.sp, lineHeight = 39.sp,
+                    fontWeight = FontWeight.Bold)
+                Text("اضغط على الكارت… والتحدي هيبان.",
+                    color = Pale, style = MaterialTheme.typography.bodyMedium)
+                Text("اكشف السر  ←", color = Amber,
+                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             }
         }
     }

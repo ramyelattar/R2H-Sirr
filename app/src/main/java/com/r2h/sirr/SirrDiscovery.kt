@@ -50,7 +50,7 @@ internal fun DiscoveryTile(
         border = BorderStroke(1.dp, accent.copy(alpha=.25f)),
         color = base
     ) {
-        Box(Modifier.fillMaxWidth().heightIn(min=198.dp)) {
+        Box(Modifier.fillMaxWidth().heightIn(min=171.dp)) {
             Canvas(Modifier.matchParentSize()) {
                 val cx=size.width*.74f
                 val cy=size.height*.27f
@@ -116,7 +116,7 @@ internal fun DiscoveryTile(
                 }
             }
             Column(
-                Modifier.fillMaxWidth().heightIn(min=198.dp).padding(18.dp),
+                Modifier.fillMaxWidth().heightIn(min=171.dp).padding(18.dp),
                 verticalArrangement=Arrangement.Bottom
             ){
                 Text(title,color=Color.White,style=MaterialTheme.typography.titleMedium,
@@ -125,7 +125,7 @@ internal fun DiscoveryTile(
                 Text(subtitle,color=Color(0xFFE5CED6),style=MaterialTheme.typography.bodySmall,
                     maxLines=2)
                 Spacer(Modifier.height(10.dp))
-                Text("اكتشف  ←",color=accent,fontSize=13.sp,fontWeight=FontWeight.SemiBold)
+                Text("العب دلوقتي  ←",color=accent,fontSize=15.sp,fontWeight=FontWeight.Bold)
             }
         }
     }
@@ -146,17 +146,22 @@ internal fun QuizTopicTile(
         Color(0xFFECC5A2)
     )
     val accent = hues[(number - 1).coerceIn(0, hues.lastIndex)]
+    val chapterBg = listOf(
+        Color(0xFF32202A), Color(0xFF372231), Color(0xFF2B2541),
+        Color(0xFF352135), Color(0xFF393020), Color(0xFF223D38),
+        Color(0xFF3D2726)
+    )[(number - 1).coerceIn(0, 6)]
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
             .semantics { contentDescription = "الموضوع $number: $title. $subtitle" },
-        color = Color(0xFF251923),
-        shape = RoundedCornerShape(24.dp),
-        border = BorderStroke(1.dp, accent.copy(alpha=.30f))
+        color = chapterBg,
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, accent.copy(alpha=.60f))
     ) {
-        Box(Modifier.fillMaxWidth().heightIn(min=122.dp)) {
+        Box(Modifier.fillMaxWidth().heightIn(min=98.dp)) {
             Canvas(Modifier.matchParentSize()) {
-                val center = Offset(size.width*.16f,size.height*.39f)
+                val center = Offset(size.width*.13f,size.height*.40f)
                 val base = size.minDimension*.17f
                 drawCircle(accent.copy(alpha=.08f),base*2.5f,center)
                 for (i in 1..3) {
@@ -167,20 +172,20 @@ internal fun QuizTopicTile(
                 drawCircle(accent.copy(alpha=.38f),2.5.dp.toPx(),end)
             }
             Row(
-                Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=22.dp),
+                Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=14.dp),
                 verticalAlignment=Alignment.CenterVertically,
                 horizontalArrangement=Arrangement.spacedBy(16.dp)
             ) {
-                Box(Modifier.size(57.dp),contentAlignment=Alignment.Center){
+                Box(Modifier.size(52.dp),contentAlignment=Alignment.Center){
                     Text(number.toString().padStart(2,'0'), color=accent,
-                        fontSize=27.sp, fontWeight=FontWeight.Bold)
+                        fontSize=25.sp, fontWeight=FontWeight.Bold)
                 }
                 Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)){
                     Text(title,color=Color.White,style=MaterialTheme.typography.titleMedium,
                         fontWeight=FontWeight.Bold)
                     Text(subtitle,color=Color(0xFFD8C3CD),style=MaterialTheme.typography.bodySmall)
                 }
-                Text("‹",color=accent,fontSize=28.sp)
+                Text("‹",color=accent,fontSize=25.sp)
             }
         }
     }

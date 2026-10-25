@@ -35,18 +35,19 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val Night = Color(0xFF0B080D)
+private val Night = Color(0xFF09080D)
 private val Wine = Color(0xFF391522)
 private val Rose = Color(0xFF79334A)
 private val Gold = Color(0xFFF3D2AD)
-private val Muted = Color(0xFFD3BCC4)
+private val Muted = Color(0xFFE4C9D2)
 private val SurfaceShade = Color(0xFF1D1520)
 private val Palette = darkColorScheme(
     primary = Gold, onPrimary = Color(0xFF29131A),
     secondary = Muted, background = Night, surface = SurfaceShade,
     surfaceVariant = Color(0xFF322431),
     onBackground = Color(0xFFFFF6F2), onSurface = Color(0xFFFFF6F2),
-    onSurfaceVariant = Muted
+    onSurfaceVariant = Muted,
+    outline = Color(0xFFAD879A)
 )
 private val SoftCorner = RoundedCornerShape(24.dp)
 // A large, readable Arabic text hierarchy rather than the default compact Material typography.
@@ -183,7 +184,7 @@ private fun AdultGate(onConfirm: () -> Unit) {
             horizontalAlignment = Alignment.Start
         ) {
             Text("للكبار وبس  ·  +18", color = Gold, style = MaterialTheme.typography.labelLarge)
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(16.dp))
             Text("سِرّ", color = Gold, fontSize = 68.sp, fontWeight = FontWeight.Bold, lineHeight = 76.sp)
             Spacer(Modifier.height(12.dp))
             Text(
@@ -195,7 +196,7 @@ private fun AdultGate(onConfirm: () -> Unit) {
             )
             Spacer(Modifier.height(16.dp))
             Text("لعبة خفيفة، لحظات مختلفة، وكل حاجة بموافقتكم.", color = Muted, style = MaterialTheme.typography.bodyLarge)
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(28.dp))
             Surface(shape = SoftCorner, color = Color(0xFF241823), border = BorderStroke(1.dp, Color(0xFF563643))) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -209,12 +210,13 @@ private fun AdultGate(onConfirm: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(22.dp))
-            Button(
+            SirrAction(
+                text = "ادخل عالم سِرّ",
                 onClick = onConfirm,
                 enabled = ageVerified && consent,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(18.dp)
-            ) { Text("ادخل عالم سِرّ", fontWeight = FontWeight.Bold) }
+                explanation = if (ageVerified && consent) "يلا نكتشف الحكاية."
+                    else "علّم على الموافقتين علشان تقدر تدخل"
+            )
             Spacer(Modifier.height(12.dp))
             Text(
                 "التأكيد ده بإقرار منك، مش تحقق مستقل من السن.",
@@ -254,9 +256,9 @@ private fun SmallMode(
         modifier.clip(SoftCorner)
             .background(Brush.linearGradient(listOf(tint, Color(0xFF20151F))))
             .clickable(onClick = onClick)
-            .heightIn(min = 184.dp)
+            .heightIn(min = 144.dp)
     ) {
-        Column(Modifier.fillMaxWidth().heightIn(min = 184.dp).padding(18.dp), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.fillMaxWidth().heightIn(min = 144.dp).padding(18.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Text(glyph, fontSize = 26.sp, color = Gold)
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
@@ -296,101 +298,91 @@ private fun FeatureRow(title: String, detail: String, glyph: String, onClick: ()
 @Composable
 private fun HomeScreen(onGo: (String) -> Unit) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
-        Spacer(Modifier.height(10.dp))
-        Text("جاهز تكتشفوا حاجة جديدة؟", color = Muted, style = MaterialTheme.typography.labelLarge)
-        Text(
-            "الليلة ليها\nحكاية تانية.",
-            color = Color.White,
-            fontSize = 34.sp,
-            lineHeight = 43.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Spacer(Modifier.height(6.dp))
+        Text("6 طرق للعب  ·  على مزاجكم", color = Gold,
+            style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text("الليلة مش عادية.", color = Color.White,
+            fontSize = 35.sp, lineHeight = 46.sp, fontWeight = FontWeight.Bold)
+        Text("اختاروا حاجة تضحككم… أو سؤال يفتح حكاية.",
+            color = Muted, style = MaterialTheme.typography.bodyMedium)
+
         Box(
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(30.dp))
-                .background(Brush.linearGradient(listOf(Wine, Rose, Color(0xFF241221))))
-                .border(1.dp, Brush.linearGradient(listOf(Gold.copy(alpha=.60f),Color(0xFF4B2639),Gold.copy(alpha=.12f))), RoundedCornerShape(30.dp))
+                .clip(RoundedCornerShape(28.dp))
+                .background(Brush.linearGradient(listOf(
+                    Color(0xFF77425C), Color(0xFF401D35), Color(0xFF1C1225))))
+                .border(1.dp, Gold.copy(alpha = .56f), RoundedCornerShape(28.dp))
         ) {
             Canvas(Modifier.matchParentSize()) {
-                val center = Offset(size.width * .86f, size.height * .26f)
-                val base = size.minDimension * .15f
-                drawCircle(Gold.copy(alpha=.045f),radius=base*2.7f,center=center)
-                for (i in 1..5) {
-                    drawCircle(
-                        color = Gold.copy(alpha = .32f / i),
-                        radius = base * (i*.66f+.4f),
-                        center = center,
-                        style = Stroke(width = (1.6f-i*.17f).dp.toPx())
-                    )
+                val c = Offset(size.width * .83f, size.height * .28f)
+                val r = size.minDimension * .17f
+                for (i in 1..4) {
+                    drawCircle(Gold.copy(alpha = .28f / i), r * (i * .52f + .60f),
+                        center = c, style = Stroke(width = 1.5.dp.toPx()))
                 }
                 val keyhole = Path().apply {
-                    moveTo(center.x,center.y-base*.7f)
-                    cubicTo(center.x-base*.73f,center.y-base*.7f,center.x-base*.72f,center.y+base*.26f,center.x-base*.23f,center.y+base*.31f)
-                    lineTo(center.x-base*.38f,center.y+base*1.05f)
-                    lineTo(center.x+base*.38f,center.y+base*1.05f)
-                    lineTo(center.x+base*.23f,center.y+base*.31f)
-                    cubicTo(center.x+base*.72f,center.y+base*.26f,center.x+base*.73f,center.y-base*.7f,center.x,center.y-base*.7f)
+                    moveTo(c.x, c.y-r*.67f)
+                    cubicTo(c.x-r*.75f,c.y-r*.65f,c.x-r*.70f,c.y+r*.15f,c.x-r*.21f,c.y+r*.28f)
+                    lineTo(c.x-r*.36f,c.y+r*.99f)
+                    lineTo(c.x+r*.36f,c.y+r*.99f)
+                    lineTo(c.x+r*.21f,c.y+r*.28f)
+                    cubicTo(c.x+r*.70f,c.y+r*.15f,c.x+r*.75f,c.y-r*.65f,c.x,c.y-r*.67f)
                     close()
                 }
-                drawPath(keyhole, Brush.verticalGradient(listOf(Gold.copy(alpha=.53f),Gold.copy(alpha=.09f))))
-                for (i in 0..12) {
-                    val px = (i*137 % 97)/97f*size.width
-                    val py = (i*89 % 97)/97f*size.height
-                    drawCircle(Gold.copy(alpha= .13f+(i%3)*.04f),radius=(1f+(i%2))*1.2.dp.toPx(),center=Offset(px,py))
-                }
+                drawPath(keyhole, Brush.verticalGradient(listOf(Gold.copy(alpha=.75f),Gold.copy(alpha=.14f))))
             }
             Column(
-                Modifier.fillMaxWidth().padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(13.dp)
+                Modifier.fillMaxWidth().padding(22.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Surface(color=Color(0xFF3D202D).copy(alpha=.93f),shape=RoundedCornerShape(50)) {
-                    Text("✦  حكاية لشخصين",modifier=Modifier.padding(horizontal=12.dp,vertical=7.dp),
-                        color=Gold,style=MaterialTheme.typography.labelLarge)
-                }
-                Text("كل جولة وراها سر.", color = Color.White, fontSize = 27.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp)
-                Text(
-                    "اختاروا المود، وخدوا أول خطوة. مفيش ضغط، وتقدروا تعدّوا أي تحدي.",
-                    color = Color(0xFFF2DDE3),
-                    style = MaterialTheme.typography.bodyMedium
+                Text("01  /  حكاية لشخصين", color = Gold,
+                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(20.dp))
+                Text("اختاروا مين\nهيكشف السر الأول.",
+                    color = Color.White, fontSize = 28.sp,
+                    lineHeight = 37.sp, fontWeight = FontWeight.Bold)
+                Text("من ضحكة صغيرة لكلام مكنش بيتقال… كل جولة ليها حكاية.",
+                    color = Color(0xFFF3DEEB), style = MaterialTheme.typography.bodyMedium)
+                SirrAction(
+                    text = "ادخلوا اللعبة  ✦",
+                    onClick = { onGo("couple") }
                 )
-                Spacer(Modifier.height(10.dp))
-                Button(
-                    onClick = { onGo("couple") },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(17.dp)
-                ) { Text("يلا نبدأ", fontWeight = FontWeight.Bold) }
             }
         }
-        Text("لَمّة صحاب؟", style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold, color = Gold)
-        SmallMode("اللّمة ليها حكاية", "ضحك ومفاجآت لكل اللي معاك", "✳",
-            Color(0xFF38304D), Modifier.fillMaxWidth()) { onGo("party") }
-        Text("واختار سرّ تاني…", style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold, color = Gold)
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)){
-            DiscoveryTile("سيبها على النرد", "الحظ ليه كلمة تانية",
-                DiscoveryMotif.DICE,Modifier.weight(1f)){onGo("dice")}
-            DiscoveryTile("إنتوا شبه بعض؟", "كل إجابة وراها حكاية",
-                DiscoveryMotif.QUIZ,Modifier.weight(1f)){onGo("quiz")}
-        }
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)){
-            DiscoveryTile("اكشف السر", "ورا الغطا مفاجأة",
-                DiscoveryMotif.SCRATCH,Modifier.weight(1f)){onGo("scratch")}
-            DiscoveryTile("همسة مخصوص", "رسالة متتقريش مرتين",
-                DiscoveryMotif.WHISPER,Modifier.weight(1f)){onGo("whispers")}
-        }
-        Text("من بعيد؟", style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold, color = Gold)
-        FeatureRow("أوضة خاصة أونلاين", "محتاج سيرفر آمن خاص قبل اللعب", "↗") { onGo("remote") }
-        FeatureRow("ظبّط التجربة على مزاجك", "الصوت · الاهتزاز · حركة الكروت", "⚙") { onGo("settings") }
-        TextButton(
-            onClick = { onGo("privacy") },
+
+        SirrSection("02", "اللّمة ليها جو مختلف", "تحديات ولحظات كل واحد ليه دور فيها")
+        SmallMode(
+            title = "اللّمة ليها حكاية",
+            hint = "من 2 لـ 4 لاعبين · كل واحد يختار",
+            glyph = "✳",
+            tint = Color(0xFF43365F),
             modifier = Modifier.fillMaxWidth()
-        ) { Text("الخصوصية والتحكم في بياناتك", color = Muted) }
-        Spacer(Modifier.height(26.dp))
+        ) { onGo("party") }
+
+        SirrSection("03", "مش لازم تلعبوا بنفس الطريقة", "اختاروا واحدة وابدأوا فورًا")
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            DiscoveryTile("سيبها على النرد", "3 نردات وحكاية",
+                DiscoveryMotif.DICE, Modifier.weight(1f)) { onGo("dice") }
+            DiscoveryTile("إنتوا شبه بعض؟", "أسئلة تفتح كلام",
+                DiscoveryMotif.QUIZ, Modifier.weight(1f)) { onGo("quiz") }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            DiscoveryTile("اكشف السر", "الخدش يكشف المفاجأة",
+                DiscoveryMotif.SCRATCH, Modifier.weight(1f)) { onGo("scratch") }
+            DiscoveryTile("همسة مخصوص", "3 رسايل ورا بعض",
+                DiscoveryMotif.WHISPER, Modifier.weight(1f)) { onGo("whispers") }
+        }
+        SirrSection("04", "من بعيد برضه تنفع", "اتصلوا بأوضة خاصة لما يكون عندكم سيرفر آمن")
+        FeatureRow("أوضة خاصة أونلاين", "للعب من موبايلين مختلفين", "↗") { onGo("remote") }
+        FeatureRow("ظبّط تجربة اللعب", "الصوت · الاهتزاز · الحركة", "⚙") { onGo("settings") }
+        TextButton(onClick = { onGo("privacy") }, modifier = Modifier.fillMaxWidth()) {
+            Text("الخصوصية والتحكم في بياناتك", color = Gold)
+        }
+        Spacer(Modifier.height(28.dp))
     }
 }
 

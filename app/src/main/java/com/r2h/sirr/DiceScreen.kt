@@ -63,7 +63,11 @@ internal fun DiceScreenV2() {
         effects.cue(GameCue.REVEAL)
     }
     Page("سيبها على النرد", "3 نردات هتقرروا تعملوا إيه… خليك جاهز.") {
-        MysteryHeader("مود الليلة", "مين قال إن الحظ بريء؟", "كل رمية بتفتح حكاية جديدة.", "◇")
+        SirrIntro(
+            "3 نردات · اختيار واحد",
+            "الحظ ليه كلمة… والباقي عليكم.",
+            "اختاروا المود، ارْموا النرد، وشوفوا التحدي اللي طلع."
+        )
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -81,8 +85,9 @@ internal fun DiceScreenV2() {
                 }
             }
         }
-        Text(if(rolling) "استنى المفاجأة…" else if(rolled==null) "اختار المود وارمي أول رمية." else "أهي الرمية اختارت لكم!",
-            color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.titleMedium)
+        SirrSection("01", if(rolling) "النرد بيلف…" else if(rolled==null)
+            "أول رمية مستنياكم" else "الرمية خلصت",
+            "تقدروا تغيّروا المود قبل الرمية الجاية")
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Intensity.entries.forEach { level ->
                 FilterChip(selected == level, enabled = !rolling, onClick = {
@@ -99,9 +104,32 @@ internal fun DiceScreenV2() {
                 }, label = { Text(level.arabic) })
             }
         }
-        Button(enabled=!rolling,onClick={error="";rolling=true;nonce++},modifier=Modifier.fillMaxWidth().height(56.dp),
-            shape=RoundedCornerShape(18.dp)) {
-            Text(if(rolling)"النرد بيلف…" else if(rolled==null)"ارمي النرد ✦" else "ارمي كمان مرة ✦",fontWeight=FontWeight.Bold)
+        SirrAction(
+            text = if(rolling) "استنّى الرمية…" else if(rolled == null) "ارمي النرد  ✦" else "ارمي تاني  ✦",
+            enabled = !rolling,
+            onClick = { error = ""; rolling = true; nonce++ },
+            explanation = if (rolling) "النتيجة هتظهر هنا أول ما النرد يقف" else null
+        )
+        if (rolled != null && !rolling) {
+            val outcome = requireNotNull(rolled)
+            val faces = rolledFaces ?: outcome.mapIndexed { i, faceIndex -> dice[i][faceIndex] }
+            SirrSection("02", "دي الرمية اللي طلعت", "كل نرد اختار جزء من الحكاية")
+            ChallengeRevealCard(faces.joinToString(" ") { it.text })
+            if (selected == Intensity.CUSTOM) {
+                faces.forEachIndexed { index, face ->
+                    val bitmap = remember(face.imageId) { vault.readPhoto(face.imageId) }
+                    if (bitmap != null) {
+                        Text("الصورة اللي طلعت في النرد ${index + 1}",
+                            color = MaterialTheme.colorScheme.primary)
+                        Image(
+                            bitmap,
+                            contentDescription = "الصورة المختارة للنرد ${index + 1}",
+                            modifier = Modifier.fillMaxWidth().height(170.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+            }
         }
         OutlinedButton(onClick={advanced=!advanced},modifier=Modifier.fillMaxWidth()) {
             Text(if(advanced)"اقفل الإعدادات" else "عايز تغيّر الوقت أو تعمل نرد مخصوص؟")
@@ -149,26 +177,6 @@ internal fun DiceScreenV2() {
                 rolled = null;rolledFaces = null;error = ""; success = ""
             }) { Text("رجّع الإعدادات الأصلية") }
         }
-        }
-        if (rolled != null && !rolling) {
-            val outcome = requireNotNull(rolled)
-            val faces = rolledFaces ?: outcome.mapIndexed { i, faceIndex -> dice[i][faceIndex] }
-            ChallengeRevealCard(faces.joinToString(" ") { it.text })
-            if (selected == Intensity.CUSTOM) {
-                faces.forEachIndexed { index, face ->
-                    val bitmap = remember(face.imageId) { vault.readPhoto(face.imageId) }
-                    if (bitmap != null) {
-                        Text("الصورة اللي طلعت في النرد ${index + 1}",
-                            color = MaterialTheme.colorScheme.primary)
-                        Image(
-                            bitmap,
-                            contentDescription = "الصورة المختارة للنرد ${index + 1}",
-                            modifier = Modifier.fillMaxWidth().height(170.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                    }
-                }
-            }
         }
         if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
         if (success.isNotBlank()) Text(success)
