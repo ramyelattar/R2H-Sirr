@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -131,10 +129,7 @@ private fun SirrApp() {
         if (!musicPrefs.enabled || musicPrefs.volume == 0 || userMediaPlaying) {
             music.stop()
         } else {
-            val samples = withContext(Dispatchers.Default) {
-                SirrSoundtrack.render(scene)
-            }
-            music.playScene(samples, musicPrefs.volume)
+            music.playScene(scene, musicPrefs.volume)
         }
     }
     // Adjust volume on the live track instead of regenerating an eight-second
@@ -151,7 +146,8 @@ private fun SirrApp() {
         CompositionLocalProvider(
             LocalLayoutDirection provides LayoutDirection.Rtl,
             LocalSirrAudioRefresh provides { musicRevision++ },
-            LocalSirrUserAudioOverride provides { isPlaying -> userMediaPlaying = isPlaying }
+            LocalSirrUserAudioOverride provides { isPlaying -> userMediaPlaying = isPlaying },
+            LocalSirrMusicStatus provides music.status.value
         ) {
             Box(Modifier.fillMaxSize().background(Night)) {
                 SirrAmbientBackground(scene, musicPrefs.cinematic)
@@ -172,11 +168,30 @@ private fun SirrApp() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (route == "home") {
-                            Text("سِرّ", style = MaterialTheme.typography.headlineMedium, color = Gold, fontWeight = FontWeight.Bold)
+                            Text("R2H-Play", style = MaterialTheme.typography.titleLarge,
+                                color = Gold, fontWeight = FontWeight.ExtraBold)
                         } else {
-                            TextButton(onClick = { navigateHome() }) { Text("→ رجوع", color = Gold) }
+                            TextButton(onClick = { navigateHome() }) {
+                                Text("رجوع  ←", color = Gold, style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
-                        Text("خاص بينكم  ·  18+", style = MaterialTheme.typography.labelSmall, color = Muted)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(onClick = {
+                                val current = SirrMusicPreferences.load(context)
+                                val prefs = runCatching {
+                                    org.json.JSONObject(vault.readPrivate("game-effects") ?: "{}")
+                                }.getOrElse { org.json.JSONObject() }
+                                prefs.put("music", !current.enabled)
+                                prefs.put("musicVolume", current.volume)
+                                runCatching { vault.writePrivate("game-effects", prefs.toString()) }
+                                    .onSuccess { musicRevision++ }
+                            }) {
+                                Text(if (musicPrefs.enabled) "♫  إيقاف" else "♫  تشغيل",
+                                    color = Gold, style = MaterialTheme.typography.labelMedium)
+                            }
+                            if (route == "home") Text("18+", color = Muted,
+                                style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                     if (askToLeave && route in immersiveRoutes) {
                         AlertDialog(
@@ -243,7 +258,10 @@ private fun AdultGate(onConfirm: () -> Unit) {
         ) {
             Text("للكبار وبس  ·  +18", color = Gold, style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(16.dp))
-            Text("سِرّ", color = Gold, fontSize = 68.sp, fontWeight = FontWeight.Bold, lineHeight = 76.sp)
+            Text("R2H-Play", color = Gold, fontSize = 45.sp,
+                fontWeight = FontWeight.ExtraBold, lineHeight = 57.sp)
+            Text("حكاية جديدة كل مرة", color = Color(0xFFE5AFCB),
+                style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(12.dp))
             Text(
                 "مش كل الأسرار\nبتتقال بصوت عالي.",
@@ -269,7 +287,7 @@ private fun AdultGate(onConfirm: () -> Unit) {
             }
             Spacer(Modifier.height(22.dp))
             SirrAction(
-                text = "ادخل عالم سِرّ",
+                text = "ابدأ R2H-Play",
                 onClick = onConfirm,
                 enabled = ageVerified && consent,
                 explanation = if (ageVerified && consent) "يلا نكتشف الحكاية."
@@ -479,7 +497,10 @@ private fun PrivacyScreen(onClear: () -> Unit) {
 private fun GameSettingsScreen(onPrivacy: () -> Unit) {
     val effects = rememberGameEffects()
     Page("ظبّطها على مزاجك", "الاختيارات دي بتتطبق على الألعاب اللي بتدعم المؤثرات.") {
-        MysteryHeader("تجربتك ليك", "كل تفصيلة بإيدك.", "صوت، حركة، اهتزاز… خليك على راحتك.", "✦")
+        SirrIntro("R2H-Play · Sound Studio", "اسمع كل لحظة.",
+            "جرّب موسيقى الصفحة حالًا، وعدّل الصوت أو اقفلها تمامًا.")
+        Text(LocalSirrMusicStatus.current, color = Gold,
+            style = MaterialTheme.typography.bodyMedium)
         EffectPreferencesPanel(effects, initiallyExpanded = true)
         Text(
             "لو قفلت الصوت من هنا، مؤثرات اللعبة مش هتشتغل. الأغاني اللي بتختارها بنفسك في الهمسات ليها زر تشغيل وإيقاف مستقل.",

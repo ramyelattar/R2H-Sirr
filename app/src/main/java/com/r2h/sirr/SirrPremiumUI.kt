@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // M10: one shared visual language for all game entry/decision surfaces.
-private val M10Cream = Color(0xFFFFE0C6)
+private val M10Cream = Color(0xFFFFD2A4)
 private val M10Ink = Color(0xFF23121B)
 private val M10Faint = Color(0xFFE7CCD7)
 private val M10Panel = Color(0xFF201621)
@@ -36,8 +36,8 @@ internal fun SirrAction(
             shape = RoundedCornerShape(18.dp),
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = M10Cream,
-                contentColor = M10Ink,
+                containerColor = Color(0xFFFA76B9),
+                contentColor = Color(0xFF150915),
                 disabledContainerColor = Color(0xFF473640),
                 disabledContentColor = Color(0xFFFFE1DC)
             ),
@@ -96,9 +96,9 @@ internal fun SirrOption(
         onClick = onClick,
         modifier = modifier.heightIn(min = 60.dp),
         shape = RoundedCornerShape(17.dp),
-        color = if (selected) Color(0xFF65415C) else M10Panel,
+        color = if (selected) Color(0xFF7D255C) else Color(0xE91C1227),
         border = BorderStroke(if (selected) 1.7.dp else 1.dp,
-            if (selected) M10Cream else Color(0xFF5F4556))
+            if (selected) Color(0xFFFFA6D1) else Color(0xFF74536A))
     ) {
         Column(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 13.dp),
@@ -154,7 +154,7 @@ internal fun SirrIntro(
 ) {
     Box(
         Modifier.fillMaxWidth()
-            .background(Brush.linearGradient(listOf(Color(0xFF2C1929),accent.copy(alpha=.52f),Color(0xFF1A1424))),
+            .background(Brush.linearGradient(listOf(Color(0xFA1D1025),accent.copy(alpha=.32f),Color(0xFA0E0A16))),
                 RoundedCornerShape(24.dp))
     ) {
         Column(

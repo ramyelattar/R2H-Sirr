@@ -88,14 +88,14 @@ private fun SirrAmbientCanvas(scene: String, phase: Float) {
             height * (.73f + sin(theta) * .10f))
         drawCircle(
             Brush.radialGradient(
-                listOf(accent.copy(alpha = .18f), accent.copy(alpha = .065f),
+                listOf(accent.copy(alpha = .09f), accent.copy(alpha = .035f),
                     Color.Transparent),
                 center = a, radius = unit * 1.05f),
             radius = unit * 1.05f, center = a
         )
         drawCircle(
             Brush.radialGradient(
-                listOf(Color(0xFF7051AA).copy(alpha = .115f),
+                listOf(Color(0xFF7051AA).copy(alpha = .066f),
                     Color(0xFF452441).copy(alpha = .045f), Color.Transparent),
                 center = b, radius = unit * .92f),
             radius = unit * .92f, center = b
@@ -117,8 +117,8 @@ private fun SirrAmbientCanvas(scene: String, phase: Float) {
             close()
         }
         drawPath(ribbon, Brush.linearGradient(listOf(
-            Color.Transparent, accent.copy(alpha = .095f),
-            Color(0xFFB067D4).copy(alpha = .125f), Color.Transparent)))
+            Color.Transparent, accent.copy(alpha = .052f),
+            Color(0xFFB067D4).copy(alpha = .050f), Color.Transparent)))
         for (i in 0 until 23) {
             val x = ((i * 73 + 11) % 101) / 101f
             val y = ((i * 47 + 29) % 97) / 97f
@@ -213,8 +213,8 @@ internal fun SirrCinematicSplash(
                     }
                 }
                 Image(
-                    painter = painterResource(R.drawable.sirr_launcher_foreground),
-                    contentDescription = "سِرّ، مفتاح الأسرار",
+                    painter = painterResource(R.drawable.r2h_play_foreground),
+                    contentDescription = "R2H-Play",
                     modifier = Modifier.size(192.dp)
                 )
             }
@@ -228,8 +228,8 @@ internal fun SirrCinematicSplash(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("سِرّ",
-                        color = Color(0xFFFFDACA), fontSize = 47.sp,
+                    Text("R2H-Play",
+                        color = Color(0xFFFFDACA), fontSize = 43.sp,
                         fontWeight = FontWeight.Bold)
                     Text("مش كل الأسرار بتتقال بصوت عالي.",
                         color = Color(0xFFF6CEDF),
