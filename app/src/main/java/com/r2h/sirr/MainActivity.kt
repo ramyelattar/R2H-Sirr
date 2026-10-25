@@ -127,7 +127,7 @@ private fun SirrApp() {
         }
     }
     LaunchedEffect(route) { userMediaPlaying = false }
-    LaunchedEffect(scene, musicPrefs, userMediaPlaying) {
+    LaunchedEffect(scene, musicPrefs.enabled, musicPrefs.volume > 0, userMediaPlaying) {
         if (!musicPrefs.enabled || musicPrefs.volume == 0 || userMediaPlaying) {
             music.stop()
         } else {
@@ -136,6 +136,11 @@ private fun SirrApp() {
             }
             music.playScene(samples, musicPrefs.volume)
         }
+    }
+    // Adjust volume on the live track instead of regenerating an eight-second
+    // musical loop on every slider movement.
+    LaunchedEffect(musicPrefs.volume) {
+        music.setMusicVolume(musicPrefs.volume)
     }
     val immersiveRoutes = remember { setOf("couple","party","dice","quiz","scratch","whispers","remote") }
     fun navigateHome() {

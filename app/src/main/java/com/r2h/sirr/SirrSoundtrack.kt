@@ -201,6 +201,10 @@ internal class SirrPageMusic(context: Context) {
         volume = (level.coerceIn(0, 45) / 100f) * .85f
         activate()
     }
+    fun setMusicVolume(level: Int) {
+        volume = (level.coerceIn(0, 45) / 100f) * .85f
+        runCatching { track?.setVolume(volume) }
+    }
     fun setForeground(active: Boolean) {
         foreground = active
         if (active) activate()

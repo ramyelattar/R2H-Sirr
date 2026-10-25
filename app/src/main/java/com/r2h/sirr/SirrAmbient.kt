@@ -3,6 +3,7 @@ package com.r2h.sirr
 import android.provider.Settings
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -137,6 +138,11 @@ internal fun SirrCinematicSplash(onFinished: () -> Unit) {
         label = "splash-heartbeat"
     )
     var show by remember { mutableStateOf(false) }
+    val progress by animateFloatAsState(
+        targetValue = if (show) 1f else 0f,
+        animationSpec = tween(2280, easing = LinearEasing),
+        label = "splash-progress"
+    )
     LaunchedEffect(Unit) {
         show = true
         delay(2450L)
@@ -198,6 +204,7 @@ internal fun SirrCinematicSplash(onFinished: () -> Unit) {
             }
             Spacer(Modifier.height(6.dp))
             LinearProgressIndicator(
+                progress = { progress },
                 modifier = Modifier.fillMaxWidth(.56f)
                     .height(3.dp).clip(RoundedCornerShape(8.dp)),
                 color = Color(0xFFFF89BC),
