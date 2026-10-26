@@ -204,7 +204,7 @@ internal fun WhispersScreenV2() {
                 motif = "whispers"
             )
             SirrSection("0${composeStep + 1}", whisperStages[composeStep],
-                "الخطوة ${composeStep + 1} من 3 · اكتب أو اختار من الاقتراحات")
+                "الهمسة ${composeStep + 1} من 3 · اكتب رسالتك أو اختار اقتراحًا")
             LinearProgressIndicator(
                 progress = { (composeStep + 1).toFloat() / 3f },
                 modifier = Modifier.fillMaxWidth()
@@ -215,7 +215,7 @@ internal fun WhispersScreenV2() {
                 repeat(3) { i -> messages[i] = suggestions[groupStart + i] }
                 composeStep = 2
             }, modifier = Modifier.fillMaxWidth()) {
-                Text("✦  مش عارف تكتب إيه؟ اختار 3 همسات جاهزين")
+                Text("مش عارف تبدأ؟ اختار ثلاث همسات جاهزة")
             }
             OutlinedTextField(
                 messages[composeStep],
@@ -243,7 +243,7 @@ internal fun WhispersScreenV2() {
                     },
                     explanation = if (messages.any { it.isBlank() })
                         "لازم التلات همسات يكونوا جاهزين" else
-                        "متأكد؟ كل همسة مش هتظهر تاني بعد ما تعدّيها"
+                        "متأكد؟ كل همسة هتختفي بعد ما تتقرا، ومش هتظهر تاني"
                 )
             }
             if(composeStep>0)TextButton(onClick={composeStep--}){Text("أرجع للهمسة اللي قبلها")}

@@ -181,7 +181,7 @@ internal fun ScratchScreenV2() {
                     // Keep the user's selected layer count (1, 2 or 3).
                 },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("✦  اختارلي سر جاهز") }
+            ) { Text("اختار سر جاهز") }
             SirrSection("02", "كام غطا هيتكشف؟", "من مفاجأة واحدة لتلات مفاجآت ورا بعض")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 (1..3).forEach { n ->
@@ -199,7 +199,7 @@ internal fun ScratchScreenV2() {
             if(extras) {
                 OutlinedButton(onClick={pickPhoto.launch("image/*")}){Text("حط صورة في الآخر")}
                 if(photoId!=null)TextButton(onClick={vault.delete(photoId);photoId=null}){Text("امسح الصورة")}
-                Text("المفاجأة تفضل مفتوحة قد إيه؟")
+                Text("تحب المفاجأة تفضل متاحة قد إيه؟")
                 Row(horizontalArrangement=Arrangement.spacedBy(7.dp)){
                     listOf(3,6,24).forEach{hours->
                         FilterChip(ttlHours==hours,onClick={ttlHours=hours},label={Text("$hours ساعات")})
