@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -166,8 +167,11 @@ private fun SirrApp() {
                             .isSuccess
                     })
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-                    // Reserve the illustrated +18 / R2H / Play All The Day masthead.
-                    Spacer(Modifier.height(92.dp))
+                    // Header typography is baked into the image. Its entire top band is
+                    // rendered below the system inset; reserve a proportional safe band.
+                    val safeHeader = (LocalConfiguration.current.screenHeightDp.dp * .155f)
+                        .coerceIn(96.dp, 152.dp)
+                    Spacer(Modifier.height(safeHeader))
                     Row(
                         Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 8.dp, bottom = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -195,8 +199,7 @@ private fun SirrApp() {
                                 Text(if (musicPrefs.enabled) "♫  إيقاف" else "♫  تشغيل",
                                     color = Gold, style = MaterialTheme.typography.labelMedium)
                             }
-                            if (route == "home") Text("18+", color = Muted,
-                                style = MaterialTheme.typography.labelMedium)
+
                         }
                     }
                     if (askToLeave && route in immersiveRoutes) {
@@ -263,7 +266,7 @@ private fun AdultGate(onConfirm: () -> Boolean) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start
         ) {
-            Text("للكبار وبس  ·  +18", color = Gold, style = MaterialTheme.typography.labelLarge)
+            Text("الدخول للكبار فقط", color = Gold, style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(16.dp))
             Text("R2H-Play", color = Gold, fontSize = 45.sp,
                 fontWeight = FontWeight.ExtraBold, lineHeight = 57.sp)
@@ -443,7 +446,7 @@ private fun HomeScreen(onGo: (String) -> Unit) {
             verticalAlignment = Alignment.CenterVertically) {
             Text("اختاروا اللحظة.", fontSize = 31.sp, lineHeight = 39.sp,
                 color = Color.White, fontWeight = FontWeight.ExtraBold)
-            Text("✦  +18", color = Gold, style = MaterialTheme.typography.labelLarge)
+
         }
         Text("ست ألعاب مختلفة. الليلة كلها على مزاجكم.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)

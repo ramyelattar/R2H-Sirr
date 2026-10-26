@@ -81,7 +81,11 @@ private fun R2HWallpaperScene(scene: String, phase: Float) {
             "r2h_neon_wallpaper", "drawable", context.packageName
         )
     }
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(Color(0xFF0C0412))) {
+        // The image itself carries +18 / R2H / Play All The Day in its top band.
+        // Drawing the whole picture below the REAL Android status inset prevents
+        // clock, battery, camera and cutouts from covering any of these letters.
+        Box(Modifier.fillMaxSize().statusBarsPadding()) {
         if (wallpaperId != 0) {
             Image(
                 painter = painterResource(wallpaperId),
@@ -127,6 +131,23 @@ private fun R2HWallpaperScene(scene: String, phase: Float) {
                     radius = unit * .49f, center = center
                 )
             }
+            // Ribbon reflections drift around the borders; the painted wordmark
+            // never translates, resizes or pulses.
+            val sway = sin(cycle) * height * .017f
+            val edgeRibbon = Path().apply {
+                moveTo(-width * .04f, height * .34f + sway)
+                cubicTo(width * .035f, height * .41f + sway,
+                    width * .018f, height * .49f - sway,
+                    width * .10f, height * .59f)
+            }
+            drawPath(
+                path = edgeRibbon,
+                brush = Brush.linearGradient(listOf(
+                    Color.Transparent, accent.copy(alpha = .20f),
+                    Color.White.copy(alpha = .14f), Color.Transparent
+                )),
+                style = Stroke(width = 1.6.dp.toPx())
+            )
             // Sparse twinkling edge stars: no animated scaling of the image or logo.
             for (i in 0 until 30) {
                 val left = i % 2 == 0
@@ -141,6 +162,7 @@ private fun R2HWallpaperScene(scene: String, phase: Float) {
                     center = Offset(px, py)
                 )
             }
+        }
         }
     }
 }
