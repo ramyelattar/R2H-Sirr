@@ -173,98 +173,45 @@ internal fun SirrIntro(
     accent: Color = Color(0xFF9F4F79),
     motif: String = ""
 ) {
-    Box(
-        Modifier.fillMaxWidth()
-            .r2hGlass(accent = accent, corner = 23.dp, lift = 15.dp)
+    val art = when (motif) {
+        "couple" -> R2HGameArt.COUPLE
+        "party" -> R2HGameArt.PARTY
+        "dice" -> R2HGameArt.DICE
+        "quiz" -> R2HGameArt.QUIZ
+        "whispers" -> R2HGameArt.WHISPERS
+        "scratch" -> R2HGameArt.SECRET
+        else -> R2HGameArt.SECRET
+    }
+    Surface(
+        modifier = Modifier.fillMaxWidth()
+            .r2hGlass(accent = accent, corner = 24.dp, lift = 17.dp),
+        shape = RoundedCornerShape(24.dp), color = Color.Transparent
     ) {
-        Canvas(Modifier.matchParentSize()) {
-            val c = Offset(size.width * .18f, size.height * .43f)
-            val r = size.minDimension * .24f
-            drawCircle(accent.copy(alpha = .13f), r * 1.4f, c)
-            when(motif) {
-                "couple" -> {
-                    val heart = Path().apply {
-                        moveTo(c.x,c.y+r*.82f)
-                        cubicTo(c.x-r*1.35f,c.y+r*.02f,c.x-r*.95f,c.y-r*.94f,c.x,c.y-r*.27f)
-                        cubicTo(c.x+r*.95f,c.y-r*.94f,c.x+r*1.35f,c.y+r*.02f,c.x,c.y+r*.82f)
-                        close()
-                    }
-                    drawPath(heart, Color(0xFFFFA2C8).copy(alpha=.65f))
-                }
-                "party" -> {
-                    for(i in 0..2) {
-                        val cx=c.x+(i-1)*r*.53f
-                        drawCircle(Color(0xFFE4C0FF).copy(alpha=.82f),
-                            r*.19f, Offset(cx,c.y-r*.34f+(i%2)*r*.08f))
-                        drawRoundRect(Color(0xFF9C7CDE).copy(alpha=.71f),
-                            topLeft=Offset(cx-r*.19f,c.y), size=Size(r*.38f,r*.65f),
-                            cornerRadius=CornerRadius(r*.15f))
-                    }
-                }
-                "dice" -> {
-                    drawRoundRect(
-                        Color(0xFFE9A383).copy(alpha=.49f),
-                        topLeft=Offset(c.x-r*.68f,c.y-r*.68f),
-                        size=Size(r*1.35f,r*1.35f),
-                        cornerRadius=CornerRadius(r*.26f))
-                    for ((dx,dy) in listOf(-.32f to -.32f, .3f to .3f, -.3f to .32f)) {
-                        drawCircle(Color(0xFFFFEACA).copy(alpha=.92f),
-                            radius=r*.07f,center=Offset(c.x+r*dx,c.y+r*dy))
-                    }
-                }
-                "quiz" -> {
-                    for(i in 1..3) {
-                        drawCircle(Color(0xFFB5B3FA).copy(alpha=.57f/i),
-                            radius=r*(.4f+i*.28f),center=c,
-                            style=Stroke(width=2.dp.toPx()))
-                    }
-                    drawCircle(Color(0xFFFDDAFA),r*.085f,
-                        Offset(c.x+r*.44f,c.y-r*.35f))
-                }
-                "whispers" -> {
-                    val x=c.x-r*.88f; val y=c.y-r*.48f
-                    drawRoundRect(Color(0xFFFA9BCA).copy(alpha=.66f),
-                        Offset(x,y),Size(r*1.75f,r*1.1f),
-                        CornerRadius(r*.13f))
-                    val flap=Path().apply {
-                        moveTo(x,y)
-                        lineTo(c.x,c.y+r*.17f)
-                        lineTo(x+r*1.75f,y)
-                    }
-                    drawPath(flap,Color(0xFF32162C),style=Stroke(width=2.dp.toPx()))
-                }
-                "scratch" -> {
-                    for(i in 0..2) {
-                        val shift=i*r*.13f
-                        drawRoundRect(
-                            Color(0xFFFFD3A2).copy(alpha=.64f-(i*.16f)),
-                            Offset(c.x-r*.63f+shift,c.y-r*.77f+shift),
-                            Size(r*1.25f,r*1.48f),
-                            CornerRadius(r*.11f),
-                            style=Stroke(width=3.dp.toPx()))
-                    }
-                }
-                else -> {
-                    for(i in 1..3) {
-                        drawCircle(Color(0xFFFFD8B0).copy(alpha=.28f/i),
-                            r*(.43f+i*.22f),c,
-                            style=Stroke(width=2.dp.toPx()))
-                    }
-                }
-            }
-        }
-        Column(
-            Modifier.fillMaxWidth().padding(horizontal=19.dp, vertical=20.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp)
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 22.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(overline.uppercase(), color=Color(0xFFFFD1A6),
-                style=MaterialTheme.typography.labelMedium,
-                fontWeight=FontWeight.Bold)
-            Text(title, color=Color.White,
-                style=MaterialTheme.typography.titleLarge,
-                fontWeight=FontWeight.ExtraBold)
-            Text(description, color=Color(0xFFF1D8E7),
-                style=MaterialTheme.typography.bodyMedium)
+            Column(
+                Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                Text(
+                    overline, color = Color(0xFFFFD8B5),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    title, color = Color.White,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    description, color = Color(0xFFFFDBEA),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            R2HArtwork(art, accent, Modifier.size(91.dp))
         }
     }
 }

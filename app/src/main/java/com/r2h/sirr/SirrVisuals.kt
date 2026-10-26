@@ -179,62 +179,39 @@ internal fun SealedChallengeCard(onReveal: () -> Unit) {
         onClick = onReveal,
         color = Color.Transparent,
         shape = RoundedCornerShape(28.dp),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 238.dp)
-            .r2hGlass(accent = Amber, corner = 28.dp, selected = true, lift = 18.dp)
+        modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp)
+            .r2hGlass(accent = Amber, corner = 28.dp, selected = true, lift = 19.dp)
     ) {
-        Box(
-            Modifier.fillMaxWidth()
-                .background(
-                    Brush.linearGradient(listOf(
-                        Color(0xFF753E70).copy(alpha = .19f),
-                        Color(0xFF281627).copy(alpha = .12f),
-                        Color.Transparent))
-                ),
-            contentAlignment = Alignment.Center
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 17.dp, vertical = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Canvas(Modifier.matchParentSize()) {
-                val center = Offset(size.width * .76f, size.height * .31f)
-                val r = size.minDimension * .16f
-                for (i in 1..4) {
-                    drawCircle(Amber.copy(alpha = .27f / i), r * (.72f + i * .35f),
-                        center, style = Stroke(width = 1.4.dp.toPx()))
-                }
-                val seal = Path().apply {
-                    moveTo(center.x, center.y - r * .7f)
-                    cubicTo(center.x-r*.67f,center.y-r*.56f,
-                        center.x-r*.6f,center.y+r*.26f,
-                        center.x-r*.18f,center.y+r*.35f)
-                    lineTo(center.x-r*.30f,center.y+r*.93f)
-                    lineTo(center.x+r*.30f,center.y+r*.93f)
-                    lineTo(center.x+r*.18f,center.y+r*.35f)
-                    cubicTo(center.x+r*.6f,center.y+r*.26f,
-                        center.x+r*.67f,center.y-r*.56f,
-                        center.x,center.y-r*.7f)
-                    close()
-                }
-                drawPath(seal, Brush.verticalGradient(listOf(
-                    Amber.copy(alpha = .78f), Amber.copy(alpha = .12f))))
-                val y = size.height * .86f
-                drawLine(Amber.copy(alpha = .20f),
-                    Offset(size.width * .09f, y), Offset(size.width * .91f, y),
-                    strokeWidth = 1.dp.toPx())
-            }
             Column(
-                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 27.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.spacedBy(15.dp)
+                Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text("✦  رسالة مقفولة", color = Amber,
-                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(24.dp))
-                Text("كل سر ليه\nلحظة يتقال فيها.",
-                    color = Color.White, fontSize = 29.sp, lineHeight = 39.sp,
-                    fontWeight = FontWeight.Bold)
-                Text("اضغط على الكارت… والتحدي هيبان.",
-                    color = Pale, style = MaterialTheme.typography.bodyMedium)
-                Text("اكشف السر  ←", color = Amber,
-                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    "رسالة مقفولة", color = Amber,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "كل سر ليه\nلحظة يتقال فيها.",
+                    color = Color.White, fontSize = 24.sp, lineHeight = 33.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    "اضغط على الكارت… والتحدي هيبان.",
+                    color = Pale, style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    "اكشف السر", color = Amber,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
+            R2HArtwork(R2HGameArt.SECRET, Amber, Modifier.size(105.dp))
         }
     }
 }
