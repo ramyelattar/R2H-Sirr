@@ -1,10 +1,16 @@
-# سِرّ — R2H Sirr
+# R2H-Play — سِرّ سابقًا
 
-**M8 · Egyptian-first Android experience · Source under review**
+**M23 · Source verification in progress · NOT release-ready / NO APK built for these branches**
 
 لعبة خاصة للبالغين (+18) على Android، بلغتها واجهة مصرية عامية، بتجارب للشريكين ولمّة الصحاب، نرد، اختبارات، كشط، وهمسات. كل لعبة لازم يكون فيها اختيار واضح للمشاركة وحق التخطي والتوقف.
 
 ## الحالة الحقيقية
+
+- **M23 (الفرع الحالي):** `feature/m23-static-verification-gate` مبني على M22-C ويتضمن إصلاح فاحص الواجهات القديم وتحديث فحوص المحتوى وملف PowerShell للتحقق من المصدر فقط. **لم ينجح CI ولم تُنفذ اختبارات Gradle/Kotlin أو بناء APK.**
+- **M22-A/B/C:** تحديث الموافقة والتخطي والكشط والنرد، ثم إعادة صياغة محتوى الأسئلة والتحديات وربط نسخ Android والخادم. جميعها على فروع Draft لم تُدمج في `main`.
+- **عائق التنفيذ:** GitHub Actions أعاد `startup_failure` قبل إنشاء Jobs، وتفتقد الشجرة الحالية إلى `gradlew` و`gradlew.bat`. لا تُعتبر هذه الفحوص دليلًا على نجاح الترجمة أو التثبيت.
+- **تقارير التحقق الحالية:** `docs/M21_CONTENT_UX_QUALITY_AUDIT.md` و`docs/M22C_FINAL_CONTENT_QUALITY_REVIEW.md` و`docs/M23_SOURCE_INTEGRATION_GATE.md`.
+
 
 - **M7:** تم تجميع Debug APK على جهاز المالك يوم 24 أكتوبر 2026، وتثبيته بنجاح. الصور الفعلية كشفت ضعفًا في المظهر وتجربة اللعب، فبدأت إعادة التصميم M8.
 - **M8:** تعديل كبير للواجهات وتوليد المحتوى على فرع `feature/m8-egyptian-experience`. **لم يتم بعد تجميعه أو اختباره على هاتف.**
