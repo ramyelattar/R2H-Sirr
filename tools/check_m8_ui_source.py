@@ -22,8 +22,8 @@ manifest = (ROOT / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8
 
 assert 'readPrivate("adult-consent-v1")' in main
 assert 'writePrivate("adult-consent-v1", "accepted")' in main
-assert 'LocalVault(context.applicationContext).clear()' in main
-assert 'Text("→ رجوع"' in main
+assert 'LocalVault(appContext).clear()' in main
+assert 'Text("رجوع  ←"' in main
 assert 'else if (phase == 2 && pairing)' in quiz
 assert 'phase == 2 && pairing && !acceptedB' not in quiz, "Don't hide consent handoff before start"
 assert 'selectedIndices[revealStep]' in quiz
@@ -35,32 +35,45 @@ assert 'mark(Offset(previous.x + dx * t, previous.y + dy * t))' in scratch
 assert '.pointerInput(dimensions)' in scratch
 assert 'coverage = (coveredCells / 192f)' in scratch
 assert 'BooleanArray(192)' in scratch and 'coveredCells++' in scratch
-assert 'ChallengeRevealCard(faces.joinToString(" ") { it.text })' in dice
-assert 'MysteryDie(' in dice and 'MysteryHeader(' in dice
+assert 'ChallengeRevealCard(faces.mapIndexed' in dice and 'joinToString("\\n")' in dice
+assert 'MysteryDie(' in dice and 'internal fun MysteryHeader(' in visuals
 assert 'ChallengeRevealCard(' in visuals
-assert 'listOf("قول", "اسأل عن", "اقترح", "اختار", "احكي", "اكتب")' in logic
+assert 'private val soft = listOf(' in logic and 'Intensity.CUSTOM to soft' in logic
 
+
+# M22+: test behavioral source contracts, not the exact copy from historical M8.
+assert 'val group = secretGroups.random()' in scratch
+assert 'stages = 1\n                },' not in scratch, "Ready-made scratch must preserve 1/2/3 layers"
+assert 'val groupStart = (0 until (suggestions.size / 3)).random() * 3' in whispers
+assert 'messages[page] = ""' in whispers
+assert 'fun compareAnswered(a: List<Int>, b: List<Int>)' in source("core/QuizInsights.kt")
+assert 'answerOrSkip(-1)' in quiz and 'if (first >= 0)' in quiz and 'if (second >= 0)' in quiz
+assert 'QuizInsights.compareAnswered(answersA, answersB)' in quiz
+assert 'enabled = acceptedContent' in quiz and 'acceptedContent = false' in quiz
+assert 'enabled = roundConsent' in experience and 'checked = roundConsent' in experience
+assert 'resetStartConsents()' in experience and 'consent[i] = false' in experience
+assert 'onClick = { finishRound(false) }' in experience
 
 assert 'SealedChallengeCard(onReveal = {' in experience
 assert 'if (!isRevealed)' in experience and 'if (isRevealed)' in experience
-assert 'Text("مش دلوقتي… عَدّي")' in experience
+assert 'onClick = { finishRound(false) }' in experience
 assert 'fun toggleAudio()' in whispers
 assert 'شغّل موسيقى المفاجأة' in whispers
 assert 'effects.cue(GameCue.REVEAL)' in scratch
-assert 'Modifier.fillMaxWidth().heightIn(min = 184.dp)' in main
-assert 'محتاج سيرفر آمن خاص' in main
+assert 'FeatureRow(' in main and 'MysteryHeader(' in visuals
+assert 'محتاج سيرفر HTTPS خاص' in main
 
-assert 'DiscoveryTile(' in main and 'DiscoveryMotif.DICE' in main
+assert 'internal fun DiscoveryTile(' in artwork and 'DiscoveryMotif.DICE' in artwork
 assert 'QuizTopicTile(' in quiz and 'internal fun QuizTopicTile(' in artwork
 assert '"settings" -> GameSettingsScreen(' in main
 assert 'EffectPreferencesPanel(effects, initiallyExpanded = true)' in main
-assert 'FeatureRow("ظبّط التجربة على مزاجك"' in main
+assert 'FeatureRow("الصوت والخصوصية"' in main
 assert 'assert' not in scratch[:200], "No dummy source assertions inside Compose"
 assert 'savedPoints' in scratch and 'strokes.last().add(p)' in scratch
 assert 'strokes[strokes.lastIndex] = strokes.last() + p' not in scratch
 assert 'Brush.linearGradient' in artwork and 'drawPath' in scratch
 
-assert 'DiscoveryMotif.WHISPER' in main and 'Canvas(' in artwork
+assert 'DiscoveryMotif.WHISPER' in artwork and 'Canvas(' in artwork
 assert 'SoundPool.Builder()' in sound
 assert 'ToneGenerator' not in sound and 'ToneGenerator' not in dice
 assert 'EnterTransition.None' in experience, "Reduced motion must disable reveal transition"
@@ -106,4 +119,4 @@ assert 'fun writeReply(' in session and 'vault.writePrivate(name,json.toString()
 assert 'pendingActions' in remote and 'forceRetry=true' in remote
 assert 'expectedDigest=fingerprint(' in transfer and 'actual!=expectedDigest' in transfer
 assert 'val content=ByteArray(total);var copied=0' not in transfer
-print("M9 UI/source regression guards PASS (static checks only, NOT Android build)")
+print("M23 UI/source regression guards PASS (static checks only, NOT Android build)")
