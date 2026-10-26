@@ -37,28 +37,12 @@ internal fun SirrAction(
     explanation: String? = null
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(7.dp)) {
-        Button(
+        R2HNeonAction(
+            text = text,
             onClick = onClick,
-            enabled = enabled,
-            shape = RoundedCornerShape(18.dp),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                .r2hGlass(
-                    accent = if (enabled) Color(0xFFFF9AD5) else Color(0xFF81657F),
-                    corner = 18.dp,
-                    selected = enabled,
-                    lift = 9.dp
-                ),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.White,
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = Color(0xFFDBC3D3)
-            ),
-            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp)
-        ) {
-            Text(text, fontSize = 17.sp, lineHeight = 24.sp,
-                fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        }
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled
+        )
         if (!explanation.isNullOrBlank()) {
             Text(explanation, color = M10Faint,
                 style = MaterialTheme.typography.bodySmall,
