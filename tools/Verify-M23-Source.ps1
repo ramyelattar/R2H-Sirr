@@ -12,7 +12,7 @@ function Invoke-Checked([string]$Description, [string]$Command, [string[]]$Argum
 
 $python = (Get-Command python -ErrorAction SilentlyContinue)
 if (-not $python) { throw 'Python 3.10+ is required on PATH for source-only verification.' }
-Invoke-Checked 'Canonical Kotlin and backend content sync' $python.Source @('tools/generate_content_v2.py', '--check')
-Invoke-Checked 'Arabic content uniqueness and schema' $python.Source @('tools/check_m22c_content_quality.py')
-Invoke-Checked 'Android UX and privacy source contracts' $python.Source @('tools/check_m8_ui_source.py')
+Invoke-Checked -Description 'Canonical Kotlin and backend content sync' -Command $python.Source -Arguments @('tools/generate_content_v2.py', '--check')
+Invoke-Checked -Description 'Arabic content uniqueness and schema' -Command $python.Source -Arguments @('tools/check_m22c_content_quality.py')
+Invoke-Checked -Description 'Android UX and privacy source contracts' -Command $python.Source -Arguments @('tools/check_m8_ui_source.py')
 Write-Host 'M23 SOURCE-ONLY CHECKS PASS. No Gradle/Kotlin compilation, JVM tests or APK build was run.' -ForegroundColor Green
