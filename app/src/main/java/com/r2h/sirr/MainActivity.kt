@@ -283,7 +283,12 @@ private fun AdultGate(onConfirm: () -> Boolean) {
             Spacer(Modifier.height(16.dp))
             Text("لعبة خفيفة، لحظات مختلفة، وكل حاجة بموافقتكم.", color = Muted, style = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.height(28.dp))
-            Surface(shape = SoftCorner, color = Color(0xFF241823), border = BorderStroke(1.dp, Color(0xFF563643))) {
+            Surface(
+                shape = SoftCorner, color = Color.Transparent,
+                modifier = Modifier.fillMaxWidth().r2hGlass(
+                    accent = Color(0xFFFFB1D8), corner = 24.dp, lift = 13.dp
+                )
+            ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = ageVerified, onCheckedChange = { ageVerified = it })
@@ -344,8 +349,7 @@ private fun SmallMode(
     onClick: () -> Unit
 ) {
     Box(
-        modifier.clip(SoftCorner)
-            .background(Brush.linearGradient(listOf(tint, Color(0xFF20151F))))
+        modifier.r2hGlass(accent = tint, corner = 24.dp, lift = 10.dp)
             .clickable(onClick = onClick)
             .heightIn(min = 144.dp)
     ) {
@@ -364,9 +368,9 @@ private fun FeatureRow(title: String, detail: String, glyph: String, onClick: ()
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
-        color = SurfaceShade,
-        border = BorderStroke(1.dp, Color(0xFF392632)),
+        color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
+            .r2hGlass(accent = Color(0xFFEAB1D3), corner = 20.dp, lift = 9.dp)
     ) {
         Row(
             Modifier.padding(horizontal = 17.dp, vertical = 17.dp),
@@ -374,7 +378,9 @@ private fun FeatureRow(title: String, detail: String, glyph: String, onClick: ()
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Box(
-                Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFF3E2434)),
+                Modifier.size(46.dp).r2hGlass(
+                    accent = Color(0xFFFFABD1), corner = 14.dp, lift = 3.dp
+                ),
                 contentAlignment = Alignment.Center
             ) { Text(glyph, color = Gold, fontSize = 22.sp) }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -398,15 +404,16 @@ private fun R2HModeCard(
 ) {
     Surface(
         onClick = onClick,
-        color = Color(0xF51C1422),
+        color = Color.Transparent,
         shape = RoundedCornerShape(22.dp),
-        border = BorderStroke(1.dp, tint.copy(alpha = .70f)),
         modifier = modifier.heightIn(min = 124.dp)
+            .r2hGlass(accent = tint, corner = 22.dp, lift = 13.dp)
     ) {
         Box(
             Modifier.fillMaxWidth().background(
                 Brush.linearGradient(listOf(
-                    tint.copy(alpha = .22f), Color(0xF91E1426), Color(0xFF100B19))))
+                    tint.copy(alpha = .14f), Color.Transparent,
+                    Color(0xFF100B19).copy(alpha = .12f))))
         ) {
             Canvas(Modifier.matchParentSize()) {
                 val c = Offset(size.width * .20f, size.height * .25f)
@@ -452,10 +459,10 @@ private fun HomeScreen(onGo: (String) -> Unit) {
             color = Muted, style = MaterialTheme.typography.bodyMedium)
         Box(
             Modifier.fillMaxWidth().heightIn(min = 173.dp)
-                .clip(RoundedCornerShape(26.dp))
-                .background(Brush.linearGradient(listOf(
-                    Color(0xFF61204B), Color(0xFF2D1838), Color(0xFF100C1D))))
-                .border(1.5.dp, Color(0xFFC76EAA), RoundedCornerShape(26.dp))
+                .r2hGlass(
+                    accent = Color(0xFFFF79C4), corner = 26.dp,
+                    selected = true, lift = 18.dp
+                )
         ) {
             Canvas(Modifier.matchParentSize()) {
                 val focus = Offset(size.width * .17f, size.height * .49f)
