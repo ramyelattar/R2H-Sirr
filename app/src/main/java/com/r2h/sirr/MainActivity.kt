@@ -353,7 +353,7 @@ private fun HomeScreen(onGo: (String) -> Unit) {
                 color = Color.White, fontWeight = FontWeight.ExtraBold)
 
         }
-        Text("ست ألعاب مختلفة. الليلة كلها على مزاجكم.",
+        Text("ست ألعاب مختلفة، وكل جولة على مزاجكم.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
         R2HFeaturedHomeCard(onClick = { onGo("couple") })
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
@@ -372,13 +372,13 @@ private fun HomeScreen(onGo: (String) -> Unit) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             R2HModeCard("النرد", "الصدفة تختار", R2HGameArt.DICE,
                 Color(0xFFFFAF86), Modifier.weight(1f)) { onGo("dice") }
-            R2HModeCard("الاختبارات", "25 سؤال وحكاية", R2HGameArt.QUIZ,
+            R2HModeCard("الاختبارات", "7 أبواب من الأسئلة", R2HGameArt.QUIZ,
                 Color(0xFFC4A7FD), Modifier.weight(1f)) { onGo("quiz") }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             R2HModeCard("الهمسات", "رسالة مش بتتكرر", R2HGameArt.WHISPERS,
                 Color(0xFFFF9CC3), Modifier.weight(1f)) { onGo("whispers") }
-            R2HModeCard("اكشف السر", "اكشط وافتح", R2HGameArt.SECRET,
+            R2HModeCard("اكشف السر", "اكشط الكارت واكتشف", R2HGameArt.SECRET,
                 Color(0xFFE9C08C), Modifier.weight(1f)) { onGo("scratch") }
         }
         HorizontalDivider(color = Color(0xFF634560))

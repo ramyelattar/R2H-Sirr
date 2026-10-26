@@ -62,7 +62,7 @@ internal fun DiceScreenV2() {
         rolling = false
         effects.cue(GameCue.REVEAL)
     }
-    Page("سيبها على النرد", "3 نردات هتقرروا تعملوا إيه… خليك جاهز.") {
+    Page("سيبها للنرد", "التلات نردات هتختار تحدي مختلف… خليك جاهز.") {
         SirrIntro(
             "3 نردات · اختيار واحد",
             "الحظ ليه كلمة… والباقي عليكم.",
@@ -128,7 +128,7 @@ internal fun DiceScreenV2() {
                 faces.forEachIndexed { index, face ->
                     val bitmap = remember(face.imageId) { vault.readPhoto(face.imageId) }
                     if (bitmap != null) {
-                        Text("الصورة اللي طلعت في النرد ${index + 1}",
+                        Text("الصورة المختارة للنرد ${index + 1}",
                             color = MaterialTheme.colorScheme.primary)
                         Image(
                             bitmap,
