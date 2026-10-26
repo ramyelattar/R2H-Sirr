@@ -1,14 +1,14 @@
-name: M8 Source Tests
+name: R2H Play Source Verification
 on:
   push:
-    branches: [feature/m8-egyptian-experience, feature/m9-stabilization]
+    branches: [feature/m8-egyptian-experience, feature/m9-stabilization, 'feature/m23-*']
   pull_request:
     paths:
       - 'backend/**'
       - 'app/src/main/java/com/r2h/sirr/**'
-      - 'tools/check_m8_ui_source.py'
+      - 'tools/**'
       - 'content/**'
-      - 'tools/generate_content_v2.py'
+      - 'app/src/test/**'
       - 'app/src/main/java/com/r2h/sirr/core/**'
       - '.github/workflows/m8-source-tests.yml'
 permissions:
@@ -26,6 +26,8 @@ jobs:
         run: python tools/generate_content_v2.py --check
       - name: Verify critical Android UX source regressions
         run: python tools/check_m8_ui_source.py
+      - name: Verify v4 content quality gates
+        run: python tools/check_m22c_content_quality.py
   backend-protocol:
     name: Node protocol and gameplay tests
     runs-on: ubuntu-latest
