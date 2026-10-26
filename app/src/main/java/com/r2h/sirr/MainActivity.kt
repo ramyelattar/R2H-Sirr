@@ -169,11 +169,11 @@ private fun SirrApp() {
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                     // Header typography is baked into the image. Its entire top band is
                     // rendered below the system inset; reserve a proportional safe band.
-                    val safeHeader = (LocalConfiguration.current.screenHeightDp.dp * .155f)
-                        .coerceIn(96.dp, 152.dp)
+                    val safeHeader = (LocalConfiguration.current.screenHeightDp.dp * .128f)
+                        .coerceIn(94.dp, 126.dp)
                     Spacer(Modifier.height(safeHeader))
                     Row(
-                        Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 8.dp, bottom = 4.dp),
+                        Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 3.dp, bottom = 2.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -340,95 +340,13 @@ internal fun Page(title: String, subtitle: String, content: @Composable ColumnSc
 }
 
 @Composable
-private fun FeatureRow(
-    title: String,
-    detail: String,
-    art: R2HGameArt,
-    tint: Color,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(22.dp),
-        color = Color.Transparent,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 92.dp)
-            .r2hGlass(accent = tint, corner = 22.dp, lift = 12.dp)
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(13.dp)
-        ) {
-            R2HArtwork(art, tint, Modifier.size(61.dp))
-            Column(
-                Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                Text(title, color = Color.White, fontSize = 18.sp,
-                    lineHeight = 24.sp, fontWeight = FontWeight.Bold)
-                Text(detail, color = Color(0xFFFFDEEF),
-                    fontSize = 13.sp, lineHeight = 19.sp)
-            }
-            R2HCardChevron(Modifier.size(22.dp))
-        }
-    }
-}
-
-/** Each game has its own engraved illustration and a distinct floating panel. */
-@Composable
-private fun R2HModeCard(
-    title: String,
-    description: String,
-    art: R2HGameArt,
-    tint: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        color = Color.Transparent,
-        shape = RoundedCornerShape(24.dp),
-        modifier = modifier.heightIn(min = 182.dp)
-            .r2hGlass(accent = tint, corner = 24.dp, lift = 16.dp)
-    ) {
-        Column(
-            Modifier.fillMaxWidth().padding(start = 15.dp, end = 14.dp, top = 9.dp, bottom = 15.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Row(
-                Modifier.fillMaxWidth().height(91.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                R2HArtwork(art, tint, Modifier.size(90.dp))
-                Box(
-                    Modifier.padding(top = 11.dp).size(27.dp)
-                        .r2hGlass(accent = tint, corner = 9.dp, lift = 3.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    R2HCardChevron(Modifier.size(16.dp))
-                }
-            }
-            Spacer(Modifier.height(3.dp))
-            Text(
-                title, color = Color.White, fontSize = 18.sp, lineHeight = 25.sp,
-                fontWeight = FontWeight.ExtraBold, maxLines = 1
-            )
-            Text(
-                description, color = Color(0xFFFFDFEE),
-                fontSize = 13.sp, lineHeight = 19.sp, maxLines = 2
-            )
-        }
-    }
-}
-
-@Composable
 private fun HomeScreen(onGo: (String) -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 19.dp),
-        verticalArrangement = Arrangement.spacedBy(13.dp)
+        verticalArrangement = Arrangement.spacedBy(11.dp)
     ) {
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(2.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             Text("اختاروا اللحظة.", fontSize = 31.sp, lineHeight = 39.sp,
@@ -437,55 +355,7 @@ private fun HomeScreen(onGo: (String) -> Unit) {
         }
         Text("ست ألعاب مختلفة. الليلة كلها على مزاجكم.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
-        // A fixed text column and a separate hero illustration; never overlap.
-        Surface(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 204.dp)
-                .r2hGlass(
-                    accent = Color(0xFFFF93CB), corner = 29.dp,
-                    selected = true, lift = 22.dp
-                ),
-            color = Color.Transparent,
-            shape = RoundedCornerShape(29.dp)
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 19.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Column(
-                    Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        "اللعبة الأساسية", color = Color(0xFFFFD3AA),
-                        fontSize = 13.sp, lineHeight = 19.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "مين هيكشف\nالسر الأول؟", color = Color.White,
-                        fontSize = 22.sp, lineHeight = 29.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Spacer(Modifier.height(3.dp))
-                    Button(
-                        onClick = { onGo("couple") },
-                        shape = RoundedCornerShape(14.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFB8D9),
-                            contentColor = Color(0xFF260E26)
-                        ),
-                        modifier = Modifier.heightIn(min = 44.dp)
-                    ) {
-                        Text("ابدأوا اللعبة", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-                R2HArtwork(
-                    R2HGameArt.SECRET, Color(0xFFFFC5A1),
-                    Modifier.size(108.dp)
-                )
-            }
-        }
+        R2HFeaturedHomeCard(onClick = { onGo("couple") })
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             Text("كل الألعاب", color = Color.White,
