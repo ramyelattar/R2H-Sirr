@@ -116,11 +116,16 @@ internal fun DiceScreenV2() {
             val faces = rolledFaces ?: outcome.mapIndexed { i, faceIndex -> dice[i][faceIndex] }
             SirrSection("02", "دي الرمية اللي طلعت", "كل نرد اختار جزء مستقل من الحكاية")
             val parts = listOf("الفعل", "الفكرة", "الطريقة")
-            ChallengeRevealCard(faces.mapIndexed { index, face ->
-                "${parts[index]}: ${face.text}"
-            }.joinToString("\n"))
+            ChallengeRevealCard(
+                if (selected == Intensity.CUSTOM) {
+                    faces.mapIndexed { index, face -> "${parts[index]}: ${face.text}" }
+                        .joinToString("\n")
+                } else {
+                    DiceCatalog.sentence(faces)
+                }
+            )
             Text(
-                "لو الأجزاء مش راكبة على بعض أو مش مناسبة ليكم، ارموا النرد تاني. مفيش حاجة إجبارية.",
+                "لو النتيجة مش مناسبة ليكم، ارْموا تاني أو اختاروا مود أهدى. مفيش أي حاجة إجبارية.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
