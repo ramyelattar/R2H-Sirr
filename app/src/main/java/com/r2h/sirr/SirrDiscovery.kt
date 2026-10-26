@@ -32,107 +32,64 @@ internal fun DiscoveryTile(
     motif: DiscoveryMotif, modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val accent = when(motif) {
+    val accent = when (motif) {
         DiscoveryMotif.DICE -> Color(0xFFEBC296)
         DiscoveryMotif.QUIZ -> Color(0xFFDDABCB)
         DiscoveryMotif.SCRATCH -> Color(0xFFE0C2A1)
         DiscoveryMotif.WHISPER -> Color(0xFFF1A5B6)
     }
-    val base = when(motif) {
-        DiscoveryMotif.DICE -> Color(0xFF412836)
-        DiscoveryMotif.QUIZ -> Color(0xFF322741)
-        DiscoveryMotif.SCRATCH -> Color(0xFF3B2831)
-        DiscoveryMotif.WHISPER -> Color(0xFF452335)
+    val icon = when (motif) {
+        DiscoveryMotif.DICE -> R2HGameArt.DICE
+        DiscoveryMotif.QUIZ -> R2HGameArt.QUIZ
+        DiscoveryMotif.SCRATCH -> R2HGameArt.SECRET
+        DiscoveryMotif.WHISPER -> R2HGameArt.WHISPERS
     }
     Surface(
         onClick = onClick,
         modifier = modifier
-            .r2hGlass(accent = accent, corner = 26.dp, lift = 13.dp)
-            .semantics { contentDescription = "$title. $subtitle" },
+            .r2hGlass(accent = accent, corner = 26.dp, lift = 14.dp)
+            .semantics { contentDescription = title + ". " + subtitle },
         shape = RoundedCornerShape(26.dp),
         color = Color.Transparent
     ) {
-        Box(Modifier.fillMaxWidth().heightIn(min=171.dp)) {
+        Box(Modifier.fillMaxWidth().heightIn(min = 192.dp)) {
             Canvas(Modifier.matchParentSize()) {
-                val cx=size.width*.74f
-                val cy=size.height*.27f
-                val r=min(size.width,size.height)*.26f
-                drawCircle(accent.copy(alpha=.06f),r*1.7f,Offset(cx,cy))
-                drawCircle(accent.copy(alpha=.13f),r*1.12f,Offset(cx,cy),
-                    style=Stroke(width=1.2.dp.toPx()))
-                when(motif){
-                    DiscoveryMotif.DICE -> {
-                        val p=Path().apply {
-                            moveTo(cx-r*.75f,cy-r*.45f)
-                            lineTo(cx+r*.42f,cy-r*.60f)
-                            lineTo(cx+r*.83f,cy-r*.05f)
-                            lineTo(cx+r*.60f,cy+r*.82f)
-                            lineTo(cx-r*.55f,cy+r*.61f)
-                            close()
-                        }
-                        drawPath(p, Brush.linearGradient(listOf(accent.copy(alpha=.39f),Color(0xFF5F354A))))
-                        listOf(-.27f to -.18f,.12f to .0f,.17f to .43f).forEach{(x,y)->
-                            drawCircle(Color(0xFFFFE7C8),3.0.dp.toPx(),Offset(cx+r*x,cy+r*y))
-                        }
-                    }
-                    DiscoveryMotif.QUIZ -> {
-                        for(i in 0..2) {
-                            drawCircle(accent.copy(alpha=.30f-i*.05f),r*(.72f+i*.30f),
-                                Offset(cx,cy),style=Stroke(width=1.8.dp.toPx()))
-                        }
-                        drawCircle(accent.copy(alpha=.75f),4.5.dp.toPx(),
-                            Offset(cx+r*.38f,cy-r*.39f))
-                        drawCircle(accent.copy(alpha=.75f),3.2.dp.toPx(),
-                            Offset(cx-r*.50f,cy+r*.25f))
-                    }
-                    DiscoveryMotif.SCRATCH -> {
-                        val top=cy-r*.77f
-                        val left=cx-r*.93f
-                        drawRoundRect(accent.copy(alpha=.18f),
-                            topLeft=Offset(left,top),
-                            size=androidx.compose.ui.geometry.Size(r*1.75f,r*1.39f),
-                            cornerRadius=CornerRadius(14.dp.toPx()))
-                        for(i in 0..6) {
-                            val y=top+r*(.18f+i*.16f)
-                            drawLine(accent.copy(alpha=.54f-(i%2)*.18f),
-                                Offset(left+r*.18f,y),
-                                Offset(left+r*(1.30f+(i%3)*.11f),y-r*.07f),
-                                strokeWidth=2.3.dp.toPx())
-                        }
-                    }
-                    DiscoveryMotif.WHISPER -> {
-                        val p=Path().apply {
-                            moveTo(cx-r*.90f,cy-r*.47f)
-                            lineTo(cx+r*.85f,cy-r*.47f)
-                            lineTo(cx+r*.85f,cy+r*.55f)
-                            lineTo(cx-r*.90f,cy+r*.55f)
-                            close()
-                        }
-                        drawPath(p,accent.copy(alpha=.27f))
-                        drawLine(accent,Offset(cx-r*.90f,cy-r*.47f),
-                            Offset(cx-r*.06f,cy+r*.17f),1.5.dp.toPx())
-                        drawLine(accent,Offset(cx+r*.85f,cy-r*.47f),
-                            Offset(cx-r*.06f,cy+r*.17f),1.5.dp.toPx())
-                        drawCircle(accent.copy(alpha=.87f),4.dp.toPx(),Offset(cx+r*.68f,cy-r*.68f))
-                    }
-                }
+                // Engraved side light is decorative only: no text ever overlaps art.
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(accent.copy(alpha = .18f), Color.Transparent),
+                        center = Offset(size.width * .23f, size.height * .30f),
+                        radius = size.minDimension * .46f
+                    ),
+                    radius = size.minDimension * .46f,
+                    center = Offset(size.width * .23f, size.height * .30f)
+                )
             }
             Column(
-                Modifier.fillMaxWidth().heightIn(min=171.dp).padding(18.dp),
-                verticalArrangement=Arrangement.Bottom
-            ){
-                Text(title,color=Color.White,style=MaterialTheme.typography.titleMedium,
-                    fontWeight=FontWeight.Bold,maxLines=2)
-                Spacer(Modifier.height(3.dp))
-                Text(subtitle,color=Color(0xFFE5CED6),style=MaterialTheme.typography.bodySmall,
-                    maxLines=2)
-                Spacer(Modifier.height(10.dp))
-                Text("العب دلوقتي  ←",color=accent,fontSize=15.sp,fontWeight=FontWeight.Bold)
+                Modifier.fillMaxWidth().padding(17.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().height(97.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    R2HArtwork(icon, accent, Modifier.size(93.dp))
+                    R2HCardChevron(Modifier.padding(top = 9.dp).size(19.dp))
+                }
+                Text(
+                    title, color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, maxLines = 2
+                )
+                Text(
+                    subtitle, color = Color(0xFFFFE0EE),
+                    style = MaterialTheme.typography.bodySmall, maxLines = 2
+                )
             }
         }
     }
 }
-
 
 /** Seven non-identical illustrated doors into the Egyptian quiz chapters. */
 @Composable
@@ -147,48 +104,45 @@ internal fun QuizTopicTile(
         Color(0xFFE3B7CD), Color(0xFFE5D7A5), Color(0xFFB9D6C9),
         Color(0xFFECC5A2)
     )
-    val accent = hues[(number - 1).coerceIn(0, hues.lastIndex)]
-    val chapterBg = listOf(
-        Color(0xFF32202A), Color(0xFF372231), Color(0xFF2B2541),
-        Color(0xFF352135), Color(0xFF393020), Color(0xFF223D38),
-        Color(0xFF3D2726)
-    )[(number - 1).coerceIn(0, 6)]
+    val icons = listOf(
+        R2HGameArt.QUIZ, R2HGameArt.COUPLE, R2HGameArt.PARTY,
+        R2HGameArt.WHISPERS, R2HGameArt.SECRET, R2HGameArt.ROOM,
+        R2HGameArt.DICE
+    )
+    val index = (number - 1).coerceIn(0, 6)
+    val accent = hues[index]
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
-            .r2hGlass(accent = accent, corner = 20.dp, lift = 11.dp)
-            .semantics { contentDescription = "الموضوع $number: $title. $subtitle" },
+            .r2hGlass(accent = accent, corner = 22.dp, lift = 13.dp)
+            .semantics {
+                contentDescription = "الموضوع " + number + ": " + title + ". " + subtitle
+            },
         color = Color.Transparent,
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(22.dp)
     ) {
-        Box(Modifier.fillMaxWidth().heightIn(min=98.dp)) {
-            Canvas(Modifier.matchParentSize()) {
-                val center = Offset(size.width*.13f,size.height*.40f)
-                val base = size.minDimension*.17f
-                drawCircle(accent.copy(alpha=.08f),base*2.5f,center)
-                for (i in 1..3) {
-                    drawCircle(accent.copy(alpha=.46f / i),base*(.65f+.44f*i),center,
-                        style=Stroke(width=1.8.dp.toPx()))
-                }
-                val end = Offset(size.width*.92f,size.height*.77f)
-                drawCircle(accent.copy(alpha=.38f),2.5.dp.toPx(),end)
-            }
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=14.dp),
-                verticalAlignment=Alignment.CenterVertically,
-                horizontalArrangement=Arrangement.spacedBy(16.dp)
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 99.dp)
+                .padding(horizontal = 13.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(13.dp)
+        ) {
+            R2HArtwork(icons[index], accent, Modifier.size(67.dp))
+            Column(
+                Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Box(Modifier.size(52.dp),contentAlignment=Alignment.Center){
-                    Text(number.toString().padStart(2,'0'), color=accent,
-                        fontSize=25.sp, fontWeight=FontWeight.Bold)
-                }
-                Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)){
-                    Text(title,color=Color.White,style=MaterialTheme.typography.titleMedium,
-                        fontWeight=FontWeight.Bold)
-                    Text(subtitle,color=Color(0xFFD8C3CD),style=MaterialTheme.typography.bodySmall)
-                }
-                Text("‹",color=accent,fontSize=25.sp)
+                Text(
+                    number.toString().padStart(2, '0'),
+                    color = accent, fontSize = 12.sp, fontWeight = FontWeight.Bold
+                )
+                Text(title, color = Color.White, style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold)
+                Text(
+                    subtitle, color = Color(0xFFFFDBEB),
+                    style = MaterialTheme.typography.bodySmall, maxLines = 2
+                )
             }
+            R2HCardChevron(Modifier.size(20.dp), accent)
         }
     }
 }
