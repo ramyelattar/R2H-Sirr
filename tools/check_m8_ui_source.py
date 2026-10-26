@@ -63,7 +63,7 @@ assert 'effects.cue(GameCue.REVEAL)' in scratch
 assert 'FeatureRow(' in main and 'MysteryHeader(' in visuals
 assert 'محتاج سيرفر HTTPS خاص' in main
 
-assert 'DiscoveryTile(' in main and 'DiscoveryMotif.DICE' in main
+assert 'internal fun DiscoveryTile(' in artwork and 'DiscoveryMotif.DICE' in artwork
 assert 'QuizTopicTile(' in quiz and 'internal fun QuizTopicTile(' in artwork
 assert '"settings" -> GameSettingsScreen(' in main
 assert 'EffectPreferencesPanel(effects, initiallyExpanded = true)' in main
@@ -73,7 +73,7 @@ assert 'savedPoints' in scratch and 'strokes.last().add(p)' in scratch
 assert 'strokes[strokes.lastIndex] = strokes.last() + p' not in scratch
 assert 'Brush.linearGradient' in artwork and 'drawPath' in scratch
 
-assert 'DiscoveryMotif.WHISPER' in main and 'Canvas(' in artwork
+assert 'DiscoveryMotif.WHISPER' in artwork and 'Canvas(' in artwork
 assert 'SoundPool.Builder()' in sound
 assert 'ToneGenerator' not in sound and 'ToneGenerator' not in dice
 assert 'EnterTransition.None' in experience, "Reduced motion must disable reveal transition"
