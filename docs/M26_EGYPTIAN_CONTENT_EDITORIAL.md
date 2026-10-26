@@ -8,7 +8,7 @@ Working branch: feature/m26-egyptian-content-editorial
    - Couple SOFT: 26, NORMAL: 26, SEXY: 10, and 5 targeted HOT/HARD fixes
    - Group SOFT, NORMAL, SEXY: 60; group HOT/HARD: 2 corrections
    - Replaced unfinished commands, misleading role-specific actions, repetitive phrases and illogical statements with coherent Egyptian colloquial challenges. Group prompts no longer assume all participants are a couple.
-2. `content/quizzes_ar_v4.json`: **81 of 175** questions and their 3 answers (243 choices) rewritten across six packs. The seventh `راحة وحدود` pack was already coherent and remains unchanged. Questions now have choices that actually answer them; eliminated placeholders and vague/non-answers.
+2. `content/quizzes_ar_v4.json`: **81 of 175** questions and their 3 answers (243 choices) rewritten across six packs. The sixth `راحة وحدود` pack was already coherent and remains unchanged. Questions now have choices that actually answer them; eliminated placeholders and vague/non-answers.
 3. `core/ExperienceLogic.kt` and `DiceScreen.kt`: 5 dice preset banks aligned into action + topic + manner, each with 6 faces (5×216 = 1080 possible natural preset sentences). Preset rolls now show one full instruction. Custom dice and images still show their original independently labeled faces.
 4. `ScratchScreenV2.kt`: 20 fresh, linked, escalating triplets (60 secrets) with clear language, without changing 1/2/3 layers, scratch engine, TTL, encrypted user photos or close/clear behavior.
 5. `WhispersScreen.kt`: 20 linked triplets (60 whispered messages), progressing premise → confession → optional invitation; preserved one-use deletion, audio/photo, TTL and no-persist behavior.
