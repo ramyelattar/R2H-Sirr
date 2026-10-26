@@ -166,14 +166,16 @@ private fun SirrApp() {
                             .isSuccess
                     })
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+                    // Reserve the illustrated +18 / R2H / Play All The Day masthead.
+                    Spacer(Modifier.height(92.dp))
                     Row(
                         Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 8.dp, bottom = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (route == "home") {
-                            Text("R2H-Play", style = MaterialTheme.typography.titleLarge,
-                                color = Gold, fontWeight = FontWeight.ExtraBold)
+                            // Brand wordmark is part of the full-bleed wallpaper.
+                            Spacer(Modifier.width(24.dp))
                         } else {
                             TextButton(onClick = { navigateHome() }) {
                                 Text("رجوع  ←", color = Gold, style = MaterialTheme.typography.bodyMedium)

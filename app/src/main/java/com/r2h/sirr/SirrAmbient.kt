@@ -33,116 +33,115 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** Each scene has its own palette, particle orbit and atmospheric light, not a static wallpaper. */
+/** Keep one premium wallpaper and a restrained atmosphere across every screen.
+ * The wallpaper is an on-device resource, never fetched from the network.
+ * If the image hasn't been installed yet, the existing dark fallback remains.
+ */
 private fun sceneHue(scene: String): Color = when (scene) {
-    "splash", "gate" -> Color(0xFFD4498F)
-    "home" -> Color(0xFFBD3D78)
-    "couple" -> Color(0xFFC34B8E)
-    "party" -> Color(0xFF8A65CA)
-    "dice" -> Color(0xFFE36E7F)
-    "quiz" -> Color(0xFF897CD7)
-    "scratch" -> Color(0xFFCF8C61)
-    "whispers" -> Color(0xFFCA629C)
-    "remote" -> Color(0xFF7283C0)
-    "settings", "privacy" -> Color(0xFF9D729F)
-    else -> Color(0xFFAE5787)
+    "splash", "gate", "home" -> Color(0xFFFF74BC)
+    "couple", "whispers" -> Color(0xFFFF77BC)
+    "party", "quiz" -> Color(0xFFB990F5)
+    "dice", "scratch" -> Color(0xFFF2AEAD)
+    else -> Color(0xFFD78EC9)
 }
 
-/** Respects Android's global animation scale and the app's own animation preference. */
 @Composable
 internal fun SirrAmbientBackground(scene: String, allowMotion: Boolean) {
     val context = LocalContext.current
-    val animationsAllowed = remember(allowMotion) {
+    val animationsAllowed = remember(context, allowMotion) {
         allowMotion && runCatching {
-            Settings.Global.getFloat(context.contentResolver,
-                Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+            Settings.Global.getFloat(
+                context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+            ) > 0f
         }.getOrDefault(true)
     }
+    // One continuous phase for all routes: navigation won't restart the effect.
     if (animationsAllowed) {
-        val movement = rememberInfiniteTransition(label = "sirr-atmosphere")
-        val phase by movement.animateFloat(
+        val transition = rememberInfiniteTransition(label = "r2h-wallpaper-glow")
+        val phase by transition.animateFloat(
             initialValue = 0f, targetValue = 1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(32000, easing = LinearEasing)),
-            label = "sirr-orbit"
+                animation = tween(36000, easing = LinearEasing)
+            ),
+            label = "r2h-slow-glow"
         )
-        SirrAmbientCanvas(scene, phase)
+        R2HWallpaperScene(scene, phase)
     } else {
-        SirrAmbientCanvas(scene, 0.27f)
+        R2HWallpaperScene(scene, .25f)
     }
 }
 
 @Composable
-private fun SirrAmbientCanvas(scene: String, phase: Float) {
-    val accent = sceneHue(scene)
-    Canvas(Modifier.fillMaxSize()) {
-        drawRect(Brush.verticalGradient(listOf(
-            Color(0xFF100A17), Color(0xFF08070C), Color(0xFF0C0810))))
-        val width = size.width
-        val height = size.height
-        val unit = size.minDimension
-        val theta = phase * 2f * PI.toFloat()
-        val a = Offset(width * (.77f + sin(theta) * .14f),
-            height * (.22f + cos(theta * .62f) * .11f))
-        val b = Offset(width * (.19f + cos(theta * .67f) * .13f),
-            height * (.73f + sin(theta) * .10f))
-        drawCircle(
-            Brush.radialGradient(
-                listOf(accent.copy(alpha = .09f), accent.copy(alpha = .035f),
-                    Color.Transparent),
-                center = a, radius = unit * 1.05f),
-            radius = unit * 1.05f, center = a
+private fun R2HWallpaperScene(scene: String, phase: Float) {
+    val context = LocalContext.current
+    // A dynamic lookup lets Android compile before the user's wallpaper is copied in.
+    // Once drawable-nodpi/r2h_neon_wallpaper.webp exists, it is used automatically.
+    val wallpaperId = remember(context) {
+        context.resources.getIdentifier(
+            "r2h_neon_wallpaper", "drawable", context.packageName
         )
-        drawCircle(
-            Brush.radialGradient(
-                listOf(Color(0xFF7051AA).copy(alpha = .066f),
-                    Color(0xFF452441).copy(alpha = .045f), Color.Transparent),
-                center = b, radius = unit * .92f),
-            radius = unit * .92f, center = b
-        )
-        // Soft, slow smoke ribbons. Drawn into the scene, never obscuring controls.
-        val lift = sin(theta * .66f) * height * .055f
-        val ribbon = Path().apply {
-            moveTo(-width * .24f, height * .28f + lift)
-            cubicTo(width * .22f, height * .16f + lift,
-                width * .34f, height * .56f + lift,
-                width * .78f, height * .36f + lift)
-            cubicTo(width * .99f, height * .26f + lift,
-                width * 1.14f, height * .28f + lift,
-                width * 1.20f, height * .35f + lift)
-            lineTo(width * 1.20f, height * .44f + lift)
-            cubicTo(width * .85f, height * .33f + lift,
-                width * .41f, height * .69f + lift,
-                -width * .24f, height * .40f + lift)
-            close()
-        }
-        drawPath(ribbon, Brush.linearGradient(listOf(
-            Color.Transparent, accent.copy(alpha = .052f),
-            Color(0xFFB067D4).copy(alpha = .050f), Color.Transparent)))
-        for (i in 0 until 23) {
-            val x = ((i * 73 + 11) % 101) / 101f
-            val y = ((i * 47 + 29) % 97) / 97f
-            val drift = (phase * (if (i % 2 == 0) .17f else -.11f))
-            val px = ((x + drift + 1f) % 1f) * width
-            val py = (y + sin(theta + i * .67f) * .018f) * height
-            val dot = if (i % 5 == 0) 2.1.dp.toPx() else 1.1.dp.toPx()
-            drawCircle(
-                Color(0xFFFFC8E5).copy(alpha = .13f + .11f *
-                    ((sin(theta + i * .42f) + 1f) / 2f)),
-                radius = dot, center = Offset(px, py)
+    }
+    Box(Modifier.fillMaxSize()) {
+        if (wallpaperId != 0) {
+            Image(
+                painter = painterResource(wallpaperId),
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
             )
+        } else {
+            Canvas(Modifier.fillMaxSize()) {
+                drawRect(Brush.verticalGradient(listOf(
+                    Color(0xFF210B24), Color(0xFF0B0612), Color(0xFF210A22)
+                )))
+            }
         }
-        val center = Offset(width * .83f, height * .40f)
-        val orbit = unit * .48f
-        for (i in 1..3) {
-            drawCircle(accent.copy(alpha = .040f / i),
-                radius = orbit * (i * .83f),
-                center = center, style = Stroke(width = 1.dp.toPx()))
+        Canvas(Modifier.matchParentSize()) {
+            val width = size.width
+            val height = size.height
+            val unit = size.minDimension
+            val cycle = phase * 2f * PI.toFloat()
+            // Darkens only the reading area, preserving the golden top R2H lettering.
+            drawRect(Brush.verticalGradient(listOf(
+                Color(0xFF09020C).copy(alpha = .04f),
+                Color(0xFF0A0611).copy(alpha = .17f),
+                Color(0xFF090410).copy(alpha = .25f),
+                Color(0xFF06030A).copy(alpha = .32f)
+            )))
+            val accent = sceneHue(scene)
+            // Very low-opacity lighting along the margins, not over controls.
+            for (side in 0..1) {
+                val px = if (side == 0) width * .04f else width * .96f
+                val py = height * (
+                    .46f + .11f * sin(cycle + side * 1.8f)
+                )
+                val center = Offset(px, py)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            accent.copy(alpha = .11f),
+                            accent.copy(alpha = .035f),
+                            Color.Transparent
+                        ), center = center, radius = unit * .49f
+                    ),
+                    radius = unit * .49f, center = center
+                )
+            }
+            // Sparse twinkling edge stars: no animated scaling of the image or logo.
+            for (i in 0 until 30) {
+                val left = i % 2 == 0
+                val px = width * (if (left)
+                    .015f + (i * 17 % 11) * .008f
+                else .985f - (i * 13 % 11) * .008f)
+                val py = height * (.10f + ((i * 47 + 19) % 83) / 100f)
+                val twinkle = (sin(cycle + i * .77f) + 1f) * .5f
+                drawCircle(
+                    color = Color(0xFFFFDBEC).copy(alpha = .13f + twinkle * .27f),
+                    radius = (if (i % 6 == 0) 1.9f else 1.05f).dp.toPx(),
+                    center = Offset(px, py)
+                )
+            }
         }
-        drawRect(Brush.verticalGradient(listOf(
-            Color(0xFF09070B).copy(alpha = .06f),
-            Color.Transparent,
-            Color(0xFF09070B).copy(alpha = .38f))))
     }
 }
 
@@ -183,7 +182,7 @@ internal fun SirrCinematicSplash(
     }
     Box(
         Modifier.fillMaxSize()
-            .background(Color(0xFF07050B).copy(alpha = .72f)),
+            .background(Color(0xFF07050B).copy(alpha = .48f)),
         contentAlignment = Alignment.Center
     ) {
         Column(
