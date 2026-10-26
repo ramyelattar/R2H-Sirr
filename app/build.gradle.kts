@@ -11,8 +11,8 @@ android {
         applicationId = "com.r2h.sirr"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "0.9.2-m25-premium-cards"
+        versionCode = 12
+        versionName = "0.9.3-m25-cinematic-cards"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }
