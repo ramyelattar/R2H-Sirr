@@ -1,5 +1,13 @@
 package com.r2h.sirr
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,4 +68,57 @@ internal fun Modifier.r2hGlass(
                 strokeWidth = 1.dp.toPx()
             )
         }
+}
+
+
+/**
+ * The one intentional high-energy surface against the dark cinematic glass.
+ * Opaque enough for white Arabic labels and never washed out by the wallpaper.
+ */
+@Composable
+internal fun R2HNeonAction(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+    enabled: Boolean = true
+) {
+    val shape = RoundedCornerShape(if (compact) 15.dp else 19.dp)
+    val gradient = if (enabled) {
+        listOf(Color(0xFFF22F9E), Color(0xFFD83AB3), Color(0xFF913CC7))
+    } else {
+        listOf(Color(0xFF4A324A), Color(0xFF49324B))
+    }
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .heightIn(min = if (compact) 45.dp else 55.dp)
+            .shadow(
+                elevation = if (enabled) 11.dp else 2.dp,
+                shape = shape, ambientColor = Color(0xFFFC4FC2),
+                spotColor = Color(0xFFFF64CF)
+            )
+            .clip(shape)
+            .background(Brush.horizontalGradient(gradient))
+            .border(
+                1.dp,
+                if (enabled) Color(0xFFFFD2F0) else Color(0xFF6F6073),
+                shape
+            ),
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent,
+            contentColor = Color.White,
+            disabledContainerColor = Color.Transparent,
+            disabledContentColor = Color(0xFFDED0DD)
+        ),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text,
+            fontSize = if (compact) 14.sp else 17.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+    }
 }

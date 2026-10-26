@@ -54,14 +54,66 @@ internal fun R2HArtwork(kind: R2HGameArt, accent: Color, modifier: Modifier = Mo
                 center = p(50f, 49f), radius = 49f * unit
             ), radius = 49f * unit, center = p(50f, 49f)
         )
-        drawCircle(
-            accent.copy(alpha = .48f), radius = 38f * unit,
-            center = p(50f, 49f), style = Stroke(width = .9f * unit)
-        )
-        drawCircle(
-            pale.copy(alpha = .20f), radius = 32f * unit,
-            center = p(50f, 49f), style = Stroke(width = .7f * unit)
-        )
+        // The framing depends on the game. No repeated generic orbital icon badge.
+        when (kind) {
+            R2HGameArt.COUPLE -> {
+                drawCircle(
+                    brush = Brush.sweepGradient(
+                        listOf(Color.Transparent, accent.copy(alpha = .50f),
+                            pale.copy(alpha = .65f), Color.Transparent),
+                        center = p(50f, 50f)
+                    ),
+                    radius = 39f * unit, center = p(50f, 50f),
+                    style = Stroke(width = 1.8f * unit)
+                )
+                dot(15f, 56f, 1.6f)
+            }
+            R2HGameArt.PARTY -> {
+                for (i in 0..4) {
+                    val x = 18f + i * 16f
+                    dot(x, if (i % 2 == 0) 22f else 16f, 1.5f,
+                        pale.copy(alpha = .5f))
+                }
+            }
+            R2HGameArt.DICE -> {
+                drawCircle(
+                    Color(0xFF170C2A).copy(alpha = .55f),
+                    25f * unit, p(53f, 66f)
+                )
+                drawLine(
+                    accent.copy(alpha = .43f), p(17f, 82f), p(80f, 82f),
+                    strokeWidth = 2f * unit, cap = StrokeCap.Round
+                )
+            }
+            R2HGameArt.QUIZ -> {
+                drawCircle(
+                    pale.copy(alpha = .25f), 41f * unit, p(50f, 49f),
+                    style = Stroke(width = 1.2f * unit)
+                )
+                dot(16f, 39f, 1.9f)
+            }
+            R2HGameArt.WHISPERS -> {
+                drawLine(accent.copy(alpha = .42f), p(15f, 26f), p(32f, 14f),
+                    strokeWidth = 1.6f * unit)
+                dot(77f, 24f, 2f)
+            }
+            R2HGameArt.SECRET -> {
+                drawCircle(
+                    brush = Brush.sweepGradient(
+                        listOf(pale.copy(alpha = .08f),
+                            accent.copy(alpha = .65f), pale.copy(alpha = .8f),
+                            accent.copy(alpha = .18f)),
+                        center = p(50f, 50f)
+                    ),
+                    radius = 41f * unit, center = p(50f, 50f),
+                    style = Stroke(width = 1.8f * unit)
+                )
+            }
+            R2HGameArt.ROOM, R2HGameArt.MUSIC -> {
+                drawLine(accent.copy(alpha = .46f), p(17f, 82f), p(84f, 82f),
+                    strokeWidth = 1.3f * unit)
+            }
+        }
         when (kind) {
             R2HGameArt.COUPLE -> {
                 drawCircle(bright, 8f * unit, p(35f, 37f))
@@ -211,8 +263,13 @@ internal fun R2HArtwork(kind: R2HGameArt, accent: Color, modifier: Modifier = Mo
                 }, 2.2f)
             }
         }
-        dot(20f, 21f, 1.4f, light.copy(alpha = .75f))
-        dot(81f, 76f, 1.1f, pale.copy(alpha = .8f))
+        // Final foil glints differ by artwork, deliberately unobtrusive.
+        if (kind == R2HGameArt.SECRET || kind == R2HGameArt.WHISPERS) {
+            dot(21f, 18f, 1.3f, light.copy(alpha = .74f))
+        }
+        if (kind == R2HGameArt.DICE || kind == R2HGameArt.PARTY) {
+            dot(82f, 76f, 1.7f, pale.copy(alpha = .78f))
+        }
     }
 }
 
