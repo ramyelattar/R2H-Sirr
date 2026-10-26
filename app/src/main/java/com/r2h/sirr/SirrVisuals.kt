@@ -39,8 +39,7 @@ private val Pale = Color(0xFFF7E8E0)
 internal fun MysteryHeader(eyebrow:String, headline:String, caption:String, symbol:String="✦"){
     Box(
         Modifier.fillMaxWidth().heightIn(min=190.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .background(Brush.linearGradient(listOf(DeepWine,Color(0xFF6A304B),Color(0xFF1C111B))))
+            .r2hGlass(accent = Color(0xFFFF9BC8), corner = 28.dp, lift = 15.dp)
     ){
         Canvas(Modifier.matchParentSize()){
             val center=Offset(size.width*.86f,size.height*.22f)
@@ -110,8 +109,7 @@ internal fun MysteryDie(number:Int,spinning:Boolean,modifier:Modifier=Modifier) 
 internal fun SecretLetter(text:String,order:Int,total:Int) {
     Box(
         Modifier.fillMaxWidth().heightIn(min=235.dp)
-            .clip(RoundedCornerShape(27.dp))
-            .background(Brush.verticalGradient(listOf(Color(0xFF462437),Color(0xFF1A1221)))),
+            .r2hGlass(accent = Color(0xFFECC2E2), corner = 27.dp, lift = 17.dp),
         contentAlignment=Alignment.Center
     ){
         Canvas(Modifier.matchParentSize()){
@@ -139,8 +137,8 @@ internal fun SecretLetter(text:String,order:Int,total:Int) {
 @Composable
 internal fun ChallengeRevealCard(text:String,modifier:Modifier=Modifier) {
     Box(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF4C2237),Color(0xFF231521),Color(0xFF180F19))))
+        modifier.fillMaxWidth()
+            .r2hGlass(accent = Color(0xFFFF93C2), corner = 28.dp, lift = 17.dp)
     ){
         Canvas(Modifier.matchParentSize()){
             drawCircle(Amber.copy(alpha=.15f),size.minDimension*.39f,
@@ -179,16 +177,18 @@ internal fun RoundChapter(current:Int,total:Int){
 internal fun SealedChallengeCard(onReveal: () -> Unit) {
     Surface(
         onClick = onReveal,
-        color = Color(0xFF1B1222),
+        color = Color.Transparent,
         shape = RoundedCornerShape(28.dp),
-        border = BorderStroke(1.5.dp, Amber.copy(alpha = .78f)),
         modifier = Modifier.fillMaxWidth().heightIn(min = 238.dp)
+            .r2hGlass(accent = Amber, corner = 28.dp, selected = true, lift = 18.dp)
     ) {
         Box(
             Modifier.fillMaxWidth()
                 .background(
                     Brush.linearGradient(listOf(
-                        Color(0xFF503048), Color(0xFF281627), Color(0xFF17121E)))
+                        Color(0xFF753E70).copy(alpha = .19f),
+                        Color(0xFF281627).copy(alpha = .12f),
+                        Color.Transparent))
                 ),
             contentAlignment = Alignment.Center
         ) {

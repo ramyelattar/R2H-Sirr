@@ -45,10 +45,12 @@ internal fun DiscoveryTile(
         DiscoveryMotif.WHISPER -> Color(0xFF452335)
     }
     Surface(
-        onClick = onClick, modifier = modifier.semantics { contentDescription = "$title. $subtitle" },
+        onClick = onClick,
+        modifier = modifier
+            .r2hGlass(accent = accent, corner = 26.dp, lift = 13.dp)
+            .semantics { contentDescription = "$title. $subtitle" },
         shape = RoundedCornerShape(26.dp),
-        border = BorderStroke(1.dp, accent.copy(alpha=.25f)),
-        color = base
+        color = Color.Transparent
     ) {
         Box(Modifier.fillMaxWidth().heightIn(min=171.dp)) {
             Canvas(Modifier.matchParentSize()) {
@@ -154,10 +156,10 @@ internal fun QuizTopicTile(
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
+            .r2hGlass(accent = accent, corner = 20.dp, lift = 11.dp)
             .semantics { contentDescription = "الموضوع $number: $title. $subtitle" },
-        color = chapterBg,
-        shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.dp, accent.copy(alpha=.60f))
+        color = Color.Transparent,
+        shape = RoundedCornerShape(20.dp)
     ) {
         Box(Modifier.fillMaxWidth().heightIn(min=98.dp)) {
             Canvas(Modifier.matchParentSize()) {
