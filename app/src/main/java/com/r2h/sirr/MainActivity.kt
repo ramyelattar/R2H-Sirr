@@ -340,64 +340,45 @@ internal fun Page(title: String, subtitle: String, content: @Composable ColumnSc
 }
 
 @Composable
-private fun SmallMode(
+private fun FeatureRow(
     title: String,
-    hint: String,
-    glyph: String,
+    detail: String,
+    art: R2HGameArt,
     tint: Color,
-    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier.r2hGlass(accent = tint, corner = 24.dp, lift = 10.dp)
-            .clickable(onClick = onClick)
-            .heightIn(min = 144.dp)
-    ) {
-        Column(Modifier.fillMaxWidth().heightIn(min = 144.dp).padding(18.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Text(glyph, fontSize = 26.sp, color = Gold)
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
-                Text(hint, style = MaterialTheme.typography.bodySmall, color = Muted)
-            }
-        }
-    }
-}
-
-@Composable
-private fun FeatureRow(title: String, detail: String, glyph: String, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
         color = Color.Transparent,
-        modifier = Modifier.fillMaxWidth()
-            .r2hGlass(accent = Color(0xFFEAB1D3), corner = 20.dp, lift = 9.dp)
+        modifier = Modifier.fillMaxWidth().heightIn(min = 92.dp)
+            .r2hGlass(accent = tint, corner = 22.dp, lift = 12.dp)
     ) {
         Row(
-            Modifier.padding(horizontal = 17.dp, vertical = 17.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(13.dp)
         ) {
-            Box(
-                Modifier.size(46.dp).r2hGlass(
-                    accent = Color(0xFFFFABD1), corner = 14.dp, lift = 3.dp
-                ),
-                contentAlignment = Alignment.Center
-            ) { Text(glyph, color = Gold, fontSize = 22.sp) }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(title, color = Color.White, fontWeight = FontWeight.SemiBold)
-                Text(detail, color = Muted, style = MaterialTheme.typography.bodySmall)
+            R2HArtwork(art, tint, Modifier.size(61.dp))
+            Column(
+                Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Text(title, color = Color.White, fontSize = 18.sp,
+                    lineHeight = 24.sp, fontWeight = FontWeight.Bold)
+                Text(detail, color = Color(0xFFFFDEEF),
+                    fontSize = 13.sp, lineHeight = 19.sp)
             }
-            Text("‹", fontSize = 26.sp, color = Gold)
+            R2HCardChevron(Modifier.size(22.dp))
         }
     }
 }
 
-/** The six actual games are above the fold on most phones; no endless hero repetition. */
+/** Each game has its own engraved illustration and a distinct floating panel. */
 @Composable
 private fun R2HModeCard(
     title: String,
     description: String,
-    monogram: String,
+    art: R2HGameArt,
     tint: Color,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
@@ -405,38 +386,37 @@ private fun R2HModeCard(
     Surface(
         onClick = onClick,
         color = Color.Transparent,
-        shape = RoundedCornerShape(22.dp),
-        modifier = modifier.heightIn(min = 124.dp)
-            .r2hGlass(accent = tint, corner = 22.dp, lift = 13.dp)
+        shape = RoundedCornerShape(24.dp),
+        modifier = modifier.heightIn(min = 182.dp)
+            .r2hGlass(accent = tint, corner = 24.dp, lift = 16.dp)
     ) {
-        Box(
-            Modifier.fillMaxWidth().background(
-                Brush.linearGradient(listOf(
-                    tint.copy(alpha = .14f), Color.Transparent,
-                    Color(0xFF100B19).copy(alpha = .12f))))
+        Column(
+            Modifier.fillMaxWidth().padding(start = 15.dp, end = 14.dp, top = 9.dp, bottom = 15.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Canvas(Modifier.matchParentSize()) {
-                val c = Offset(size.width * .20f, size.height * .25f)
-                val radius = size.minDimension * .33f
-                drawCircle(tint.copy(alpha = .18f), radius, c)
-                drawCircle(tint.copy(alpha = .38f), radius * .66f, c,
-                    style = Stroke(width = 1.dp.toPx()))
-            }
-            Column(
-                Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+            Row(
+                Modifier.fillMaxWidth().height(91.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(monogram, color = tint, fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Text("↗", color = Gold, fontSize = 18.sp)
+                R2HArtwork(art, tint, Modifier.size(90.dp))
+                Box(
+                    Modifier.padding(top = 11.dp).size(27.dp)
+                        .r2hGlass(accent = tint, corner = 9.dp, lift = 3.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    R2HCardChevron(Modifier.size(16.dp))
                 }
-                Spacer(Modifier.height(4.dp))
-                Text(title, color = Color.White,
-                    fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold)
-                Text(description, color = Color(0xFFEBCDDC),
-                    fontSize = 12.sp, lineHeight = 18.sp)
             }
+            Spacer(Modifier.height(3.dp))
+            Text(
+                title, color = Color.White, fontSize = 18.sp, lineHeight = 25.sp,
+                fontWeight = FontWeight.ExtraBold, maxLines = 1
+            )
+            Text(
+                description, color = Color(0xFFFFDFEE),
+                fontSize = 13.sp, lineHeight = 19.sp, maxLines = 2
+            )
         }
     }
 }
@@ -457,58 +437,53 @@ private fun HomeScreen(onGo: (String) -> Unit) {
         }
         Text("ست ألعاب مختلفة. الليلة كلها على مزاجكم.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Box(
-            Modifier.fillMaxWidth().heightIn(min = 173.dp)
+        // A fixed text column and a separate hero illustration; never overlap.
+        Surface(
+            modifier = Modifier.fillMaxWidth().heightIn(min = 204.dp)
                 .r2hGlass(
-                    accent = Color(0xFFFF79C4), corner = 26.dp,
-                    selected = true, lift = 18.dp
-                )
+                    accent = Color(0xFFFF93CB), corner = 29.dp,
+                    selected = true, lift = 22.dp
+                ),
+            color = Color.Transparent,
+            shape = RoundedCornerShape(29.dp)
         ) {
-            Canvas(Modifier.matchParentSize()) {
-                val focus = Offset(size.width * .17f, size.height * .49f)
-                val r = size.minDimension * .21f
-                for(i in 1..4) {
-                    drawCircle(
-                        Color(0xFFFF95C1).copy(alpha = .39f/i),
-                        r * (.67f+i*.25f), focus,
-                        style = Stroke(width = 1.5.dp.toPx()))
-                }
-                val jewel=Path().apply {
-                    moveTo(focus.x,focus.y-r*.61f)
-                    cubicTo(focus.x-r*.55f, focus.y-r*.6f,
-                        focus.x-r*.55f, focus.y+r*.24f,
-                        focus.x-r*.14f, focus.y+r*.38f)
-                    lineTo(focus.x-r*.28f,focus.y+r*.9f)
-                    lineTo(focus.x+r*.28f,focus.y+r*.9f)
-                    lineTo(focus.x+r*.14f,focus.y+r*.38f)
-                    cubicTo(focus.x+r*.55f,focus.y+r*.24f,
-                        focus.x+r*.55f,focus.y-r*.6f,focus.x,focus.y-r*.61f)
-                    close()
-                }
-                drawPath(jewel, Brush.verticalGradient(listOf(
-                    Color(0xFFFFD3A6),Color(0xFFDB4F9F))))
-            }
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 15.dp),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(7.dp)
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 19.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("اللعبة الأساسية", color = Color(0xFFFFD0A0),
-                    fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                Text("مين هيكشف\nالسر الأول؟", color = Color.White,
-                    textAlign = TextAlign.End, fontSize = 24.sp,
-                    lineHeight = 31.sp, fontWeight = FontWeight.ExtraBold)
-                Spacer(Modifier.height(6.dp))
-                Button(
-                    onClick = { onGo("couple") },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF84B9),
-                        contentColor = Color(0xFF200D1E)),
-                    modifier = Modifier.heightIn(min = 45.dp)
+                Column(
+                    Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("ابدأوا اللعبة  ←", fontWeight = FontWeight.Bold)
+                    Text(
+                        "اللعبة الأساسية", color = Color(0xFFFFD3AA),
+                        fontSize = 13.sp, lineHeight = 19.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "مين هيكشف\nالسر الأول؟", color = Color.White,
+                        fontSize = 22.sp, lineHeight = 29.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Button(
+                        onClick = { onGo("couple") },
+                        shape = RoundedCornerShape(14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFB8D9),
+                            contentColor = Color(0xFF260E26)
+                        ),
+                        modifier = Modifier.heightIn(min = 44.dp)
+                    ) {
+                        Text("ابدأوا اللعبة", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
+                R2HArtwork(
+                    R2HGameArt.SECRET, Color(0xFFFFC5A1),
+                    Modifier.size(108.dp)
+                )
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
@@ -519,26 +494,26 @@ private fun HomeScreen(onGo: (String) -> Unit) {
             Text("اختار وابدأ", color = Gold, style = MaterialTheme.typography.labelLarge)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            R2HModeCard("شخصين", "أسئلة ومواقف", "♡",
+            R2HModeCard("شخصين", "أسئلة ومواقف", R2HGameArt.COUPLE,
                 Color(0xFFFF89BD), Modifier.weight(1f)) { onGo("couple") }
-            R2HModeCard("اللّمة", "كل واحد ليه دور", "✣",
+            R2HModeCard("اللّمة", "كل واحد ليه دور", R2HGameArt.PARTY,
                 Color(0xFFA798FB), Modifier.weight(1f)) { onGo("party") }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            R2HModeCard("النرد", "الصدفة تختار", "◆",
+            R2HModeCard("النرد", "الصدفة تختار", R2HGameArt.DICE,
                 Color(0xFFFFAF86), Modifier.weight(1f)) { onGo("dice") }
-            R2HModeCard("الاختبارات", "25 سؤال وحكاية", "?",
+            R2HModeCard("الاختبارات", "25 سؤال وحكاية", R2HGameArt.QUIZ,
                 Color(0xFFC4A7FD), Modifier.weight(1f)) { onGo("quiz") }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            R2HModeCard("الهمسات", "رسالة مش بتتكرر", "✉",
+            R2HModeCard("الهمسات", "رسالة مش بتتكرر", R2HGameArt.WHISPERS,
                 Color(0xFFFF9CC3), Modifier.weight(1f)) { onGo("whispers") }
-            R2HModeCard("اكشف السر", "اكشط وافتح", "✦",
+            R2HModeCard("اكشف السر", "اكشط وافتح", R2HGameArt.SECRET,
                 Color(0xFFE9C08C), Modifier.weight(1f)) { onGo("scratch") }
         }
         HorizontalDivider(color = Color(0xFF634560))
-        FeatureRow("أوضة أونلاين", "للعب من موبايلين مختلفين", "↗") { onGo("remote") }
-        FeatureRow("الصوت والخصوصية", "اختبر الموسيقى والمظهر", "♫") { onGo("settings") }
+        FeatureRow("أوضة أونلاين", "للعب من موبايلين مختلفين", R2HGameArt.ROOM, Color(0xFFBE9CFA)) { onGo("remote") }
+        FeatureRow("الصوت والخصوصية", "اختبر الموسيقى والمظهر", R2HGameArt.MUSIC, Color(0xFFFFA7C9)) { onGo("settings") }
         TextButton(onClick = { onGo("privacy") }, modifier = Modifier.fillMaxWidth()) {
             Text("الخصوصية ومسح البيانات", color = Gold)
         }

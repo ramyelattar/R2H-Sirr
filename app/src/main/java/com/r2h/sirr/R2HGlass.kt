@@ -24,11 +24,11 @@ internal fun Modifier.r2hGlass(
     lift: Dp = 12.dp
 ): Modifier {
     val shape = RoundedCornerShape(corner)
-    val top = if (selected) Color(0xFF5E2859).copy(alpha = .74f)
-              else Color(0xFF44264F).copy(alpha = .55f)
-    val middle = if (selected) Color(0xFF311A42).copy(alpha = .78f)
-                 else Color(0xFF21192F).copy(alpha = .52f)
-    val bottom = Color(0xFF090815).copy(alpha = if (selected) .79f else .61f)
+    val top = if (selected) Color(0xFF4B264B).copy(alpha = .91f)
+              else Color(0xFF36213F).copy(alpha = .85f)
+    val middle = if (selected) Color(0xFF271833).copy(alpha = .92f)
+                 else Color(0xFF1B1429).copy(alpha = .82f)
+    val bottom = Color(0xFF090815).copy(alpha = if (selected) .93f else .88f)
     return this
         .shadow(
             elevation = lift, shape = shape, clip = false,
@@ -44,7 +44,7 @@ internal fun Modifier.r2hGlass(
         .border(
             width = if (selected) 1.5.dp else 1.dp,
             brush = Brush.linearGradient(listOf(
-                Color.White.copy(alpha = if (selected) .65f else .45f),
+                Color.White.copy(alpha = if (selected) .73f else .52f),
                 accent.copy(alpha = .72f),
                 accent.copy(alpha = .23f)
             )),
