@@ -162,7 +162,8 @@ private fun SirrApp() {
                 } else if (!confirmedAdult) {
                     AdultGate(onConfirm = {
                         runCatching { vault.writePrivate("adult-consent-v1", "accepted") }
-                        confirmedAdult = true
+                            .onSuccess { confirmedAdult = true }
+                            .isSuccess
                     })
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                     Row(
@@ -245,9 +246,10 @@ private fun SirrApp() {
 }
 
 @Composable
-private fun AdultGate(onConfirm: () -> Unit) {
+private fun AdultGate(onConfirm: () -> Boolean) {
     var ageVerified by remember { mutableStateOf(false) }
     var consent by remember { mutableStateOf(false) }
+    var saveFailed by remember { mutableStateOf(false) }
     Box(
         Modifier.fillMaxSize().background(
             Brush.verticalGradient(listOf(
@@ -291,10 +293,15 @@ private fun AdultGate(onConfirm: () -> Unit) {
             Spacer(Modifier.height(22.dp))
             SirrAction(
                 text = "ابدأ R2H-Play",
-                onClick = onConfirm,
+                onClick = { saveFailed = !onConfirm() },
                 enabled = ageVerified && consent,
                 explanation = if (ageVerified && consent) "يلا نكتشف الحكاية."
                     else "علّم على الموافقتين علشان تقدر تدخل"
+            )
+            if (saveFailed) Text(
+                "تعذّر حفظ الموافقة على الموبايل بأمان. اتأكد من مساحة التخزين وحاول تاني.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
             )
             Spacer(Modifier.height(12.dp))
             Text(
