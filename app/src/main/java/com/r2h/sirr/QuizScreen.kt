@@ -136,9 +136,10 @@ internal fun QuizScreenV2() {
                 Text("سؤال ${step + 1} من ${selectedIndices.size}",
                     style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = Color.Transparent,
                     shape = RoundedCornerShape(26.dp),
                     modifier = Modifier.fillMaxWidth()
+                        .r2hGlass(accent = Color(0xFFD4A5F1), corner = 26.dp, lift = 16.dp)
                 ) {
                     Column(Modifier.fillMaxWidth().padding(22.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -150,11 +151,10 @@ internal fun QuizScreenV2() {
                         question.choices.forEachIndexed { i, answer ->
                             Surface(
                                 onClick = { answerOrSkip(i) },
-                                color = Color(0xFF362639),
+                                color = Color.Transparent,
                                 shape = RoundedCornerShape(17.dp),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp, Color(0xFF8D637E)),
                                 modifier = Modifier.fillMaxWidth()
+                                    .r2hGlass(accent = Color(0xFFE0ABD7), corner = 17.dp, lift = 7.dp)
                             ) {
                                 Row(
                                     Modifier.fillMaxWidth().padding(13.dp),
@@ -162,8 +162,11 @@ internal fun QuizScreenV2() {
                                     horizontalArrangement = Arrangement.spacedBy(13.dp)
                                 ) {
                                     Surface(
-                                        color = Color(0xFF5B3A51),
-                                        shape = RoundedCornerShape(12.dp)
+                                        color = Color.Transparent,
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.r2hGlass(
+                                            accent = Color(0xFFFFB8DB), corner = 12.dp, lift = 3.dp
+                                        )
                                     ) {
                                         Text("${i + 1}",
                                             modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp),
@@ -214,8 +217,9 @@ internal fun QuizScreenV2() {
                     style = MaterialTheme.typography.labelLarge)
                 Surface(
                     shape = RoundedCornerShape(26.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = Color.Transparent,
                     modifier = Modifier.fillMaxWidth()
+                        .r2hGlass(accent = Color(0xFFFFAEDC), corner = 26.dp, lift = 15.dp)
                 ) {
                     Column(
                         Modifier.padding(22.dp),

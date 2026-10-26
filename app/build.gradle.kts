@@ -11,8 +11,8 @@ android {
         applicationId = "com.r2h.sirr"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "0.9.0-m25-wallpaper"
+        versionCode = 10
+        versionName = "0.9.1-m25-glass"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }

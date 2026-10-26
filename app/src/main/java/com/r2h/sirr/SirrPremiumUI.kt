@@ -41,12 +41,18 @@ internal fun SirrAction(
             onClick = onClick,
             enabled = enabled,
             shape = RoundedCornerShape(18.dp),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                .r2hGlass(
+                    accent = if (enabled) Color(0xFFFF9AD5) else Color(0xFF81657F),
+                    corner = 18.dp,
+                    selected = enabled,
+                    lift = 9.dp
+                ),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFA76B9),
-                contentColor = Color(0xFF150915),
-                disabledContainerColor = Color(0xFF473640),
-                disabledContentColor = Color(0xFFFFE1DC)
+                containerColor = Color.Transparent,
+                contentColor = Color.White,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor = Color(0xFFDBC3D3)
             ),
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp)
         ) {
@@ -75,8 +81,10 @@ internal fun SirrSection(
     ) {
         Surface(
             shape = RoundedCornerShape(13.dp),
-            color = Color(0xFF523046),
-            border = BorderStroke(1.dp, Color(0xFF9F6882))
+            color = Color.Transparent,
+            modifier = Modifier.r2hGlass(
+                accent = Color(0xFFFFA9DA), corner = 13.dp, lift = 5.dp
+            )
         ) {
             Text(number, modifier = Modifier.padding(horizontal = 13.dp, vertical = 9.dp),
                 color = M10Cream, fontSize = 15.sp, fontWeight = FontWeight.Bold)
@@ -101,11 +109,13 @@ internal fun SirrOption(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 60.dp),
+        modifier = modifier.heightIn(min = 60.dp)
+            .r2hGlass(
+                accent = if (selected) Color(0xFFFFA6D1) else Color(0xFFA994C4),
+                corner = 17.dp, selected = selected, lift = if (selected) 10.dp else 5.dp
+            ),
         shape = RoundedCornerShape(17.dp),
-        color = if (selected) Color(0xFF7D255C) else Color(0xE91C1227),
-        border = BorderStroke(if (selected) 1.7.dp else 1.dp,
-            if (selected) Color(0xFFFFA6D1) else Color(0xFF74536A))
+        color = Color.Transparent
     ) {
         Column(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 13.dp),
@@ -131,10 +141,12 @@ internal fun SirrConsent(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = if (checked) Color(0xFF30283A) else M10Panel,
-        border = BorderStroke(1.dp,
-            if (checked) Color(0xFFB68AA5) else Color(0xFF513B4B)),
+        color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
+            .r2hGlass(
+                accent = if (checked) Color(0xFFFFA8D2) else Color(0xFFB094C4),
+                corner = 18.dp, selected = checked, lift = 7.dp
+            )
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 8.dp),
@@ -163,11 +175,7 @@ internal fun SirrIntro(
 ) {
     Box(
         Modifier.fillMaxWidth()
-            .background(Brush.linearGradient(listOf(
-                Color(0xFE1A101F), accent.copy(alpha = .29f), Color(0xFD100B19))),
-                RoundedCornerShape(23.dp))
-            .border(BorderStroke(1.dp, accent.copy(alpha = .56f)),
-                RoundedCornerShape(23.dp))
+            .r2hGlass(accent = accent, corner = 23.dp, lift = 15.dp)
     ) {
         Canvas(Modifier.matchParentSize()) {
             val c = Offset(size.width * .18f, size.height * .43f)

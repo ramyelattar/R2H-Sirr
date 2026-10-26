@@ -622,7 +622,11 @@ private fun MediaResultPreview(result:Pair<String,ByteArray>,clear:()->Unit,
     }
     val player=remember(temp){MediaPlayer()}
     DisposableEffect(temp){onDispose{runCatching{player.release()};temp?.delete()}}
-    Card(Modifier.fillMaxWidth()){Column(Modifier.padding(12.dp)){
+    Card(
+        modifier = Modifier.fillMaxWidth()
+            .r2hGlass(accent = Color(0xFFD5B6FF), corner = 22.dp, lift = 14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) { Column(Modifier.padding(12.dp)){
         Text("معاينة وسيط على هذا الجهاز",style=MaterialTheme.typography.titleMedium)
         if(temp==null&&!mime.startsWith("image/"))Text("تعذر إنشاء المعاينة المؤقتة",color=MaterialTheme.colorScheme.error)
         if(mime.startsWith("image/")){
@@ -658,7 +662,11 @@ private fun RemoteCardViewer(type:String,lines:List<String>,attachments:Map<Stri
     var revealed by remember(type,lines){mutableStateOf(false)}
     var media by remember(type,lines){mutableStateOf<Pair<String,ByteArray>?>(null)}
     var error by remember(type,lines){mutableStateOf("")}
-    Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+            .r2hGlass(accent = Color(0xFFFFAFDB), corner = 22.dp, lift = 14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text(if(type=="whispers") "همسات خاصة" else "بطاقة كشف خاصة",style=MaterialTheme.typography.titleLarge)
         if(index<lines.size) {
             Text("الرسالة ${index+1} من ${lines.size}")
