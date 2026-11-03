@@ -14,6 +14,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.r2h.sirr.core.CoupleOutcome
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.r2h.sirr.core.CoupleTieBreak
@@ -33,6 +35,14 @@ internal fun CoupleCompetitionPanel(game: LocalGame, persist: (LocalGame) -> Boo
     Text("النتيجة النهائية", style = MaterialTheme.typography.titleLarge)
     game.playerNames.forEachIndexed { index, name ->
         Text("$name — ${game.scores[index]} نقطة")
+        val rounds = rules.outcomes.withIndex().filter { (round, _) ->
+            game.turns[round].actorIndex == index
+        }.map { it.value }
+        val completed = rounds.count { it == CoupleOutcome.COMPLETED }
+        val uncompleted = rounds.count { it == CoupleOutcome.NOT_COMPLETED }
+        val agreed = rounds.count { it == CoupleOutcome.AGREED_SKIP }
+        Text("تم: $completed · لم يتم: $uncompleted · بالاتفاق: $agreed",
+            style = MaterialTheme.typography.bodySmall)
     }
     if (game.ended) {
         Text("الجلسة اتوقفت من غير إعلان فائز. مفيش مكافأة مستحقة.")
@@ -40,8 +50,13 @@ internal fun CoupleCompetitionPanel(game: LocalGame, persist: (LocalGame) -> Boo
     }
     val winner = game.winnerIndex
     if (winner != null) {
-        Text("الفائز: ${game.playerNames[winner]}", style = MaterialTheme.typography.headlineMedium)
-        Text("المكافأة المتفق عليها: ${rules.reward}")
+        SirrIntro(
+            overline = "بطل الجلسة",
+            title = "الفائز: ${game.playerNames[winner]}",
+            description = "الجايزة اللي اتفقتوا عليها: ${rules.reward}",
+            accent = Color(0xFF9F4D72),
+            motif = "couple"
+        )
         Text("المكافأة تتنفذ بموافقة الطرفين، ومن حق أي طرف يغيّر رأيه.")
         return
     }
