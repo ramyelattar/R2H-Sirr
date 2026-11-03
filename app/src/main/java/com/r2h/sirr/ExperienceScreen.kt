@@ -473,6 +473,15 @@ internal fun ExperienceScreen(group: Boolean) {
                         replyStatus = "ما قدرناش نحفظ النتيجة. اتأكد من المؤقت ومساحة التخزين وحاول تاني."
                     }
                 }
+                fun pauseOnConsentWithdrawal() {
+                    if (current.competition?.roundClock?.running == true) {
+                        val next = current.pauseRoundClock(System.currentTimeMillis())
+                        // Stop counting in memory immediately, even if encrypted persistence fails.
+                        game = next
+                        runCatching { LocalSessionStore.save(vault, gameName, next) }
+                            .onFailure { replyStatus = "المؤقت وقف، لكن حفظ التوقف فشل. ما تكملوش قبل إعادة المحاولة." }
+                    }
+                }
                 if (isRevealed) {
                     Text(
                         "المشاركة اختيارية في كل تحدي. لو فيه شخص تاني هيشارك في أي تلامس أو نشاط، لازم تسأل وتتأكد من موافقته دلوقتي. الرفض أو تغيير الرأي يوقف النشاط فورًا.",
@@ -482,14 +491,20 @@ internal fun ExperienceScreen(group: Boolean) {
                     SirrConsent(
                         name = "${current.playerNames[turn.actorIndex]} — موافق على التحدي ده",
                         checked = roundConsent,
-                        onChange = { roundConsent = it }
+                        onChange = {
+                            roundConsent = it
+                            if (!it) pauseOnConsentWithdrawal()
+                        }
                     )
                     if (current.competition != null) {
                         val other = 1 - turn.actorIndex
                         SirrConsent(
                             name = "${current.playerNames[other]} — موافق على المشاركة في التحدي",
                             checked = partnerConsent,
-                            onChange = { partnerConsent = it }
+                            onChange = {
+                                partnerConsent = it
+                                if (!it) pauseOnConsentWithdrawal()
+                            }
                         )
                     }
                     val bothConsent = roundConsent &&
