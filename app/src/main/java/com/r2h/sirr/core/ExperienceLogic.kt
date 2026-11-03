@@ -147,8 +147,9 @@ data class LocalGame(
         require(state.stage == TieStage.KNOWLEDGE && state.questions.size == 2)
         val winner = if (correctByPlayer[0] != correctByPlayer[1])
             correctByPlayer.indexOf(true) else null
-        val next = if (winner != null) state.copy(stage = TieStage.DECIDED, winnerIndex = winner)
-            else state.copy(questions = emptyList(), knowledgeRound = state.knowledgeRound + 1)
+        val next = if (winner != null) state.copy(
+            stage = TieStage.DECIDED, winnerIndex = winner, questions = emptyList()
+        ) else state.copy(questions = emptyList(), knowledgeRound = state.knowledgeRound + 1)
         return copy(competition = rules.copy(tieBreak = next))
     }
 
