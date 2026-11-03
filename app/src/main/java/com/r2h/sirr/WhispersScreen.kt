@@ -44,6 +44,7 @@ internal fun WhispersScreenV2() {
     var audioUri by remember { mutableStateOf<String?>(null) }
     var page by remember { mutableIntStateOf(-1) }
     var playing by remember { mutableStateOf(false) }
+    var preparing by remember { mutableStateOf(false) }
     val overrideBackgroundMusic = LocalSirrUserAudioOverride.current
     val player = remember { MediaPlayer() }
     // User-selected soundtrack must not continue playing after the app is backgrounded.
@@ -51,7 +52,11 @@ internal fun WhispersScreenV2() {
     DisposableEffect(activity, player) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) {
-                runCatching { if (player.isPlaying) player.pause() }
+                runCatching {
+                    if (preparing) player.reset()
+                    else if (player.isPlaying) player.pause()
+                }
+                preparing = false
                 playing = false
                 overrideBackgroundMusic(false)
             }
@@ -59,7 +64,8 @@ internal fun WhispersScreenV2() {
         activity?.lifecycle?.addObserver(observer)
         onDispose {
             activity?.lifecycle?.removeObserver(observer)
-            runCatching { player.stop() }
+            runCatching { player.setOnPreparedListener(null) }
+            runCatching { player.setOnErrorListener(null) }
             runCatching { player.release() }
             overrideBackgroundMusic(false)
         }
@@ -72,24 +78,43 @@ internal fun WhispersScreenV2() {
     fun toggleAudio() {
         val selectedAudio = audioUri ?: return
         runCatching {
-            if (playing) {
-                player.stop()
+            if (playing || preparing) {
+                // Cancel an in-flight prepare as well as any currently playing track.
                 player.reset()
                 playing = false
+                preparing = false
                 overrideBackgroundMusic(false)
             } else {
-                // Stop generated page music before starting the chosen personal soundtrack.
+                // Async prepare avoids blocking Compose's UI thread on a media URI.
                 overrideBackgroundMusic(true)
                 player.reset()
                 player.setDataSource(context, Uri.parse(selectedAudio))
-                player.prepare()
-                player.start()
-                playing = true
+                player.setOnErrorListener { _, _, _ ->
+                    preparing = false
+                    playing = false
+                    error = "مش قادرين نشغّل الأغنية"
+                    overrideBackgroundMusic(false)
+                    true
+                }
+                player.setOnPreparedListener { ready ->
+                    preparing = false
+                    runCatching {
+                        ready.start()
+                        playing = true
+                    }.onFailure {
+                        playing = false
+                        error = "مش قادرين نشغّل الأغنية"
+                        overrideBackgroundMusic(false)
+                    }
+                }
+                preparing = true
+                player.prepareAsync()
             }
         }.onFailure {
             runCatching { player.reset() }
             error = "مش قادرين نشغّل الأغنية"
             playing = false
+            preparing = false
             overrideBackgroundMusic(false)
         }
     }
@@ -100,13 +125,19 @@ internal fun WhispersScreenV2() {
         }.onFailure { error = "تعذر إدراج الصورة المحددة" }
     }
     val pickAudio = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        audioUri = uri?.toString() // Session-scoped only. Media will not be copied/uploaded.
+        if (uri != null) {
+            runCatching { player.reset() }
+            playing = false
+            preparing = false
+            overrideBackgroundMusic(false)
+            audioUri = uri.toString() // Session-only. Never copied or uploaded.
+        }
     }
     fun clear() {
         messages.indices.forEach { messages[it] = "" }
         sender = ""; receiver = ""; signature = ""; page = -1; envelope = null
         composeStep=0; extras=false; recipientReady=false; chosenStoryId=null
-        runCatching { player.reset() }; playing = false
+        runCatching { player.reset() }; playing = false; preparing = false
         overrideBackgroundMusic(false)
         vault.delete(photoId); photoId = null; audioUri = null; error = ""
     }
@@ -221,7 +252,7 @@ internal fun WhispersScreenV2() {
                 OutlinedButton(onClick={pickAudio.launch("audio/*")}){Text("اختار أغنية من موبايلك")}
                 if (audioUri != null) {
                     OutlinedButton(onClick = { toggleAudio() }) {
-                        Text(if (playing) "وقّف الأغنية" else "اسمع الأغنية")
+                        Text(if (preparing) "إلغاء تجهيز الأغنية" else if (playing) "وقّف الأغنية" else "اسمع الأغنية")
                     }
                     Text("الأغنية بتفضل على الموبايل ده، ومش بتتبعت لحد.",
                         style = MaterialTheme.typography.bodySmall,
@@ -258,7 +289,7 @@ internal fun WhispersScreenV2() {
             SecretLetter(messages[page],page+1,3)
             if (audioUri != null) {
                 OutlinedButton(onClick = { toggleAudio() },modifier=Modifier.fillMaxWidth()) {
-                    Text(if (playing) "وقّف الموسيقى" else "شغّل موسيقى المفاجأة")
+                    Text(if (preparing) "إلغاء التجهيز" else if (playing) "وقّف الموسيقى" else "شغّل موسيقى المفاجأة")
                 }
             }
             SirrAction(
@@ -280,7 +311,7 @@ internal fun WhispersScreenV2() {
             if (signature.isNotBlank()) Text(signature)
             if (audioUri != null) {
                 OutlinedButton(onClick = { toggleAudio() },modifier=Modifier.fillMaxWidth()) {
-                    Text(if (playing) "وقّف الموسيقى" else "شغّل موسيقى المفاجأة")
+                    Text(if (preparing) "إلغاء التجهيز" else if (playing) "وقّف الموسيقى" else "شغّل موسيقى المفاجأة")
                 }
             }
             val photo = remember(photoId) { vault.readPhoto(photoId) }
