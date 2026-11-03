@@ -38,7 +38,7 @@ This change covers **offline local two-player couple challenge sessions**. It do
 4. Both answers are committed to encrypted storage before either partner answers.
 5. Only one correct response decides the winner. If both correct or both wrong, use two new questions.
 6. Reference answers are removed from the tie-break state after the winner is decided.
-7. The winner's reward remains subject to both partners' agreement.
+7. The winner's reward remains subject to both partners' agreement. Partners may end the tie-break without a winner or reward at any stage.
 
 ## Persistence and backward compatibility
 
