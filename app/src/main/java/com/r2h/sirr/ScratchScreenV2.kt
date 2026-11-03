@@ -216,17 +216,18 @@ internal fun ScratchScreenV2() {
 internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     val effects = rememberGameEffects()
     val brushRadiusPx = with(LocalDensity.current) { 17.dp.toPx() }
-    // Nested observable lists append in O(1), avoiding quadratic copy-on-each-pointer-event.
-    val strokes = remember { mutableStateListOf<androidx.compose.runtime.snapshots.SnapshotStateList<Offset>>() }
-    var savedPoints by remember { mutableIntStateOf(0) }
-    val cells = remember { BooleanArray(192) }
+    // A bounded mask uses constant memory no matter how long the user scratches.
+    // Coverage and the visible erased cells share the same 32 x 24 mask.
+    val columns = 32
+    val rows = 24
+    val cells = remember { BooleanArray(columns * rows) }
     var coveredCells by remember { mutableIntStateOf(0) }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
     var alreadyRevealed by remember { mutableStateOf(false) }
-    // Coverage measures the same brush-sized trail that is visibly cleared.
-    // 16×12 cells are sampled along the line and inside the brush radius.
-    val coverage = (coveredCells / 192f).coerceIn(0f, 1f)
-    val revealed = coverage >= .58f
+    var revealWithoutTouch by remember { mutableStateOf(false) }
+    val coverage = coveredCells / (columns * rows).toFloat()
+    val revealed = revealWithoutTouch || coverage >= 0.58f
+
     LaunchedEffect(revealed) {
         if (revealed && !alreadyRevealed) {
             alreadyRevealed = true
@@ -234,102 +235,129 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             onRevealed()
         }
     }
+
     fun mark(center: Offset) {
+        if (revealed) return
         val w = dimensions.width.toFloat()
         val h = dimensions.height.toFloat()
-        if (w < 1f || h < 1f) return
-        // The brush width and hit testing both scale in density-independent
-        // physical pixels; clamp the edge so swiping outside has no effect.
-        if (center.x < 0f || center.y < 0f || center.x > w || center.y > h) return
+        if (w < 1f || h < 1f || center.x < 0f || center.y < 0f ||
+            center.x > w || center.y > h) return
+        val cellWidth = w / columns
+        val cellHeight = h / rows
         val radius = brushRadiusPx
-        val startX = ((center.x - radius) / w * 16).toInt().coerceIn(0, 15)
-        val endX = ((center.x + radius) / w * 16).toInt().coerceIn(0, 15)
-        val startY = ((center.y - radius) / h * 12).toInt().coerceIn(0, 11)
-        val endY = ((center.y + radius) / h * 12).toInt().coerceIn(0, 11)
+        val startX = ((center.x - radius) / cellWidth).toInt().coerceIn(0, columns - 1)
+        val endX = ((center.x + radius) / cellWidth).toInt().coerceIn(0, columns - 1)
+        val startY = ((center.y - radius) / cellHeight).toInt().coerceIn(0, rows - 1)
+        val endY = ((center.y + radius) / cellHeight).toInt().coerceIn(0, rows - 1)
         for (y in startY..endY) for (x in startX..endX) {
-            val midX = (x + .5f) * w / 16f
-            val midY = (y + .5f) * h / 12f
-            val dx = midX - center.x
-            val dy = midY - center.y
-            val index = y * 16 + x
+            val dx = (x + 0.5f) * cellWidth - center.x
+            val dy = (y + 0.5f) * cellHeight - center.y
+            val index = y * columns + x
             if (dx * dx + dy * dy <= radius * radius && !cells[index]) {
                 cells[index] = true
                 coveredCells++
             }
         }
     }
-    fun begin(p: Offset) {
-        if (savedPoints < 2400) { strokes.add(mutableStateListOf(p)); savedPoints++ }
-        mark(p)
-    }
-    fun append(p: Offset) {
-        val previous = strokes.lastOrNull()?.lastOrNull()
-        if (previous == null) { begin(p); return }
-        val dx = p.x - previous.x
-        val dy = p.y - previous.y
-        val distance = hypot(dx, dy)
-        if (distance < 1f) return
-        val count = ceil(distance / 7f).toInt().coerceIn(1, 180)
-        for (i in 1..count) {
-            val t = i.toFloat() / count
-            mark(Offset(previous.x + dx * t, previous.y + dy * t))
-        }
-        if (savedPoints < 2400 && strokes.isNotEmpty()) {
-            strokes.last().add(p)
-            savedPoints++
+
+    fun markBetween(start: Offset, end: Offset) {
+        val distance = hypot(end.x - start.x, end.y - start.y)
+        val steps = ceil(distance / 7f).toInt().coerceIn(1, 256)
+        for (i in 0..steps) {
+            val ratio = i.toFloat() / steps
+            mark(Offset(
+                start.x + (end.x - start.x) * ratio,
+                start.y + (end.y - start.y) * ratio
+            ))
         }
     }
-    Text(if(revealed) "السر بان! ✦" else "امسح بإيدك لحد ما يظهر السر — ${(coverage * 100).toInt()}٪",
-        color=MaterialTheme.colorScheme.onSurfaceVariant)
-    Box(Modifier.fillMaxWidth().height(265.dp).clip(RoundedCornerShape(27.dp)),contentAlignment=Alignment.Center) {
-        Surface(color=Color(0xFF321B2B),modifier=Modifier.fillMaxSize()) {
+
+    Text(
+        if (revealed) "السر اتكشف!" else
+            "امسح على الغطا — ${(coverage * 100).toInt()}٪ اتكشف",
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Box(
+        Modifier.fillMaxWidth().height(265.dp).clip(RoundedCornerShape(27.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(color = Color(0xFF321B2B), modifier = Modifier.fillMaxSize()) {
             Box(Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
-                Text(hiddenText, color = Color.White, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge)
-            }
-        }
-        if (!revealed) Canvas(Modifier.fillMaxSize()
-            .onSizeChanged { dimensions = it }
-            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .pointerInput(dimensions) {
-                detectDragGestures(
-                    onDragStart = { begin(it) },
-                    onDrag = { change, _ ->
-                        append(change.position)
-                        change.consume()
-                    }
+                // Prevent TalkBack and accessibility services from reading covered secrets.
+                Text(
+                    hiddenText,
+                    modifier = if (revealed) Modifier else Modifier.clearAndSetSemantics {},
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
-            .pointerInput(dimensions) { detectTapGestures { begin(it) } }
+        }
+        if (!revealed) Canvas(
+            Modifier.fillMaxSize()
+                .onSizeChanged { dimensions = it }
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .pointerInput(dimensions) {
+                    var previous: Offset? = null
+                    detectDragGestures(
+                        onDragStart = {
+                            previous = it
+                            mark(it)
+                        },
+                        onDrag = { change, _ ->
+                            val old = previous
+                            if (old == null) mark(change.position)
+                            else markBetween(old, change.position)
+                            previous = change.position
+                            change.consume()
+                        },
+                        onDragEnd = { previous = null },
+                        onDragCancel = { previous = null }
+                    )
+                }
+                .pointerInput(dimensions) { detectTapGestures { mark(it) } }
         ) {
-            drawRect(Brush.linearGradient(listOf(Color(0xFFDCB98D),Color(0xFF8C5169),Color(0xFF50283A))))
-            drawCircle(Color.White.copy(alpha=.1f),radius=size.minDimension*.3f,
-                center=Offset(size.width*.83f,size.height*.27f))
+            drawRect(Brush.linearGradient(
+                listOf(Color(0xFFDCB98D), Color(0xFF8C5169), Color(0xFF50283A))
+            ))
+            drawCircle(
+                Color.White.copy(alpha = 0.1f),
+                radius = size.minDimension * 0.3f,
+                center = Offset(size.width * 0.83f, size.height * 0.27f)
+            )
             for (i in 0..19) {
-                val x = (i*41 % 97) / 97f * size.width
-                val y = (i*73 % 97) / 97f * size.height
+                val x = (i * 41 % 97) / 97f * size.width
+                val y = (i * 73 % 97) / 97f * size.height
                 drawCircle(
-                    color = Color(0xFFFFEDCF).copy(alpha = if(i%2==0) .38f else .2f),
-                    radius = (if(i%3==0) 2.3f else 1.3f).dp.toPx(),
+                    color = Color(0xFFFFEDCF).copy(alpha = if (i % 2 == 0) 0.38f else 0.2f),
+                    radius = (if (i % 3 == 0) 2.3f else 1.3f).dp.toPx(),
                     center = Offset(x, y)
                 )
             }
-            // Keep the visual clearing as connected lines rather than isolated dots.
-            strokes.forEach { stroke ->
-                if (stroke.isNotEmpty()) {
-                    val path = Path().apply {
-                        moveTo(stroke.first().x, stroke.first().y)
-                        if (stroke.size == 1) {
-                            lineTo(stroke.first().x + .1f, stroke.first().y)
-                        } else {
-                            for (i in 1 until stroke.size) lineTo(stroke[i].x, stroke[i].y)
-                        }
-                    }
-                    drawPath(path, color = Color.Transparent, style = Stroke(
-                        width = 34.dp.toPx(), cap = StrokeCap.Round
-                    ), blendMode = BlendMode.Clear)
-                }
+            val cellWidth = size.width / columns
+            val cellHeight = size.height / rows
+            cells.forEachIndexed { i, erased ->
+                if (erased) drawRect(
+                    color = Color.Transparent,
+                    topLeft = Offset(
+                        (i % columns) * cellWidth,
+                        (i / columns) * cellHeight
+                    ),
+                    size = Size(cellWidth + 0.5f, cellHeight + 0.5f),
+                    blendMode = BlendMode.Clear
+                )
             }
         }
     }
-    if (revealed) Text("بان السر!", color = MaterialTheme.colorScheme.primary)
+    if (!revealed) {
+        Text(
+            "مش لازم تقدر تستخدم السحب علشان تعرف السر.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall
+        )
+        OutlinedButton(
+            onClick = { revealWithoutTouch = true },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("اظهر السر بدون كشط") }
+    }
 }
