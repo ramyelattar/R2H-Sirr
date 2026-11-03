@@ -130,16 +130,17 @@ class CoupleCompetitionTest {
         assertFalse(stopped.tiePending)
     }
 
-    @Test fun localCoupleBankHas100DistinctActivities() {
+    @Test fun ownerApprovedV10Has100PreservedRecordsAndActionCodes() {
         val levels = listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY,
             Intensity.HOT, Intensity.HARD)
-        val items = levels.flatMap { CoupleChallengeCatalog.deck(it) }
+        val items = levels.flatMap { CoupleStyleV10Catalog.deck(it) }
         assertEquals(100, items.size)
         assertEquals(100, items.map { it.id }.toSet().size)
+        assertEquals(100, items.map { it.kindCode }.toSet().size)
         assertEquals(100, items.map { it.text }.toSet().size)
         assertTrue(items.all { it.durationSeconds in 30..300 && it.title.isNotBlank() })
-        assertTrue(items.map { it.kind }.toSet().size >= 6)
-        assertEquals(120, CoupleChallengeCatalog.deck(Intensity.HOT)[0].durationSeconds)
+        assertEquals("c-SOFT-1", CoupleStyleV10Catalog.deck(Intensity.SOFT)[0].id)
+        assertEquals(90, CoupleStyleV10Catalog.deck(Intensity.SOFT)[0].durationSeconds)
     }
 
     @Test fun roundCannotAwardPositivePointsBeforeCountdown() {
@@ -170,12 +171,14 @@ class CoupleCompetitionTest {
 
     @Test fun balancedSelectionAvoidsDuplicatePromptsAndIncludesKinds() {
         val g = SessionFactory.create(
-            listOf("الزوج", "الزوجة"), Intensity.HOT, false, Random(11),
-            roundCount = 18, competition = competition()
+            listOf("الزوج", "الزوجة"), Intensity.HARD, false, Random(11),
+            roundCount = 18, variety = ChallengeVariety.MIX_WITH_LOWER,
+            competition = competition()
         )
         assertEquals(18, g.turns.size)
         assertEquals(18, g.turns.map { it.prompt.text }.toSet().size)
-        assertTrue(g.turns.map { it.prompt.kind }.toSet().size >= 5)
+        assertEquals(18, g.turns.map { it.prompt.actionCode }.toSet().size)
+        assertTrue(g.turns.map { it.prompt.level }.toSet().size >= 2)
         assertTrue(g.turns.zipWithNext().all { (a, b) -> a.actorIndex != b.actorIndex })
     }
 
@@ -189,6 +192,50 @@ class CoupleCompetitionTest {
         assertEquals(18, g.turns.size)
         assertEquals(custom.toSet(), g.turns.map { it.prompt.text }.toSet())
         assertTrue(g.turns.all { it.prompt.kind == CoupleChallengeKind.PERSONAL })
+    }
+
+    @Test fun v10RuntimeEligibilityKeepsFlaggedIdsOutOfAutomaticDecks() {
+        val levels = listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY,
+            Intensity.HOT, Intensity.HARD)
+        val playable = levels.flatMap { CoupleV10Policy.deck(it) }
+        assertEquals(81, playable.size)
+        assertEquals(19, CoupleV10Policy.excludedIds.size)
+        assertTrue(playable.none { it.id in CoupleV10Policy.excludedIds })
+        assertTrue(playable.all { it.actionCode.isNotBlank() })
+        assertEquals(16, CoupleV10Policy.eligibleCount(Intensity.SOFT))
+        assertEquals(20, CoupleV10Policy.eligibleCount(Intensity.NORMAL))
+        assertEquals(20, CoupleV10Policy.eligibleCount(Intensity.SEXY))
+        assertEquals(17, CoupleV10Policy.eligibleCount(Intensity.HOT))
+        assertEquals(8, CoupleV10Policy.eligibleCount(Intensity.HARD))
+    }
+
+    @Test fun newSingleLevelSessionUsesV10PreservingExactActionCode() {
+        val session = game()
+        val originals = CoupleStyleV10Catalog.deck(Intensity.SOFT).associateBy { it.id }
+        assertTrue(session.turns.all { it.prompt.id.startsWith("c-SOFT-") })
+        assertTrue(session.turns.all { it.prompt.actionCode ==
+            originals.getValue(it.prompt.id).kindCode })
+    }
+
+    @Test fun hardSingleLevelCannotOverdrawSafetyEligiblePool() {
+        try {
+            SessionFactory.create(listOf("الزوج", "الزوجة"), Intensity.HARD,
+                false, Random(3), roundCount = 18, competition = competition())
+            fail("Must not repeat or silently escalate HARD beyond 8 eligible items")
+        } catch (_: IllegalArgumentException) { }
+    }
+
+    @Test fun newSessionsStayInSelectedLevelUnlessMixExplicitlyRequested() {
+        val single = SessionFactory.create(listOf("الزوج", "الزوجة"),
+            Intensity.SOFT, false, Random(1), roundCount = 12,
+            competition = competition())
+        assertTrue(single.turns.all { it.prompt.level == Intensity.SOFT })
+        val mixed = SessionFactory.create(listOf("الزوج", "الزوجة"),
+            Intensity.HARD, false, Random(1), roundCount = 18,
+            variety = ChallengeVariety.MIX_WITH_LOWER, competition = competition())
+        assertTrue(mixed.turns.any { it.prompt.level == Intensity.HARD })
+        assertTrue(mixed.turns.any { it.prompt.level == Intensity.HOT })
+        assertFalse(mixed.turns.any { it.prompt.level == Intensity.SEXY })
     }
 
     @Test fun newCompetitionIsNotAllowedForPartyMode() {
