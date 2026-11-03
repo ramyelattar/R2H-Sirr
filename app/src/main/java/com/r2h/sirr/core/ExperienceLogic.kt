@@ -109,7 +109,7 @@ data class LocalGame(
     /** End early and count only resolved rounds. Never marks an unwilling player as losing. */
     fun settleEarly(): LocalGame {
         require(competition != null && !finished && round > 0)
-        return copy(competition = competition.copy(settledEarly = true))
+        return copy(competition = competition.copy(settledEarly = true, roundClock = ChallengeClock()))
     }
 
     fun resolveSharedTieBreak(completedByPlayer: List<Boolean>): LocalGame {
@@ -152,7 +152,10 @@ data class LocalGame(
         return copy(competition = rules.copy(tieBreak = next))
     }
 
-    fun leave() = copy(ended = true)
+    fun leave() = copy(
+        ended = true,
+        competition = competition?.copy(roundClock = ChallengeClock())
+    )
 }
 
 enum class ChallengeVariety(val arabic: String) {
