@@ -3,7 +3,7 @@
   "source_file": "content/couple_challenges_style_v10_original.json",
   "refined_file": "content/couple_challenges_v10_refined.json",
   "source_sha256": "3aab9ecbb2868cb16be2feb867e054261fd92d2fdf3a772b0d6fd215ac15be8d",
-  "editorial_status": "DRAFT_NOT_OWNER_APPROVED",
+  "editorial_status": "OWNER_APPROVED_AS_IS",
   "preservation": {
     "ids": 100,
     "unique_action_codes": 100,
@@ -109,70 +109,70 @@
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-SOFT-5",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-SOFT-13",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-SOFT-20",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-NORMAL-1",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-NORMAL-5",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-NORMAL-6",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-NORMAL-14",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-NORMAL-15",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     },
     {
       "id": "c-SEXY-4",
       "instruction_seconds": 60,
       "field_seconds": 90,
       "source_preserved": true,
-      "decision": "PENDING"
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
     }
   ],
   "safety_flags": [
@@ -180,119 +180,127 @@
       "id": "c-SOFT-3",
       "category": "consent",
       "reason": "Wording removes the possibility of objecting",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-SOFT-5",
       "category": "boundary",
       "reason": "Success criterion is tied to a request to stop",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-SOFT-10",
       "category": "consent",
       "reason": "Unconditional obedience wording",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-SOFT-16",
       "category": "consent",
       "reason": "Automatic compliance phrasing",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HOT-4",
       "category": "physical_risk",
       "reason": "Throat-related physical risk",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HOT-5",
       "category": "health",
       "reason": "Potential reproductive consequences",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HOT-17",
       "category": "physical_risk",
       "reason": "Forceful physical activity",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-3",
       "category": "physical_risk",
       "reason": "Neck pressure / strangulation risk",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-6",
       "category": "health",
       "reason": "Potential infection and injury considerations",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-7",
       "category": "physical_risk",
       "reason": "Head control and respiratory injury risk",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-8",
       "category": "physical_risk",
       "reason": "Forceful impact risk",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-10",
       "category": "consent",
       "reason": "No-verbal-response compliance requirement",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-11",
       "category": "health",
       "reason": "Potential injury risk",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-12",
       "category": "physical_risk",
       "reason": "Neck pressure / strangulation risk",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-14",
       "category": "consent",
       "reason": "No-stop instruction",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-15",
       "category": "health",
       "reason": "Cross-site infection considerations",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-17",
       "category": "boundary",
       "reason": "Undefined scope for completion",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-18",
       "category": "physical_risk",
       "reason": "Forceful activity and injury risk",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     },
     {
       "id": "c-HARD-20",
       "category": "boundary",
       "reason": "Open-ended obligation to finish",
-      "action": "OWNER_REVIEW_REQUIRED_BEFORE_RUNTIME_ACTIVATION"
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
     }
   ],
-  "note": "Safety flags are targeted, non-exhaustive editorial warnings, not a complete risk assessment.",
+  "note": "Owner approved the current refined text without additional edits. Editorial approval does not override the recorded health/consent/physical-risk flags, and does not imply safe runtime activation.",
   "runtime_activation": "NOT_ENABLED",
   "build": "NOT_RUN",
-  "tests": "NOT_RUN"
+  "tests": "NOT_RUN",
+  "owner_approval": {
+    "approved_on": "2026-11-03",
+    "approved_file": "content/couple_challenges_v10_refined.json",
+    "scope": "Exact current wording, titles, IDs, kinds, level placement, order and seconds accepted as-is by owner.",
+    "further_copy_edits_allowed_without_new_approval": false,
+    "safety_signoff": false,
+    "runtime_activation_signoff": false
+  }
 }
