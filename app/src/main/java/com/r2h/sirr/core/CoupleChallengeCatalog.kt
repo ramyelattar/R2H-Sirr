@@ -38,7 +38,14 @@ data class CoupleActivity(
 object CoupleChallengeCatalog {
     private fun list(level: Intensity, entries: List<Triple<CoupleChallengeKind, String, String>>): List<CoupleActivity> =
         entries.mapIndexed { i, (kind, title, instruction) ->
-            CoupleActivity("couple2-${level.name}-${i + 1}", level, kind, title, instruction)
+            CoupleActivity("couple2-${level.name}-${i + 1}", level, kind, title, instruction,
+                seconds = if (level == Intensity.HOT && i == 0) 300 else when (kind) {
+                    CoupleChallengeKind.TALK, CoupleChallengeKind.TOGETHER -> 180
+                    CoupleChallengeKind.WHISPER -> 90
+                    CoupleChallengeKind.CHOICE, CoupleChallengeKind.CLOSENESS,
+                    CoupleChallengeKind.SURPRISE -> 120
+                    CoupleChallengeKind.PERSONAL -> 300
+                })
         }
 
     private val soft = list(Intensity.SOFT, listOf(
