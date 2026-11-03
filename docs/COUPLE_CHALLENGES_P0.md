@@ -1,75 +1,43 @@
-# R2H-Play — Couple Challenges P0
+# R2H-Play — Couple Challenges feature: source close-out
 
-Status: **source implemented on an isolated branch; not built, not tested, not accepted**.
+**State:** owner-approved v10 editorial copy; Android source integrated with conservative runtime eligibility; **NOT compiled, tested, merged, or released**.
 
-## Scope
+## Editorial source: immutable
 
-This change covers **offline local two-player couple challenge sessions**. It does not alter the party mode, remote backend protocol, quizzes, whispers, scratch, or dice content. The original shared challenge bank remains intact.
+- Owner-uploaded baseline: `content/couple_challenges_style_v10_original.json`.
+- Owner-approved wording, spelling edits and exact timing fields: `content/couple_challenges_v10_refined.json`.
+- Exactly 100 entries across SOFT / NORMAL / SEXY / HOT / HARD (20 each).
+- All original `id`, `kind`, `title`, level and `seconds` values are preserved in approved content. 14 wording-only corrections were accepted by the owner. The 10 text-vs-seconds differences were accepted unchanged.
+- The source JSON is generated to `CoupleStyleV10Catalog.kt` using `tools/generate_couple_style_v10.mjs`; this generator has **not** been executed for verification.
+- The prior v2 JSON and Kotlin bank remain in the repository as historical material; new local couple sessions now select from v10 through `CoupleV10Policy`, not from v2.
 
-## Content architecture
+## Safety and visibility policy
 
-- Canonical editorial file: `content/couple_challenges_v2.json` (100 owner-supplied, language-edited explicit challenges, 20 per intensity).
-- Generated Kotlin catalog: `app/src/main/java/com/r2h/sirr/core/CoupleChallengeCatalog.kt`.
-- Deterministic local generator: `node tools/generate_couple_challenges.mjs`.
-- Planned future sync check: `node tools/generate_couple_challenges.mjs --check` (**not run**).
-- Six built-in challenge kinds: talking, whispers, choice, closeness, together, surprise.
-- User-authored activities are marked `PERSONAL`, editable as one TXT line per activity (up to 60 prompts of 6–500 characters). Import and export use Android's document picker; encrypted in-app persistence uses the existing local vault.
-- **Exported TXT is plaintext outside the app** and must be handled as sensitive by the owner.
-- When the user's private pack has enough activities for a session, the game chooses only from those custom activities. A smaller pack is supplemented with built-in content.
-- Fresh prompts are prioritized over recently seen prompts; within a session prompt text does not repeat. New local couple selection balances activity kinds rather than repeating only one category.
-- The local built-in catalog now contains the owner's v2 explicit challenge source with language cleanup. This is **not yet owner-approved final wording**: 60 entries have changes, including 16 that warrant deliberate review because wording or intent was clarified.
+The owner approved the **text**, not physical safety. The separate `CoupleV10Policy` keeps all 100 records in the source but excludes 19 previously flagged IDs from automated challenge drawing. Eligible counts: SOFT 16, NORMAL 20, SEXY 20, HOT 17, HARD 8. This list is targeted and is **not a certification that the remaining 81 are risk-free**. No flagged wording is silently modified. Further activation of flagged content is not inferred from editorial approval.
 
-## Competition rules (approved product intent)
+One-level sessions do not draw from harder levels and respect the available count. The mixed-level option explicitly uses the chosen level plus the next lower one. The screen adjusts available round-count options (6, 10, 12, 18) to prevent requesting an impossible unique draw. In the HARD one-level setting only 6 is currently feasible without repeats; selecting mixed-level allows longer sessions.
 
-- Both partners agree on the reward, game intensity, number of challenges (6/10/12/18), and optional duration (15/30/60 minutes or unlimited).
-- The two local player roles alternate each round.
-- The participant responsible for the challenge receives +10 for a completed activity; -10 for activity not completed; 0 for noncompletion explicitly agreed by both.
-- Either partner can decline, end, or interrupt any interaction. Scores represent only the game's voluntary bookkeeping and must not enforce a sexual act or a reward.
-- Challenge countdowns have per-activity durations taken from the owner-provided v2 JSON (30–300 seconds after 12 timing corrections). The former draft challenge-001 is not silently mixed into the new 100-item v2 bank.
-- Completing a timed activity is only eligible for +10 after the countdown has elapsed; time spent paused does not count.
-- The round timer is persisted in encrypted session v3, supports pause/resume, and keeps elapsed time across process restoration. The overall session timer is an advisory threshold: when reached, users may continue or settle scored rounds without automatic negative scoring.
-- The scoreboard and end-of-session summary show scores and results per player; the winner sees the previously agreed reward.
+## Feature flow integrated in source
 
-## Tie-break
+- Couple session setup with two named players, 5 intensity choices, custom challenge pack, rounds, advisory overall time limit (15/30/60 min or no limit), reward selected before start, optional agreed shared tie-break challenge.
+- Alternating player turns, v10 title/type/duration display, reveal and two-party consent.
+- Duration-based persisted countdown with start, pause, resume; revoking either partner's consent pauses a running timer.
+- Score changes per round: completed +10, not completed -10, mutually agreed skip 0. A deliberate stop ends without a winner or reward.
+- On points tie: one shared challenge, then two pre-registered knowledge questions if necessary. Subsequent tied question rounds repeat until resolved or participants choose to stop.
+- End screen with totals and breakdown, declared winner and previously agreed reward, with separate consent to the reward.
+- Offline user-authored TXT challenge import/export. Content is encrypted within the existing app vault; exported TXT is plaintext and clearly labelled as such.
+- New session persistence format **v4** records the original v10 `kind` as `actionCode: String` plus the legacy broad UI category. Reads v1/v2/v3 records with backward-compatible defaults. The existing party mode remains v1 with legacy +1 scoring.
 
-1. Equal points after normal scoring triggers one shared challenge. Players may define its wording before the session.
-2. If exactly one partner completes that challenge, that partner wins, with no additional regular points.
-3. If both or neither completes it, each author writes one question about themselves and a reference answer.
-4. Both answers are committed to encrypted storage before either partner answers.
-5. Only one correct response decides the winner. If both correct or both wrong, use two new questions.
-6. Reference answers are removed from the tie-break state after the winner is decided.
-7. The winner's reward remains subject to both partners' agreement. Partners may end the tie-break without a winner or reward at any stage.
+## Verification and release constraints
 
-## Persistence and backward compatibility
+**Do not claim release readiness from source changes.** No Android Gradle build, Kotlin unit test, instrumentation test, APK install or device runtime review has been performed. A static source inspection cross-referenced 100 v10 catalog entries, the 19 exclusions and the v4 save/read code; that inspection is **not** compile or test evidence. Kotlin test source currently declares 24 cases but none have been executed.
 
-- Legacy session v1 is still read with +1/skip legacy semantics.
-- Draft competition v2 is still accepted on load.
-- New couple competition v3 persists: rules, reward, tie challenge, outcomes, typed activity metadata, countdown state, tie-break state, and scores.
-- Load rejects malformed scores, invalid schema versions, and impossible tie states. The previous project/user data is not modified automatically.
-- Party sessions retain v1 persistence and legacy scoring.
+Remaining acceptance checks before merging/release:
+- Android compilation and JVM tests on supported Gradle/JDK/SDK.
+- Instrumented encrypted-vault persistence round-trips for versions v1–v4.
+- Real-device and process-death resume, countdown/consent, scores, exit, shared tie-break and knowledge question behavior.
+- Regression checks for party, remote, and other app routes, as well as actual Android RTL, accessibility and portrait layouts.
+- Confirm that the excluded 19 are never selected, including custom/fallback paths, and that the user understands the eligible count.
+- Preserve frozen editorial content unless owner explicitly requests a change.
 
-## Not yet verified
-
-No Android compilation, tests, APK installation, runtime review, or GitHub Actions success has been demonstrated. GitHub Actions previously returned `startup_failure` before executing jobs.
-
-Unit-test source has been added for scoring, timing, early stop, custom content, alternating turns, and tie states. These tests have **not been executed**.
-
-## Deferred verification after feature-content approval
-
-- Confirm JSON generator sync and baseline content tests.
-- Compile Android on JDK 17 / Gradle 8.13 / Android SDK.
-- Execute Kotlin unit and data round-trip migration tests for v1/v2/v3 on representative isolated data.
-- Test start/pause/resume/expiry after process death and screen changes.
-- Verify score integrity for all outcomes, including cancellation, 0-point mutual agreement, timer completion, and tie-break.
-- Verify no regressions to party, remote, quiz, dice, scratch or whispers.
-- Review real Android portrait layouts, accessibility, Arabic RTL and screen-reader labels.
-- Run dedicated real-device tests and confirm the APK behavior before merging into `main`.
-
-## Owner/content acceptance remaining
-
-The owner explicitly asked to finish the complete feature before building and testing. Source implementation alone is **not** evidence of readiness. The owner-supplied v2 copy has undergone editorial cleanup, but edits that affect meaning still require owner review and acceptance where the owner wants different user-provided private copy; do not automatically treat it as accepted.
-
-
-## Owner-authored explicit content import
-
-The attached `couple_challenges_explicit_v2.json` was used as the input for canonical `content/couple_challenges_v2.json`. All 100 IDs, five levels and six challenge kinds were preserved. A subset of entries received language corrections, and 12 durations were aligned. The owner's source was not copied to the public backend or remote party catalog. The repository is private at the time of this edit. **Final wording and level progression still require owner review**. No application build or automated tests were run.
+This is **source-level completion of the currently eligible subset**, not complete operational acceptance of all 100 challenge records.
