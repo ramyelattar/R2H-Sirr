@@ -206,7 +206,14 @@ private fun SirrApp() {
                         AlertDialog(
                             onDismissRequest = { askToLeave = false },
                             title = { Text("عايز تخرج من اللعبة؟") },
-                            text = { Text("جولات التحديات المحلية محفوظة مشفّرة، لكن وسائط المعاينة المؤقتة ممكن تتمسح.") },
+                            text = {
+                                 Text(
+                                     if (route == "quiz")
+                                         "جولة الأسئلة وإجاباتها محفوظة محليًا بشكل مشفّر. لما ترجع للعبة تقدر تكمل من مكانك، إلا لو اخترت مسح الجولة."
+                                     else
+                                         "جولات التحديات المحلية محفوظة مشفّرة، لكن وسائط المعاينة المؤقتة ممكن تتمسح."
+                                 )
+                             },
                             confirmButton = {
                                 TextButton(onClick = { askToLeave = false; route = "home" }) {
                                     Text("أيوه، اخرج")

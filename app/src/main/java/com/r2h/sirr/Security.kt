@@ -105,6 +105,17 @@ internal class LocalVault(private val context: Context) {
         val plain = try { decrypt(encrypted) } finally { encrypted.fill(0) }
         try { String(plain, Charsets.UTF_8) } finally { plain.fill(0) }
     }.getOrNull()
+    /**
+     * Existence check only; never decrypts or exposes payload.
+     * Covers interrupted AtomicFile backups, so unreadable records are not treated as absent.
+     */
+    fun hasPrivate(name: String): Boolean {
+        require(name.matches(Regex("[a-z0-9-]{1,30}")))
+        val file = File(dir, "$name.private")
+        return file.exists() || File(dir, "$name.private.bak").exists() ||
+            File(dir, "$name.private.new").exists()
+    }
+
     fun deletePrivate(name: String) {
         require(name.matches(Regex("[a-z0-9-]{1,30}")))
         AtomicFile(File(dir, "$name.private")).delete()

@@ -1,0 +1,977 @@
+{
+  "source": "content/quizzes_ar_v4.json",
+  "original_main_blob_sha": "82983dc859a8bc29f65361fb0e0006e257ea5bc0",
+  "current_version": 4,
+  "counts": {
+    "packs": 7,
+    "questions_per_pack": 25,
+    "questions": 175,
+    "answer_options": 525
+  },
+  "review": "Editorial revision in active draft; owner approval pending, no Gradle/Android verification.",
+  "changes": [
+    {
+      "pack": "quiz_02",
+      "question": 20,
+      "before": "لما توحشك حد، أول حاجة بتعملها إيه؟",
+      "after": "لما يوحشك حد، أول حاجة بتعملها إيه؟",
+      "type": "wording",
+      "rationale": "Egyptian Arabic agreement"
+    },
+    {
+      "pack": "quiz_05",
+      "question": 9,
+      "before": "لو تقدر تعيد لحظة واحدة، تختار ليه؟",
+      "after": "لو تقدر تعيد لحظة واحدة، إيه اللي يخليك تختارها؟",
+      "type": "clarity",
+      "rationale": "Resolve incomplete/ambiguous phrasing"
+    },
+    {
+      "pack": "quiz_05",
+      "question": 24,
+      "before": "لو اتاح لك يوم كامل من غير مسئوليات، تقضيه إزاي؟",
+      "after": "لو جالك يوم كامل من غير مسؤوليات، هتقضيه إزاي؟",
+      "type": "wording",
+      "rationale": "Fix grammar and keep colloquial tone"
+    }
+  ],
+  "new_review_baseline_commit": "6919df7e978b09fb9ec59dd7a89ce4fc03bd7055",
+  "next_stage": "43 focused edits including three role-relative comparison defects and expressive material in packs 04/05/07; no quiz answers/IDs added or removed.",
+  "reviewed_revision": {
+    "change_count": 43,
+    "untouched_question_count": 132,
+    "owner_approval": "PENDING",
+    "changes": [
+      {
+        "pack": "quiz_02",
+        "question": 3,
+        "before": {
+          "text": "في العلاقة، مين بيحب يبدأ الكلام بعد الزعل؟",
+          "choices": [
+            "أنا غالبًا",
+            "هو غالبًا",
+            "حسب الموقف"
+          ]
+        },
+        "after": {
+          "text": "بعد الزعل، إيه طريقتك المفضلة لفتح الكلام من جديد؟",
+          "choices": [
+            "أبدأ بسؤال هادي",
+            "أقول اللي ضايقني بوضوح",
+            "أطلب وقت وبعدين نتكلم"
+          ]
+        },
+        "reason": "Comparable first-person action preference (removes self/other role ambiguity)"
+      },
+      {
+        "pack": "quiz_03",
+        "question": 14,
+        "before": {
+          "text": "مين فيكم بيبدأ المصالحة أسرع؟",
+          "choices": [
+            "أنا غالبًا",
+            "التاني غالبًا",
+            "بتختلف حسب الغلطة"
+          ]
+        },
+        "after": {
+          "text": "بعد خناقة بسيطة، إيه أول خطوة بتحب تحصل قبل المصالحة؟",
+          "choices": [
+            "نسمع بعض من غير مقاطعة",
+            "كل واحد يشرح اللي ضايقه",
+            "نهدى الأول ونرجع نتكلم"
+          ]
+        },
+        "reason": "Comparable first-person action preference (removes self/other role ambiguity)"
+      },
+      {
+        "pack": "quiz_03",
+        "question": 18,
+        "before": {
+          "text": "مين بيحب يجرب أكل جديد أكتر؟",
+          "choices": [
+            "أنا اللي بحب أجرب",
+            "الطرف التاني",
+            "الاتنين على حسب المود"
+          ]
+        },
+        "after": {
+          "text": "لما تجرب أكلة جديدة، إيه أكتر حاجة بتشجعك؟",
+          "choices": [
+            "حد أثق في ذوقه يرشحها",
+            "أشوف مكوناتها الأول",
+            "أغامر وأطلبها من غير توقعات"
+          ]
+        },
+        "reason": "Comparable first-person action preference (removes self/other role ambiguity)"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 2,
+        "before": {
+          "text": "لو حد بصلك فترة طويلة، بتفسر النظرة إزاي؟",
+          "choices": [
+            "يمكن معجب",
+            "يمكن سرحان",
+            "أفضل أسأله من غير افتراض"
+          ]
+        },
+        "after": {
+          "text": "حد بيبصلك كل شوية في قعدة، هتعرف قصده إزاي من غير ما تفترض؟",
+          "choices": [
+            "أفتح كلام عادي",
+            "أسأله بلطف عن اللي شاغله",
+            "أسيب الموقف يوضح نفسه"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 3,
+        "before": {
+          "text": "أنهي مجاملة ممكن تلخبطك؟",
+          "choices": [
+            "إنت مختلف",
+            "ضحكتك حلوة",
+            "مبسوط وأنا بكلمك"
+          ]
+        },
+        "after": {
+          "text": "مجاملة واحدة خلتك تفكر فيها بعد ما سمعتها؛ كانت بتخص إيه؟",
+          "choices": [
+            "طريقة تفكيري",
+            "تفصيلة محدش بياخد باله منها",
+            "إحساس الشخص وهو معايا"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 7,
+        "before": {
+          "text": "لما تلاحظ اهتمام من حد، ردك الأول إيه؟",
+          "choices": [
+            "أبتسم",
+            "أسأل سؤال",
+            "أستنى أتأكد"
+          ]
+        },
+        "after": {
+          "text": "لما تلاحظ اهتمام واضح من حد، أول إشارة مريحة منك بتكون إيه؟",
+          "choices": [
+            "سؤال يفتح كلام",
+            "ابتسامة وأكمل القعدة",
+            "أقول بصراحة إني مبسوط بالكلام"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 9,
+        "before": {
+          "text": "لو رسالة فيها تلميح غامض، تعمل إيه؟",
+          "choices": [
+            "أسأل قصدك إيه",
+            "أرد بتلميح ألطف",
+            "أستنى وأفكر"
+          ]
+        },
+        "after": {
+          "text": "وصلك تلميح غامض في رسالة، تحب ترد بإيه؟",
+          "choices": [
+            "سؤال يكشف المقصود",
+            "تلميح خفيف من عندي",
+            "دعوة لكلام أوضح"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 12,
+        "before": {
+          "text": "إيه اللي يخليك تعرف إن الإعجاب متبادل؟",
+          "choices": [
+            "كلام صريح",
+            "اهتمام مستمر",
+            "دعوة واضحة للتعارف"
+          ]
+        },
+        "after": {
+          "text": "بالنسبالك، إمتى الإعجاب يبقى واضح من غير تخمين؟",
+          "choices": [
+            "لما حد يعبر بالكلام",
+            "لما يطلب نتقابل تاني",
+            "لما الاهتمام يبقى متبادل باستمرار"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 14,
+        "before": {
+          "text": "أنهي نوع من النظرات بيأثر فيك؟",
+          "choices": [
+            "نظرة اهتمام",
+            "نظرة ثقة",
+            "نظرة ضحك"
+          ]
+        },
+        "after": {
+          "text": "لو عندك دقيقة تبص في عين اللي بتحبه، إيه اللي نفسك توصله من غير كلام؟",
+          "choices": [
+            "إني مشتاق",
+            "إني مرتاح معاه",
+            "إن عندي كلام لسه ما اتقالش"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 16,
+        "before": {
+          "text": "تحب رسالة الإعجاب الأولى تكون عاملة إزاي؟",
+          "choices": [
+            "بسيطة وصريحة",
+            "ذكية وفيها هزار",
+            "قصيرة وغامضة"
+          ]
+        },
+        "after": {
+          "text": "رسالة إعجاب أول مرة؛ تحب تكون جملتها الأولى إيه؟",
+          "choices": [
+            "أنا مبسوط إني عرفتك",
+            "في حاجة في كلامك شدتني",
+            "نفسي نتكلم أكتر لو تحب"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 19,
+        "before": {
+          "text": "أنهي طريقة غزل بتبان طبيعية عندك؟",
+          "choices": [
+            "كلمة وقتها",
+            "لفتة صغيرة",
+            "ابتسامة واضحة"
+          ]
+        },
+        "after": {
+          "text": "في لحظة إعجاب، إيه أسلوبك الطبيعي من غير ما تتصنع؟",
+          "choices": [
+            "أفتكر تفصيلة قالها",
+            "أقول مجاملة محددة",
+            "أدعوه لوقت هادي سوا"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_04",
+        "question": 23,
+        "before": {
+          "text": "لو عايز تعترف بإعجابك، تختار فين؟",
+          "choices": [
+            "مكان هادي",
+            "وقت مناسب بعد خروجة",
+            "رسالة خاصة"
+          ]
+        },
+        "after": {
+          "text": "مكان واحد تخليه شاهد على اعتراف مهم، تختار إيه؟",
+          "choices": [
+            "مكان بينا فيه ذكرى",
+            "طريق بنتمشى فيه",
+            "قعدة هادية من غير ناس كتير"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 1,
+        "before": {
+          "text": "لو قدامك أمنية واحدة للسهرة دي، تختار إيه؟",
+          "choices": [
+            "وقت هادي",
+            "اعتراف لطيف",
+            "مفاجأة غير متوقعة"
+          ]
+        },
+        "after": {
+          "text": "اقفل عينيك وتخيل إن السهرة خلصت على مزاجك؛ إيه اللي نفسك تفتكره منها؟",
+          "choices": [
+            "كلمة اتقالت لأول مرة",
+            "مفاجأة فهمتني أكتر",
+            "لحظة هدوء قريبة"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 3,
+        "before": {
+          "text": "لو هتكتب رسالة مش هتتبعت، تبدأها بإيه؟",
+          "choices": [
+            "كان نفسي أقولك",
+            "وحشتني من غير سبب",
+            "فاكر اليوم اللي"
+          ]
+        },
+        "after": {
+          "text": "لقيت رسالة قديمة كتبتها ومبعتهاش؛ إيه اللي كان ناقصك وقتها؟",
+          "choices": [
+            "الشجاعة إني أبعتها",
+            "الكلام الصح اللي أقوله",
+            "معرفة إذا كان الوقت مناسب"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 6,
+        "before": {
+          "text": "إيه الاعتراف اللي محتاج توقيت مناسب؟",
+          "choices": [
+            "إني مشتاق",
+            "إني اتأثرت بموقف",
+            "إني عايز نتكلم أكتر"
+          ]
+        },
+        "after": {
+          "text": "اعتراف مأجله من فترة؛ أنهي وقت تختاره ليه؟",
+          "choices": [
+            "بعد لحظة ضحك وراحة",
+            "وسط كلام صريح بينا",
+            "في رسالة أقدر أرتبها"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 11,
+        "before": {
+          "text": "لو هتكتب أمنية على ورقة وتخبيها، تكون عن إيه؟",
+          "choices": [
+            "ذكريات جاية",
+            "حاجة تتغير",
+            "شجاعة أقول الحقيقة"
+          ]
+        },
+        "after": {
+          "text": "لو هتخبي أمنية في ورقة، هتبدأها بأنهي جملة؟",
+          "choices": [
+            "نفسي نرجع…",
+            "المرة الجاية…",
+            "عمري ما قلتلك…"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 16,
+        "before": {
+          "text": "لو تقدر تخلي اليوم ده له عنوان، تختار إيه؟",
+          "choices": [
+            "بداية جديدة",
+            "مفاجأة لطيفة",
+            "حكاية لسه بتبدأ"
+          ]
+        },
+        "after": {
+          "text": "اختار عنوان سري للسهرة دي، يكون شكله إيه؟",
+          "choices": [
+            "حاجة حصلت بالغلط",
+            "الكلام اللي اتأخر",
+            "أول مرة نتجرأ نسأل"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 19,
+        "before": {
+          "text": "إيه نوع الشجاعة اللي نفسك تكتسبه؟",
+          "choices": [
+            "الاعتراف بالمشاعر",
+            "قول لأ بوضوح",
+            "بدء كلام صعب"
+          ]
+        },
+        "after": {
+          "text": "في سؤال نفسك تسأله من زمان، إيه اللي مانعك؟",
+          "choices": [
+            "خايف أحرج اللي قدامي",
+            "مش لاقي اللحظة المناسبة",
+            "مش عارف أصيغه كويس"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 22,
+        "before": {
+          "text": "لو هتعترف بحاجة اتأخرت تقولها، تبدأ منين؟",
+          "choices": [
+            "من أول موقف",
+            "من سبب السكوت",
+            "من إحساسي دلوقتي"
+          ]
+        },
+        "after": {
+          "text": "قدامك فرصة تقول جملة مأجلها؛ هتبدأ منين؟",
+          "choices": [
+            "من اللي كنت خايف أقوله",
+            "من سبب سكوتي",
+            "من إحساسي دلوقتي"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 23,
+        "before": {
+          "text": "إيه الشيء اللي تتمنى اللي معاك يفهمه من غير شرح طويل؟",
+          "choices": [
+            "إني محتاج هدوء",
+            "إني مشتاق",
+            "إني مقدّر وجوده"
+          ]
+        },
+        "after": {
+          "text": "لو الشخص اللي معاك فهم منك حاجة واحدة من غير شرح، تحب تكون إيه؟",
+          "choices": [
+            "إني باحتاج طمأنة أوقات",
+            "إني بافتكر التفاصيل الصغيرة",
+            "إني بحب الوضوح حتى لو صعب"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_05",
+        "question": 25,
+        "before": {
+          "text": "لو هتسيب أمنية للجولة الجاية، هتكون عن إيه؟",
+          "choices": [
+            "مغامرة لطيفة",
+            "كلام أعمق",
+            "ذكرى جديدة"
+          ]
+        },
+        "after": {
+          "text": "سيب رسالة قصيرة للمرة اللي هتلعبوا فيها تاني؛ تحب تكون عن إيه؟",
+          "choices": [
+            "سؤال مش جاهز أسأله النهارده",
+            "مكان نفسنا نزوره",
+            "اعتراف محتاج لحظة مناسبة"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_06",
+        "question": 2,
+        "before": {
+          "text": "أنهي تصرف بيخليك تحس إن كلمة لأ محترمة؟",
+          "choices": [
+            "التوقف فورًا",
+            "عدم الزن",
+            "تغيير الموضوع بهدوء"
+          ]
+        },
+        "after": {
+          "text": "لما تقول «مش مرتاح»، أنهي رد فعليًا يطمنك؟",
+          "choices": [
+            "الطرف التاني يوقف فورًا",
+            "يسألني محتاج إيه من غير ضغط",
+            "يديني مساحة من غير زعل"
+          ]
+        },
+        "reason": "Respectful, distinct boundaries and personal preferences"
+      },
+      {
+        "pack": "quiz_06",
+        "question": 7,
+        "before": {
+          "text": "تحب حدودك تتفهم إزاي؟",
+          "choices": [
+            "بكلام مباشر",
+            "بسؤال قبل أي خطوة",
+            "باحترام أي تردد"
+          ]
+        },
+        "after": {
+          "text": "لو حدودك اتغيرت من موقف للتاني، تحب توضح ده إزاي؟",
+          "choices": [
+            "أقوله قبل ما نبدأ",
+            "أنبه وقت ما أحس بتردد",
+            "أقترح بديل أرتاح له"
+          ]
+        },
+        "reason": "Respectful, distinct boundaries and personal preferences"
+      },
+      {
+        "pack": "quiz_06",
+        "question": 14,
+        "before": {
+          "text": "لو حد ضحك من التوتر، تفهم ده إزاي؟",
+          "choices": [
+            "مش معناه موافقة",
+            "أسأله إذا مرتاح",
+            "أوقف لحد ما يوضح"
+          ]
+        },
+        "after": {
+          "text": "لو حد ضحك وهو متوتر، إيه التصرف اللي تختاره بدل ما تفترض إنه مبسوط؟",
+          "choices": [
+            "أسأله لو مرتاح",
+            "أوقف وأسيب له فرصة يتكلم",
+            "أغيّر الموضوع لو طلب"
+          ]
+        },
+        "reason": "Respectful, distinct boundaries and personal preferences"
+      },
+      {
+        "pack": "quiz_06",
+        "question": 21,
+        "before": {
+          "text": "إيه التصرف اللي يبوّظ أي موافقة؟",
+          "choices": [
+            "الضغط",
+            "الإلحاح",
+            "التقليل من الرفض"
+          ]
+        },
+        "after": {
+          "text": "أي تصرف يخلّيك تفقد إحساسك بالأمان أسرع؟",
+          "choices": [
+            "الإلحاح بعد الرفض",
+            "الهزار على حساب حدودي",
+            "نقل كلام خاص من غير إذني"
+          ]
+        },
+        "reason": "Respectful, distinct boundaries and personal preferences"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 2,
+        "before": {
+          "text": "إيه أكتر اعتراف ممكن تفاجئ بيه اللي معاك؟",
+          "choices": [
+            "إعجاب قديم",
+            "سر لطيف",
+            "موقف محرج"
+          ]
+        },
+        "after": {
+          "text": "اعتراف واحد نفسك تقوله لشخص قريب بس بتتردد؛ غالبًا هيكون عن إيه؟",
+          "choices": [
+            "تفصيلة شدتني فيه",
+            "غيرة ما قلتهاش",
+            "لحظة افتكرته فيها فجأة"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 3,
+        "before": {
+          "text": "لو هتختار تحدي بالكلام، تختار أنهي واحد؟",
+          "choices": [
+            "مجاملة غير متوقعة",
+            "حكاية من غير أسماء",
+            "جملة غزل جديدة"
+          ]
+        },
+        "after": {
+          "text": "قدامك فرصة تقول جملة مش متوقعها منك؛ تختار إيه؟",
+          "choices": [
+            "أول مرة شوفتك كنت متوتر",
+            "في حاجة عنك لسه مش عارف أقولها",
+            "نفسي أسألك سؤال شخصي"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 4,
+        "before": {
+          "text": "أنهي حاجة تخليك تتكسف وتضحك؟",
+          "choices": [
+            "مجاملة مفاجئة",
+            "سؤال مباشر",
+            "نظرة طويلة"
+          ]
+        },
+        "after": {
+          "text": "لو شريكك همسلك بجملة جريئة، أنهي تفصيلة هتخليك تبتسم من الكسوف؟",
+          "choices": [
+            "يناديني باسم خاص بينا",
+            "يقول إنه مشتاق لقربي",
+            "يعترف بحاجة كان مكسوف يقولها"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 6,
+        "before": {
+          "text": "تختار أنهي لعبة في نص السهرة؟",
+          "choices": [
+            "صراحة",
+            "تحدي خفيف",
+            "سؤال غامض"
+          ]
+        },
+        "after": {
+          "text": "لو عندك حق تختار نوع السؤال الجاي، هتجازف بأنهي نوع؟",
+          "choices": [
+            "حقيقة خبّيتها بدافع الكسوف",
+            "توقع عن اللي في بال الطرف التاني",
+            "موقف محرج محدش يعرفه"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 7,
+        "before": {
+          "text": "لو هتعترف إنك معجب بحد، تبدأ إزاي؟",
+          "choices": [
+            "أقولها مباشرة",
+            "أبعت رسالة",
+            "أختار وقت مناسب"
+          ]
+        },
+        "after": {
+          "text": "شريكك سألك: «إيه أكتر حاجة فيا بتخليك تقرب؟» تختار إيه؟",
+          "choices": [
+            "نظرة معينة منه",
+            "طريقته وهو بيسمعني",
+            "لمسته لما نكون مرتاحين"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 8,
+        "before": {
+          "text": "إيه أغرب سؤال بريء ممكن تسأله لحد معجب بيه؟",
+          "choices": [
+            "بتخاف من إيه",
+            "بتحلم بإيه",
+            "بتضحك على إيه"
+          ]
+        },
+        "after": {
+          "text": "سؤال جريء لكن محترم نفسك تسمع إجابته؛ يكون عن إيه؟",
+          "choices": [
+            "أول انطباع حقيقي عني",
+            "أكتر كلمة مني فضلت في بالك",
+            "حاجة نفسك تطلبها ومكسوف"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 9,
+        "before": {
+          "text": "لو هتعمل مشهد تمثيل جريء شوية، تختار إيه؟",
+          "choices": [
+            "لقاء صدفة",
+            "رسالة متأخرة",
+            "اعتراف في آخر لحظة"
+          ]
+        },
+        "after": {
+          "text": "تخيل إنكم اتقابلتوا أول مرة من جديد؛ هتغيّر إيه في المشهد؟",
+          "choices": [
+            "أبدأ كلام أسرع",
+            "أقول مجاملة كنت مخبيها",
+            "أسيب الموقف يمشي بطبيعته"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 12,
+        "before": {
+          "text": "أنهي نوع غزل ممكن تقوله وش لوش؟",
+          "choices": [
+            "مجاملة في الشخصية",
+            "اعتراف بالاشتياق",
+            "كلمة سر بيننا"
+          ]
+        },
+        "after": {
+          "text": "لو هتقول غزل وش لوش من غير تحضير، هتبدأ بإيه؟",
+          "choices": [
+            "قرب مني شوية",
+            "وحشتني من أول اليوم",
+            "نفسي نسرق وقت لينا"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 13,
+        "before": {
+          "text": "لو تقدر تسأل سؤال محدش متوقعه، يكون عن إيه؟",
+          "choices": [
+            "ذكرى غريبة",
+            "أمنية مخبية",
+            "حاجة بتفرح الشخص"
+          ]
+        },
+        "after": {
+          "text": "في سر صغير عن إعجاب قديم، أنهي تفصيلة ممكن تحكيها؟",
+          "choices": [
+            "إزاي بدأ من غير ما أخد بالي",
+            "أول رسالة اتكتبت واتمسحت",
+            "لحظة فهمت فيها إنه مجرد إعجاب"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 15,
+        "before": {
+          "text": "لو اتحديت تقول حقيقة عن نفسك، تقول إيه؟",
+          "choices": [
+            "عادة غريبة",
+            "موقف اتعلمت منه",
+            "أمنية قديمة"
+          ]
+        },
+        "after": {
+          "text": "مطلوب منك تقول حقيقة عن نفسك ممكن تفاجئ اللي قدامك؛ تختار إيه؟",
+          "choices": [
+            "مرة حسيت بالغيرة وسكت",
+            "مرة تمنيت كلمة ومطلبتهاش",
+            "مرة كنت عايز أقرب واترددت"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 16,
+        "before": {
+          "text": "مين أصعب: تسأل ولا تجاوب؟",
+          "choices": [
+            "السؤال",
+            "الإجابة",
+            "الاتنين حسب الشخص"
+          ]
+        },
+        "after": {
+          "text": "لو قدامك سؤال واحد صعب، إيه الأصعب بالنسبالك؟",
+          "choices": [
+            "أسأل حاجة ممكن إجابتها تفاجئني",
+            "أجاوب بصراحة عن إحساسي",
+            "أعترف إني مش جاهز أتكلم"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 17,
+        "before": {
+          "text": "لو عايز تتكلم من غير أسماء، تحكي عن إيه؟",
+          "choices": [
+            "أول إعجاب",
+            "موقف مضحك",
+            "رسالة غريبة"
+          ]
+        },
+        "after": {
+          "text": "احكي حكاية من غير أسماء؛ أنهي جزء تبدأ بيه؟",
+          "choices": [
+            "الرسالة اللي غيرت رأيي",
+            "الموقف اللي كسفني",
+            "الصدفة اللي فاكرها لحد دلوقتي"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 18,
+        "before": {
+          "text": "أنهي رد على جملة وحشتني يعجبك؟",
+          "choices": [
+            "وإنت كمان",
+            "قد إيه",
+            "طب نشوف بعض إمتى"
+          ]
+        },
+        "after": {
+          "text": "شريكك قالك «وحشتني» وهو قريب منك، ترد بإيه؟",
+          "choices": [
+            "قرب أكتر",
+            "مش عارف أقولك قد إيه",
+            "كنت مستني أسمعها منك"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 20,
+        "before": {
+          "text": "إيه أكتر حاجة تضحك في تحدي غزل؟",
+          "choices": [
+            "الارتباك",
+            "محاولة التأليف",
+            "النهاية المفاجئة"
+          ]
+        },
+        "after": {
+          "text": "لو الهزار اتقلب لحظة صراحة، إيه اللي هيكسفك أكتر؟",
+          "choices": [
+            "حد يلاحظ إني معجب",
+            "أقول مجاملة من قلبي",
+            "حد يسألني عن سر مخبيه"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 21,
+        "before": {
+          "text": "لو عليك اختيار سؤال للشخص التاني، تهتم بإيه؟",
+          "choices": [
+            "إنه يناسبه",
+            "إنه مختلف",
+            "إنه خفيف"
+          ]
+        },
+        "after": {
+          "text": "سؤال واحد خاص بينك وبين شريكك؛ تحب تعرف إيه؟",
+          "choices": [
+            "لحظة قرب ما نسيهاش",
+            "حاجة بيتكسف يعترف بيها",
+            "حدود نفسه تتفهم أكتر"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 22,
+        "before": {
+          "text": "إيه الجرأة اللي بتحترمها في الناس؟",
+          "choices": [
+            "الاعتذار",
+            "قول الحقيقة",
+            "التعبير عن المشاعر"
+          ]
+        },
+        "after": {
+          "text": "أنهي نوع من الجرأة بيشدك في كلام شريكك؟",
+          "choices": [
+            "يعبر عن رغبته من غير ضغط",
+            "يسألني لو مرتاح قبل القرب",
+            "يقول اللي حاسس بيه بوضوح"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 24,
+        "before": {
+          "text": "تختار أنهي نهاية لجولة تحديات؟",
+          "choices": [
+            "ضحكة مشتركة",
+            "اعتراف صغير",
+            "مفاجأة لطيفة"
+          ]
+        },
+        "after": {
+          "text": "آخر دقيقة في الجولة؛ تحب تسيب أثر بإيه؟",
+          "choices": [
+            "سؤال يفضل بينا",
+            "جملة صريحة أقولها",
+            "وعد بسيط نقدر نحققه"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 25,
+        "before": {
+          "text": "لو فاضل سؤال واحد، تحب يكون عن إيه؟",
+          "choices": [
+            "حلم للمستقبل",
+            "ذكرى حلوة",
+            "حاجة لسه متقالتش"
+          ]
+        },
+        "after": {
+          "text": "قبل ما نقفل اللعبة، أنهي سؤال نفسك تسأله ومش عايز تسيبه لبعدين؟",
+          "choices": [
+            "إيه أول حاجة فكرت فيها عني؟",
+            "إمتى حسيت إننا بقينا أقرب؟",
+            "إيه حاجة نفسك أحسنها في تعاملنا؟"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      }
+    ],
+    "quality_snapshot": {
+      "packs": 7,
+      "perPack": [
+        25,
+        25,
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "questions": 175,
+      "options": 525,
+      "uniqueNormalizedQuestions": 175,
+      "questionIntraChoiceDuplicates": 0,
+      "shortChoicesFourOrLess": 0,
+      "startsLo": 65,
+      "startsWhat": 37
+    }
+  },
+  "historical_record": true,
+  "final_canonical_approval": {
+    "status": "OWNER_APPROVED_AS_IS",
+    "approved_on": "2026-11-03",
+    "approved_file": "content/quizzes_ar_v4.json",
+    "approved_blob_sha": "fd35caee10e9159fd27f7bc85c28f5bfcaa7cd78",
+    "note": "The older 43-item editorial record is a historical revision, not a separate currently pending content approval. The owner later approved the final 175-item adult bank."
+  }
+}
