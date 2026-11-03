@@ -331,11 +331,11 @@ internal fun DiceScreenV2() {
                                 onClick = {
                                     val oldImage = face.imageId
                                     val next = config.changeFace(cube,index,face.copy(imageId = null))
+                                    clearResult()
                                     persist(next) {
                                         if (next.cubes.flatten().none { it.imageId == oldImage })
                                             vault.delete(oldImage)
                                     }
-                                    clearResult()
                                 }
                             ) { Text("امسح الصورة") }
                         }
