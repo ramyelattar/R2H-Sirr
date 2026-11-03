@@ -50,7 +50,7 @@ internal fun ExperienceScreen(group: Boolean) {
         if (game?.competition != null && game?.finished == false) {
             while (true) {
                 clockNow = System.currentTimeMillis()
-                kotlinx.coroutines.delay(10_000L)
+                kotlinx.coroutines.delay(1_000L)
             }
         }
     }
@@ -275,7 +275,9 @@ internal fun ExperienceScreen(group: Boolean) {
                     }
                 }
                 val turn = current.turns[current.round]
-                var isRevealed by remember(current.round) { mutableStateOf(false) }
+                var isRevealed by remember(current.round) {
+                    mutableStateOf(current.competition?.roundClock?.started == true)
+                }
                 // Opt-in is renewed for the current actor after each new reveal.
                 var roundConsent by remember(current.round) { mutableStateOf(false) }
                 var partnerConsent by remember(current.round) { mutableStateOf(false) }
@@ -293,6 +295,16 @@ internal fun ExperienceScreen(group: Boolean) {
                 RoundChapter(current.round,current.turns.size)
                 Text("الدور على ${current.playerNames[turn.actorIndex]}",
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                if (current.competition != null) {
+                    Text(
+                        "${turn.prompt.kind.arabic} · ${turn.prompt.durationSeconds / 60} دقيقة",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (turn.prompt.title.isNotBlank()) {
+                        Text(turn.prompt.title, style = MaterialTheme.typography.titleLarge)
+                    }
+                }
                 if (!isRevealed) {
                     SealedChallengeCard(onReveal = {
                         isRevealed = true
@@ -335,16 +347,18 @@ internal fun ExperienceScreen(group: Boolean) {
                         replyStatus = "فشل حفظ الرد؛ النص لسه موجود علشان متفقدوش"
                         return
                     }
-                    val next = if (current.competition != null) current.resolve(outcome)
-                        else current.resolve(outcome == CoupleOutcome.COMPLETED)
-                    runCatching { LocalSessionStore.save(vault, gameName, next) }
-                        .onSuccess {
-                            effects.cue(if (outcome == CoupleOutcome.COMPLETED) GameCue.SUCCESS else GameCue.SKIP)
-                            game = next
-                            reply = ""; mediaOpen = false; replyStatus = ""
-                        }.onFailure {
-                            replyStatus = "الجولة متقدمتش لأن حفظها فشل؛ ردك لسه موجود"
-                        }
+                    runCatching {
+                        val next = if (current.competition != null) current.resolve(outcome)
+                            else current.resolve(outcome == CoupleOutcome.COMPLETED)
+                        LocalSessionStore.save(vault, gameName, next)
+                        next
+                    }.onSuccess { next ->
+                        effects.cue(if (outcome == CoupleOutcome.COMPLETED) GameCue.SUCCESS else GameCue.SKIP)
+                        game = next
+                        reply = ""; mediaOpen = false; replyStatus = ""
+                    }.onFailure {
+                        replyStatus = "ما قدرناش نحفظ النتيجة. اتأكد من المؤقت ومساحة التخزين وحاول تاني."
+                    }
                 }
                 if (isRevealed) {
                     Text(
@@ -367,10 +381,32 @@ internal fun ExperienceScreen(group: Boolean) {
                     }
                     val bothConsent = roundConsent &&
                         (current.competition == null || partnerConsent)
+                    if (current.competition != null) {
+                        CoupleRoundClockPanel(
+                            game = current,
+                            nowMillis = clockNow,
+                            bothConsent = bothConsent
+                        ) { next ->
+                            runCatching {
+                                LocalSessionStore.save(vault, gameName, next)
+                            }.onSuccess {
+                                game = next
+                                clockNow = System.currentTimeMillis()
+                                replyStatus = ""
+                            }.onFailure { replyStatus = "ما قدرناش نحفظ حالة المؤقت" }.isSuccess
+                        }
+                    }
+                    val clockFinished = current.competition == null ||
+                        (current.competition.roundClock.started &&
+                            current.competition.roundClock.remainingSeconds(clockNow) == 0)
                     SirrAction(
                         text = "التحدي اتعمل  ✦",
-                        enabled = bothConsent,
-                        explanation = if (bothConsent) null else "محتاج موافقة الطرفين قبل تسجيل التنفيذ",
+                        enabled = bothConsent && clockFinished,
+                        explanation = when {
+                            !bothConsent -> "محتاج موافقة الطرفين قبل تسجيل التنفيذ"
+                            !clockFinished -> "كمّلوا وقت التحدي قبل احتساب النقاط"
+                            else -> null
+                        },
                         onClick = { finishRound(CoupleOutcome.COMPLETED) }
                     )
                 }
