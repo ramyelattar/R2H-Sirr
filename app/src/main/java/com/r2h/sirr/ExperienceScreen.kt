@@ -485,7 +485,7 @@ internal fun ExperienceScreen(group: Boolean) {
                         )
                     }
                 }
-                if (current.competition != null) {
+                if (current.competition != null && isRevealed) {
                     OutlinedButton(
                         onClick = { finishRound(CoupleOutcome.NOT_COMPLETED) },
                         modifier = Modifier.fillMaxWidth()
@@ -500,11 +500,13 @@ internal fun ExperienceScreen(group: Boolean) {
                         onClick = { finishRound(CoupleOutcome.AGREED_SKIP) },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("اتفقنا ما ننفّذوش — 0 نقطة") }
-                } else {
+                } else if (current.competition == null) {
                     OutlinedButton(
                         onClick = { finishRound(CoupleOutcome.NOT_COMPLETED) },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("مش مناسب؟ عَدّي من غير إحراج") }
+                } else {
+                    Text("اكشف التحدي الأول، وبعدها اختاروا نتيجته أو اتفقوا على تخطيه.")
                 }
                 TextButton(onClick = {
                     runCatching { LocalSessionStore.save(vault, gameName, current.leave()) }
