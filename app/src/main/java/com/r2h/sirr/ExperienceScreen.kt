@@ -30,6 +30,7 @@ internal fun ExperienceScreen(group: Boolean) {
     var intensity by remember { mutableStateOf(Intensity.SOFT) }
     var durationMinutes by remember { mutableIntStateOf(30) }
     var rewardText by remember { mutableStateOf("") }
+    var tieChallengeText by remember { mutableStateOf("") }
     var clockNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val names = remember(group) {
         mutableStateListOf(if (group) "إنت" else "الزوج",
@@ -223,6 +224,13 @@ internal fun ExperienceScreen(group: Boolean) {
                     label = { Text("مكافأة الفائز — اتفقوا عليها سوا") },
                     modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 3
                 )
+                OutlinedTextField(
+                    value = tieChallengeText,
+                    onValueChange = { tieChallengeText = it.take(500); resetStartConsents() },
+                    label = { Text("تحدي كسر التعادل — اختياري") },
+                    placeholder = { Text("لو سبتوه فاضي هنستخدم تحدي مشترك جاهز") },
+                    modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 3
+                )
                 Text("مدة الجلسة — انتهاء الوقت تنبيه، مش خصم تلقائي")
                 listOf(15, 30, 60, 0).chunked(2).forEach { row ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -252,10 +260,13 @@ internal fun ExperienceScreen(group: Boolean) {
             val invalidCustom = intensity == Intensity.CUSTOM &&
                 (!customValid || customEntries.isEmpty())
             val invalidReward = !group && rewardText.trim().isEmpty()
+            val invalidTieText = !group && tieChallengeText.isNotBlank() &&
+                tieChallengeText.trim().length < 6
             val startHint = when {
                 invalidNames -> "اكتبوا اسم لكل لاعب من الاختيارات الإضافية"
                 invalidCustom -> "كمّل التحديات المخصوصة الأول"
                 invalidReward -> "اتفقوا واكتبوا مكافأة الفائز قبل ما تبدأوا"
+                invalidTieText -> "اكتب تحدي كسر التعادل بوضوح أو سيبه فاضي"
                 waiting.isNotEmpty() -> "مستنيين موافقة ${waiting.size} من اللاعبين"
                 else -> "جاهزين؟ السر الأول مستنيكم."
             }
@@ -274,7 +285,10 @@ internal fun ExperienceScreen(group: Boolean) {
                             competition = if (!group) CoupleCompetition(
                                 reward = rewardText.trim(),
                                 sessionMinutes = durationMinutes,
-                                startedAtMillis = System.currentTimeMillis()
+                                startedAtMillis = System.currentTimeMillis(),
+                                tieChallenge = tieChallengeText.trim().ifBlank {
+                                    "كل واحد يقول لشريكه 3 حاجات جديدة بيقدّرها فيه، من غير ما يقاطع التاني."
+                                }
                             ) else null
                         )
                     }.onSuccess { newGame ->
@@ -288,7 +302,7 @@ internal fun ExperienceScreen(group: Boolean) {
                         }.onFailure { formError = "تعذر حفظ الجولة بأمان؛ لم تبدأ اللعبة. تأكد إن مساحة التخزين كافية." }
                     }.onFailure { formError = "حصلت مشكلة في تجهيز الجولة. جرّب اختيار مود تاني." }
                 },
-                enabled = !invalidNames && !invalidCustom && !invalidReward && waiting.isEmpty(),
+                enabled = !invalidNames && !invalidCustom && !invalidReward && !invalidTieText && waiting.isEmpty(),
                 modifier = Modifier.fillMaxWidth()
             )
             if (formError.isNotEmpty()) Text(formError, color = MaterialTheme.colorScheme.error)
