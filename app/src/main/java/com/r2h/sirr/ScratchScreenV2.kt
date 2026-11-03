@@ -89,7 +89,13 @@ internal fun ScratchScreenV2() {
                 SecretTier.entries.forEach { tier ->
                     FilterChip(
                         selected = suggestionTier == tier,
-                        onClick = { suggestionTier = tier; selectedStory = null },
+                        onClick = {
+                            if (selectedStory != null && suggestionTier != tier) {
+                                texts.indices.forEach { texts[it] = "" }
+                            }
+                            suggestionTier = tier
+                            selectedStory = null
+                        },
                         label = { Text(tier.arabic) }
                     )
                 }
