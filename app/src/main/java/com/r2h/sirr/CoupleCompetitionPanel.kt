@@ -48,7 +48,12 @@ internal fun CoupleCompetitionPanel(game: LocalGame, persist: (LocalGame) -> Boo
     if (!game.tiePending) return
     val tie = rules.tieBreak ?: CoupleTieBreak()
     HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
-    Text("النقاط متعادلة — هنحسمها بتحدي مشترك.", style = MaterialTheme.typography.titleMedium)
+    Text(
+        if (tie.stage == TieStage.SHARED_CHALLENGE)
+            "النقاط متعادلة — هنحسمها بتحدي مشترك."
+        else "التعادل مستمر — مين يعرف التاني أكتر؟",
+        style = MaterialTheme.typography.titleMedium
+    )
     when (tie.stage) {
         TieStage.SHARED_CHALLENGE -> {
             Text("تحدي كسر التعادل: ${rules.tieChallenge}")
