@@ -27,6 +27,7 @@ internal object LocalSessionStore {
             require(!game.group && game.playerNames.size == 2 && rules.outcomes.size == game.round)
             val details=JSONObject()
                 .put("reward",rules.reward).put("sessionMinutes",rules.sessionMinutes)
+                .put("tieChallenge",rules.tieChallenge)
                 .put("startedAtMillis",rules.startedAtMillis)
                 .put("settledEarly",rules.settledEarly)
                 .put("outcomes",JSONArray(rules.outcomes.map { it.name }))
@@ -123,6 +124,8 @@ internal object LocalSessionStore {
                 reward=rules.getString("reward"),
                 sessionMinutes=rules.getInt("sessionMinutes"),
                 startedAtMillis=rules.getLong("startedAtMillis"),
+                tieChallenge=rules.optString("tieChallenge").takeIf { it.isNotBlank() }
+                    ?: "كل واحد يقول لشريكه 3 حاجات جديدة بيقدّرها فيه، من غير ما يقاطع التاني.",
                 outcomes=outcomes,
                 settledEarly=rules.optBoolean("settledEarly",false),
                 tieBreak=state,
