@@ -77,8 +77,16 @@ internal fun ExperienceScreen(group: Boolean) {
     val importChallenges = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             runCatching {
-                context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use {
-                    it.readText()
+                context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { reader ->
+                    val result = StringBuilder()
+                    val buffer = CharArray(4_096)
+                    while (true) {
+                        val count = reader.read(buffer)
+                        if (count < 0) break
+                        require(result.length + count <= 30_000) { "Challenge file is too large" }
+                        result.append(buffer, 0, count)
+                    }
+                    result.toString()
                 } ?: error("Cannot read text file")
             }.onSuccess { imported ->
                 if (imported.length > 30_000) {
@@ -88,7 +96,10 @@ internal fun ExperienceScreen(group: Boolean) {
                     resetStartConsents()
                     customStatus = "تم استيراد التحديات. راجعها قبل الحفظ."
                 }
-            }.onFailure { customStatus = "تعذر استيراد الملف. اختار ملف TXT بصيغة UTF-8." }
+            }.onFailure {
+                customStatus = if (it is IllegalArgumentException) "الملف أكبر من الحد — 30 ألف حرف"
+                    else "تعذر استيراد الملف. اختار ملف TXT بصيغة UTF-8."
+            }
         }
     }
     val exportChallenges = rememberLauncherForActivityResult(
