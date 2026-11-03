@@ -220,6 +220,14 @@ class CoupleCompetitionTest {
         } catch (_: IllegalArgumentException) { }
     }
 
+    @Test fun partnersCanEndTieBreakWithoutWinnerOrReward() {
+        val tied = tiedGame().resolveSharedTieBreak(listOf(true, true))
+        val stopped = tied.leave()
+        assertTrue(stopped.ended)
+        assertNull(stopped.winnerIndex)
+        assertFalse(stopped.tiePending)
+    }
+
     @Test fun originalGroupScoringRemainsOnePoint() {
         val group = SessionFactory.create(
             listOf("أ", "ب", "ج", "د"), Intensity.SOFT, true, Random(3)
