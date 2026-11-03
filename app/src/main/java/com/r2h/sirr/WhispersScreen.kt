@@ -21,7 +21,7 @@ import com.r2h.sirr.core.SecretStoryCatalog
 import com.r2h.sirr.core.SecretTier
 import kotlinx.coroutines.delay
 
-/** One-use on-device experience; this screen intentionally does not persist message text. */
+/** Ephemeral, local-only three-part message flow. No durable message-text storage. */
 @Composable
 internal fun WhispersScreenV2() {
     val context = LocalContext.current
@@ -218,7 +218,7 @@ internal fun WhispersScreenV2() {
                 )
             } else {
                 SirrAction(
-                    text = "افتحوا أول همسة  ✦",
+                    text = "جهّز الهمسات وسلّم الموبايل  ✦",
                     enabled = messages.all { it.isNotBlank() },
                     onClick = {
                         val now = System.currentTimeMillis()
@@ -228,7 +228,7 @@ internal fun WhispersScreenV2() {
                     },
                     explanation = if (messages.any { it.isBlank() })
                         "لازم التلات همسات يكونوا جاهزين" else
-                        "متأكد؟ كل همسة مش هتظهر تاني بعد ما تعدّيها"
+                        "بعد التجهيز، المستلم يقرر يفتح الهمسات أو يمسحها"
                 )
             }
             if(composeStep>0)TextButton(onClick={composeStep--}){Text("أرجع للهمسة اللي قبلها")}
