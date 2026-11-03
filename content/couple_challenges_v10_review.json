@@ -1,0 +1,323 @@
+{
+  "version": 10,
+  "source_file": "content/couple_challenges_style_v10_original.json",
+  "refined_file": "content/couple_challenges_v10_refined.json",
+  "source_sha256": "3aab9ecbb2868cb16be2feb867e054261fd92d2fdf3a772b0d6fd215ac15be8d",
+  "editorial_status": "OWNER_APPROVED_AS_IS",
+  "preservation": {
+    "ids": 100,
+    "unique_action_codes": 100,
+    "levels": [
+      "SOFT",
+      "NORMAL",
+      "SEXY",
+      "HOT",
+      "HARD"
+    ],
+    "challenges_per_level": 20,
+    "all_kind_title_order_seconds_unchanged": true
+  },
+  "language_edits": [
+    {
+      "id": "c-SOFT-2",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-SOFT-14",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-SOFT-15",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-NORMAL-9",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-NORMAL-15",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-NORMAL-17",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-NORMAL-19",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-SEXY-3",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-SEXY-8",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-SEXY-12",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-SEXY-13",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-SEXY-17",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-HOT-13",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    },
+    {
+      "id": "c-HOT-19",
+      "field": "text",
+      "change_type": "orthography_or_minor_grammar",
+      "owner_review_required": false
+    }
+  ],
+  "timing_conflicts": [
+    {
+      "id": "c-SOFT-1",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-SOFT-5",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-SOFT-13",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-SOFT-20",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-NORMAL-1",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-NORMAL-5",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-NORMAL-6",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-NORMAL-14",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-NORMAL-15",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    },
+    {
+      "id": "c-SEXY-4",
+      "instruction_seconds": 60,
+      "field_seconds": 90,
+      "source_preserved": true,
+      "decision": "ACCEPT_CURRENT_SECONDS_AS_IS"
+    }
+  ],
+  "safety_flags": [
+    {
+      "id": "c-SOFT-3",
+      "category": "consent",
+      "reason": "Wording removes the possibility of objecting",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-SOFT-5",
+      "category": "boundary",
+      "reason": "Success criterion is tied to a request to stop",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-SOFT-10",
+      "category": "consent",
+      "reason": "Unconditional obedience wording",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-SOFT-16",
+      "category": "consent",
+      "reason": "Automatic compliance phrasing",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HOT-4",
+      "category": "physical_risk",
+      "reason": "Throat-related physical risk",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HOT-5",
+      "category": "health",
+      "reason": "Potential reproductive consequences",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HOT-17",
+      "category": "physical_risk",
+      "reason": "Forceful physical activity",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-3",
+      "category": "physical_risk",
+      "reason": "Neck pressure / strangulation risk",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-6",
+      "category": "health",
+      "reason": "Potential infection and injury considerations",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-7",
+      "category": "physical_risk",
+      "reason": "Head control and respiratory injury risk",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-8",
+      "category": "physical_risk",
+      "reason": "Forceful impact risk",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-10",
+      "category": "consent",
+      "reason": "No-verbal-response compliance requirement",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-11",
+      "category": "health",
+      "reason": "Potential injury risk",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-12",
+      "category": "physical_risk",
+      "reason": "Neck pressure / strangulation risk",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-14",
+      "category": "consent",
+      "reason": "No-stop instruction",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-15",
+      "category": "health",
+      "reason": "Cross-site infection considerations",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-17",
+      "category": "boundary",
+      "reason": "Undefined scope for completion",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-18",
+      "category": "physical_risk",
+      "reason": "Forceful activity and injury risk",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    },
+    {
+      "id": "c-HARD-20",
+      "category": "boundary",
+      "reason": "Open-ended obligation to finish",
+      "action": "PRESERVE_TEXT; RUNTIME_ACTIVATION_REQUIRES_SEPARATE_SAFETY_DECISION"
+    }
+  ],
+  "note": "Owner approved the current refined text without additional edits. Editorial approval does not override the recorded health/consent/physical-risk flags, and does not imply safe runtime activation.",
+  "runtime_activation": "ELIGIBLE_SUBSET_WIRED_TO_NEW_LOCAL_SESSIONS_UNVERIFIED",
+  "build": "NOT_RUN",
+  "tests": "NOT_RUN",
+  "owner_approval": {
+    "approved_on": "2026-11-03",
+    "approved_file": "content/couple_challenges_v10_refined.json",
+    "scope": "Exact current wording, titles, IDs, kinds, level placement, order and seconds accepted as-is by owner.",
+    "further_copy_edits_allowed_without_new_approval": false,
+    "safety_signoff": false,
+    "runtime_activation_signoff": false
+  },
+  "runtime_eligibility": {
+    "approved_total": 100,
+    "automatic_session_eligible": 81,
+    "excluded_pending_safety_resolution": 19,
+    "eligible_by_level": {
+      "SOFT": 16,
+      "NORMAL": 20,
+      "SEXY": 20,
+      "HOT": 17,
+      "HARD": 8
+    },
+    "source": "app/src/main/java/com/r2h/sirr/core/CoupleV10Policy.kt",
+    "source_of_truth": "content/couple_challenges_v10_refined.json",
+    "approved_copy_untouched": true,
+    "explicit_mixed_lower_levels_only": true,
+    "caution": "Source integration only; no Android compilation or runtime behavior has been verified."
+  }
+}

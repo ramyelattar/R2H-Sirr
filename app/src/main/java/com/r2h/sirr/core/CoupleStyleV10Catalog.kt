@@ -1,0 +1,128 @@
+package com.r2h.sirr.core
+
+/** Owner-approved v10 wording. Runtime eligibility is enforced by CoupleV10Policy. */
+internal data class CoupleStyleV10Activity(
+    val id: String,
+    val level: Intensity,
+    val kindCode: String,
+    val title: String,
+    val text: String,
+    val durationSeconds: Int
+)
+
+internal object CoupleStyleV10Catalog {
+    private val byLevel: Map<Intensity, List<CoupleStyleV10Activity>> = mapOf(
+        Intensity.SOFT to listOf(
+            CoupleStyleV10Activity("c-SOFT-1", Intensity.SOFT, "SIGHT", "تفرج بس", "اقعدي/اقعد على السرير وافتح رجليك كويس العبي/العب في كسك/زبك وشريكك يتفرج من قريب بدون أي لمس لمدة دقيقة كاملة. مع كلام يسخن.", 90),
+            CoupleStyleV10Activity("c-SOFT-2", Intensity.SOFT, "FABRIC", "ممنوع الإيد", "قلّع شريكك قطعة من ملابسه من غير ما تستخدم إيدك خالص.", 90),
+            CoupleStyleV10Activity("c-SOFT-3", Intensity.SOFT, "BREATH", "إنت بتاعي", "تحكم في شريكك زي ما تحب لمدة دقيقة من غير أي اعتراض منه.", 60),
+            CoupleStyleV10Activity("c-SOFT-4", Intensity.SOFT, "DESCRIBE", "هجننك", "بوس رجل شريكك من جوا من فوق الركبة ببطء لحد ما توصل للكس/الزب من غير لمس، بس يحس بالأنفاس السخنة.", 90),
+            CoupleStyleV10Activity("c-SOFT-5", Intensity.SOFT, "KISS", "اجمد", "معاك دقيقة اعمل أي حاجة تخلي شريكك يقولك كفاية.", 90),
+            CoupleStyleV10Activity("c-SOFT-6", Intensity.SOFT, "MIRROR", "خمن", "شريكك يختار صباع أو لسان، وبعدين عنده 3 محاولات يعرف الحاجة بلمسة وهو مغمض عينه.", 120),
+            CoupleStyleV10Activity("c-SOFT-7", Intensity.SOFT, "GUIDE", "اثبت", "اثبت حبك بإنك تقبل قدم شريكك وتمص أصابعها باستمتاع.", 90),
+            CoupleStyleV10Activity("c-SOFT-8", Intensity.SOFT, "WHISPER", "تملك", "سيطر على أحاسيس شريكك بأوسخ جملة تهزه من الإثارة.", 60),
+            CoupleStyleV10Activity("c-SOFT-9", Intensity.SOFT, "STRIP", "خلع بطيء", "اغري شريكك بقلع ملابسك بأسلوب استعراضي بطيء.", 90),
+            CoupleStyleV10Activity("c-SOFT-10", Intensity.SOFT, "LEG", "الملك/الملكة", "لمدة 5 دقايق شريكك هو الملك العظيم وطاعته واجب، وينفذ أي جملة تبدأ بـ مولاي/مولاتي.", 300),
+            CoupleStyleV10Activity("c-SOFT-11", Intensity.SOFT, "EYES", "لو كنت مكانك", "الراجل يعمل دور شرموطة بتستنى زبون، والست تعمل دور راجل بيقنع راقصة بليلة معاه.", 120),
+            CoupleStyleV10Activity("c-SOFT-12", Intensity.SOFT, "TOUCH", "لمسة واحدة", "لمسة واحدة بس في أي مكان تختاره، وبعدين تقف خالص.", 60),
+            CoupleStyleV10Activity("c-SOFT-13", Intensity.SOFT, "VOICE", "صوت بس", "قول لشريكك كلام يسخنه من غير أي لمس خالص لمدة دقيقة.", 90),
+            CoupleStyleV10Activity("c-SOFT-14", Intensity.SOFT, "POSE", "وضع", "اعمل وضع يسخن شريكك وافضل فيه لحد ما يقولك تتحرك.", 90),
+            CoupleStyleV10Activity("c-SOFT-15", Intensity.SOFT, "SLOW", "بطيء أوي", "قرّب من شريكك ببطء شديد لحد ما تحس بأنفاسه، من غير لمس.", 90),
+            CoupleStyleV10Activity("c-SOFT-16", Intensity.SOFT, "COMMAND", "أمر واحد", "اطلب من شريكك أمر واحد خفيف وينفذه على طول.", 60),
+            CoupleStyleV10Activity("c-SOFT-17", Intensity.SOFT, "MIRROR2", "مراية", "اقفوا قدام المراية وواحد يوصف للتاني إيه اللي شايفه.", 90),
+            CoupleStyleV10Activity("c-SOFT-18", Intensity.SOFT, "BREATH2", "أنفاس", "انفخ أنفاسك السخنة على رقبة شريكك أو فخده من غير لمس.", 60),
+            CoupleStyleV10Activity("c-SOFT-19", Intensity.SOFT, "HOLD", "امسك", "امسك إيد شريكك وحطها على جسمك في مكان تختاره.", 60),
+            CoupleStyleV10Activity("c-SOFT-20", Intensity.SOFT, "WAIT", "استنى", "خلي شريكك يستنى دقيقة كاملة وأنت بتعمل حاجة تسخنه من بعيد.", 90)
+        ),
+        Intensity.NORMAL to listOf(
+            CoupleStyleV10Activity("c-NORMAL-1", Intensity.NORMAL, "ORAL", "رأس بس", "مص رأس الزب/البظر بس من غير ما تدخل جوا، لمدة دقيقة.", 90),
+            CoupleStyleV10Activity("c-NORMAL-2", Intensity.NORMAL, "FINGER", "إصبع", "دخل إصبع واحد ببطء وخلي شريكك يوصف الإحساس.", 90),
+            CoupleStyleV10Activity("c-NORMAL-3", Intensity.NORMAL, "RUB", "فرك", "فرك الزب بين الفخاد أو الكس على الزب من غير دخول.", 120),
+            CoupleStyleV10Activity("c-NORMAL-4", Intensity.NORMAL, "LICK", "لعق", "لعق الفخذ من جوا لحد ما توصل للمكان الحساس وتقف.", 90),
+            CoupleStyleV10Activity("c-NORMAL-5", Intensity.NORMAL, "CONTROL", "تحكم", "شريكك يتحكم في إيدك وأنت بتلمسه لمدة دقيقة.", 90),
+            CoupleStyleV10Activity("c-NORMAL-6", Intensity.NORMAL, "CLOTHES", "فوق الهدوم", "لمس أو مص من فوق الهدوم بس لمدة دقيقة.", 90),
+            CoupleStyleV10Activity("c-NORMAL-7", Intensity.NORMAL, "TONGUE", "لسان", "حرك لسانك دوائر على المكان الحساس من غير مص قوي.", 60),
+            CoupleStyleV10Activity("c-NORMAL-8", Intensity.NORMAL, "PRESS", "ضغط", "اضغط جسمك على جسم شريكك وتحرك ببطء.", 90),
+            CoupleStyleV10Activity("c-NORMAL-9", Intensity.NORMAL, "TALK", "كلام ولمس", "المس شريكك وقول كلام يسخنه في نفس الوقت.", 90),
+            CoupleStyleV10Activity("c-NORMAL-10", Intensity.NORMAL, "SLOW_HAND", "إيدك بطيئة", "حرك إيدك على الزب/الكس ببطء شديد جدًا.", 120),
+            CoupleStyleV10Activity("c-NORMAL-11", Intensity.NORMAL, "KISS_BODY", "بوس الجسم", "بوس جسم شريكك من الرقبة لتحت ببطء لحد ما يوقفك.", 120),
+            CoupleStyleV10Activity("c-NORMAL-12", Intensity.NORMAL, "GUIDE_HAND", "وجه إيده", "خد إيد شريكك ووجهها على جسمك بالظبط زي ما تحب.", 90),
+            CoupleStyleV10Activity("c-NORMAL-13", Intensity.NORMAL, "SOUND", "صوت", "طلع صوت وأنت بتلمس شريكك أو هو بيلمسك.", 60),
+            CoupleStyleV10Activity("c-NORMAL-14", Intensity.NORMAL, "ONE_SPOT", "مكان واحد", "ركز على مكان واحد بس في جسم شريكك لمدة دقيقة.", 90),
+            CoupleStyleV10Activity("c-NORMAL-15", Intensity.NORMAL, "SWITCH", "تبديل", "كل واحد يلمس التاني 30 ثانية وبعدين اتبدّلوا.", 90),
+            CoupleStyleV10Activity("c-NORMAL-16", Intensity.NORMAL, "EYES_CLOSED", "مغمض", "شريكك يغمض عينه وأنت تلمسه في أي مكان تختاره.", 90),
+            CoupleStyleV10Activity("c-NORMAL-17", Intensity.NORMAL, "DESCRIBE_FEEL", "وصف الإحساس", "المس شريكك وهو يوصفلك الإحساس بالتفصيل.", 90),
+            CoupleStyleV10Activity("c-NORMAL-18", Intensity.NORMAL, "STOP_GO", "قف وكمّل", "ابدأ تلمس وبعدين قف فجأة، وكرر كده 3 مرات.", 90),
+            CoupleStyleV10Activity("c-NORMAL-19", Intensity.NORMAL, "WHISPER_ACT", "همس ونفذ", "اهمس بطلب خفيف في ودن شريكك وهو ينفذه.", 60),
+            CoupleStyleV10Activity("c-NORMAL-20", Intensity.NORMAL, "MIRROR_TOUCH", "مراية ولمس", "اقفوا قدام المراية وواحد يلمس التاني وهو بيتفرج.", 90)
+        ),
+        Intensity.SEXY to listOf(
+            CoupleStyleV10Activity("c-SEXY-1", Intensity.SEXY, "DEEP_ORAL", "مص أعمق", "مص الزب/الكس لحد ما تحس بيه كويس وأنت بتبص في عينه.", 120),
+            CoupleStyleV10Activity("c-SEXY-2", Intensity.SEXY, "RIDE_SLOW", "ركوب بطيء", "اركب الزب ببطء شديد وفضل ثابت شوية قبل ما تتحرك.", 150),
+            CoupleStyleV10Activity("c-SEXY-3", Intensity.SEXY, "ASS_TOUCH", "لمس الطيز", "المس أو العَق الطيز وأنت بتمص أو بتركب.", 90),
+            CoupleStyleV10Activity("c-SEXY-4", Intensity.SEXY, "FACE", "على الوش", "اقعد على وش شريكك وخليه يمص لمدة دقيقة.", 90),
+            CoupleStyleV10Activity("c-SEXY-5", Intensity.SEXY, "SPANK_LIGHT", "ضرب خفيف", "ضرب خفيف على الطيز وأنت بتركب أو راكع.", 60),
+            CoupleStyleV10Activity("c-SEXY-6", Intensity.SEXY, "BALLS_LICK", "لعق الخصيتين", "لعق الخصيتين وأنت ممسك الزب.", 60),
+            CoupleStyleV10Activity("c-SEXY-7", Intensity.SEXY, "CLIT_FOCUS", "تركيز على البظر", "ركز على البظر بلسانك أو إصبعك لحد ما يحس كويس.", 90),
+            CoupleStyleV10Activity("c-SEXY-8", Intensity.SEXY, "REVERSE_RIDE", "ركوب عكسي", "اركب الزب بالعكس وخلي شريكك يتفرج.", 120),
+            CoupleStyleV10Activity("c-SEXY-9", Intensity.SEXY, "GRIP_ASS", "يمسك الطيز", "شريكك يمسك طيزك بقوة وأنت بتتحرك عليه.", 90),
+            CoupleStyleV10Activity("c-SEXY-10", Intensity.SEXY, "DIRTY", "كلام وسخ", "قول كلام وسخ صريح وأنت بتمص أو بتركب.", 90),
+            CoupleStyleV10Activity("c-SEXY-11", Intensity.SEXY, "SLOW_IN", "دخول بطيء", "دخل الزب ببطء شديد لحد آخره وثبت.", 90),
+            CoupleStyleV10Activity("c-SEXY-12", Intensity.SEXY, "IN_OUT", "دخل وطلع", "دخّل وطلّع الزب ببطء 5 مرات.", 90),
+            CoupleStyleV10Activity("c-SEXY-13", Intensity.SEXY, "HIP_CIRCLE", "حركة دائرية", "حرّك وركك دوائر وأنت على الزب.", 90),
+            CoupleStyleV10Activity("c-SEXY-14", Intensity.SEXY, "LEAN_FORWARD", "ميل لقدام", "ميل بجسمك لقدام وأنت بتركب.", 60),
+            CoupleStyleV10Activity("c-SEXY-15", Intensity.SEXY, "HANDS_OFF", "من غير إيدين", "اركب أو مص من غير ما تستخدم إيدك.", 90),
+            CoupleStyleV10Activity("c-SEXY-16", Intensity.SEXY, "EYE", "عين في عين", "بص في عين شريكك طول ما إنت بتعمل الحركة.", 90),
+            CoupleStyleV10Activity("c-SEXY-17", Intensity.SEXY, "MOAN", "صوت", "طلّع صوت واضح وأنت بتتحرك أو بتمص.", 60),
+            CoupleStyleV10Activity("c-SEXY-18", Intensity.SEXY, "HAIR_PULL", "شد الشعر", "شريكك يشد شعرك بلطف وأنت بتمص.", 60),
+            CoupleStyleV10Activity("c-SEXY-19", Intensity.SEXY, "SPREAD", "افتح", "افتح رجليك أو طيزك بإيدك وخلي شريكك يتفرج أو يلمس.", 60),
+            CoupleStyleV10Activity("c-SEXY-20", Intensity.SEXY, "WET_SOUND", "صوت البلل", "حرك بحيث صوت البلل يبان كويس.", 60)
+        ),
+        Intensity.HOT to listOf(
+            CoupleStyleV10Activity("c-HOT-1", Intensity.HOT, "CUM_FACE", "على الوش", "مص لحد ما يجي على وشك وأنت بتبص فيه.", 180),
+            CoupleStyleV10Activity("c-HOT-2", Intensity.HOT, "DOGGY_HARD", "من ورا قوي", "اركع وخليه يناكك من ورا بقوة وأنت بتقول كلام وسخ.", 180),
+            CoupleStyleV10Activity("c-HOT-3", Intensity.HOT, "FINGERS_HARD", "إصبعين قوي", "إصبعين جوا وتحركهم بقوة لحد ما تتبلل كويس.", 120),
+            CoupleStyleV10Activity("c-HOT-4", Intensity.HOT, "THROAT", "حلق", "خلي الزب يدخل في حلقك وهو بيحرك.", 90),
+            CoupleStyleV10Activity("c-HOT-5", Intensity.HOT, "INSIDE", "جوا", "نيك لحد ما يجي جواكي.", 200),
+            CoupleStyleV10Activity("c-HOT-6", Intensity.HOT, "SQUEEZE", "ضغط", "اضغط على الزب بكيسك وأنت عليه.", 60),
+            CoupleStyleV10Activity("c-HOT-7", Intensity.HOT, "LICK_AFTER", "لعق بعد", "بعد ما يجي جوا، يلعق وينضف.", 60),
+            CoupleStyleV10Activity("c-HOT-8", Intensity.HOT, "NO_HAND", "من غير إيد", "مص الزب من غير إيدين خالص.", 90),
+            CoupleStyleV10Activity("c-HOT-9", Intensity.HOT, "STAND", "واقف", "نيك وأنتم واقفين.", 150),
+            CoupleStyleV10Activity("c-HOT-10", Intensity.HOT, "EDGE", "قرب ووقف", "قرب من الجي وبعدين وقف فجأة.", 90),
+            CoupleStyleV10Activity("c-HOT-11", Intensity.HOT, "FAST_RIDE", "ركوب سريع", "اركب وتحرك بسرعة.", 90),
+            CoupleStyleV10Activity("c-HOT-12", Intensity.HOT, "DEEP_HOLD", "عمق", "دخل عميق وثبت من غير حركة.", 60),
+            CoupleStyleV10Activity("c-HOT-13", Intensity.HOT, "SPIT", "ريق", "ابصق على الزب ومص بعده.", 60),
+            CoupleStyleV10Activity("c-HOT-14", Intensity.HOT, "SLAP", "صفعة", "صفعة على الطيز وأنت بتركب.", 30),
+            CoupleStyleV10Activity("c-HOT-15", Intensity.HOT, "PULL_OUT", "طلع", "طلع الزب قبل الجي.", 60),
+            CoupleStyleV10Activity("c-HOT-16", Intensity.HOT, "ON_CHEST", "على الصدر", "جي على الصدر.", 120),
+            CoupleStyleV10Activity("c-HOT-17", Intensity.HOT, "ROUGH_RIDE", "ركوب خشن", "اركب بقوة وسرعة.", 120),
+            CoupleStyleV10Activity("c-HOT-18", Intensity.HOT, "SPREAD_WHILE", "افتح وأنت بتنك", "افتح طيزك وهو بينيك من ورا.", 60),
+            CoupleStyleV10Activity("c-HOT-19", Intensity.HOT, "LOUD_MOAN", "صوت عالي", "طلّع صوت عالي طول الوقت.", 60),
+            CoupleStyleV10Activity("c-HOT-20", Intensity.HOT, "EYE_CUM", "بص وهو بيجي", "بص في عينه وهو بيجي على وشك.", 120)
+        ),
+        Intensity.HARD to listOf(
+            CoupleStyleV10Activity("c-HARD-1", Intensity.HARD, "SWALLOW", "بلع", "مص لحد ما يجي في بقك وتبلع كله وأنت بتبص.", 180),
+            CoupleStyleV10Activity("c-HARD-2", Intensity.HARD, "ANAL", "طيز", "لو موافقين، نيك في الطيز ببطء.", 180),
+            CoupleStyleV10Activity("c-HARD-3", Intensity.HARD, "CHOKE", "رقبة", "يمسك رقبتك وأنت بتركب بقوة.", 120),
+            CoupleStyleV10Activity("c-HARD-4", Intensity.HARD, "MULTI_POS", "أوضاع", "3 أوضاع ورا بعض من غير وقف.", 240),
+            CoupleStyleV10Activity("c-HARD-5", Intensity.HARD, "DENY", "منع", "قرب من الجي أكتر من مرة ووقف.", 150),
+            CoupleStyleV10Activity("c-HARD-6", Intensity.HARD, "ANAL_CUM", "جي في الطيز", "لو موافقين، يجي جوا الطيز.", 180),
+            CoupleStyleV10Activity("c-HARD-7", Intensity.HARD, "FACE_FUCK", "نيك الفم", "يمسك راسك ويناك فمك.", 90),
+            CoupleStyleV10Activity("c-HARD-8", Intensity.HARD, "HARD_SPANK", "ضرب قوي", "ضرب قوي على الطيز وأنت بتركب.", 60),
+            CoupleStyleV10Activity("c-HARD-9", Intensity.HARD, "MULTI_CUM", "أكتر من مرة", "كمل لحد ما يجي أكتر من مرة.", 300),
+            CoupleStyleV10Activity("c-HARD-10", Intensity.HARD, "FULL", "تحكم كامل", "شريكك يتحكم في كل حاجة وأنت تنفذ من غير كلام.", 180),
+            CoupleStyleV10Activity("c-HARD-11", Intensity.HARD, "DEEP_ANAL", "عمق طيز", "دخول عميق في الطيز لو موافق.", 120),
+            CoupleStyleV10Activity("c-HARD-12", Intensity.HARD, "CHOKE_RIDE", "رقبة وركوب", "مسك رقبة وركوب قوي في نفس الوقت.", 120),
+            CoupleStyleV10Activity("c-HARD-13", Intensity.HARD, "TWICE", "مرتين", "يجي مرتين ورا بعض.", 240),
+            CoupleStyleV10Activity("c-HARD-14", Intensity.HARD, "NO_STOP", "من غير وقف", "نيك مستمر من غير أي توقف.", 180),
+            CoupleStyleV10Activity("c-HARD-15", Intensity.HARD, "SWITCH_HOLE", "تبديل", "لو موافقين، من كس لطيز أو العكس.", 120),
+            CoupleStyleV10Activity("c-HARD-16", Intensity.HARD, "EDGE_MULTI", "قرب متكرر", "قرب من الجي 3 مرات قبل ما تكمل.", 150),
+            CoupleStyleV10Activity("c-HARD-17", Intensity.HARD, "ALL", "كل حاجة", "اعملوا كل اللي نفسكم فيه لحد النهاية.", 300),
+            CoupleStyleV10Activity("c-HARD-18", Intensity.HARD, "ROUGH", "خشن", "نيك خشن وصوت عالي.", 150),
+            CoupleStyleV10Activity("c-HARD-19", Intensity.HARD, "FINISH", "نهاية", "نهاية قوية جوا أو على الوش.", 180),
+            CoupleStyleV10Activity("c-HARD-20", Intensity.HARD, "LAST_ONE", "آخر تحدي", "آخر حاجة نفسكم فيها دلوقتي، نفذوها لحد الآخر.", 180)
+        )
+    )
+
+    fun deck(level: Intensity): List<CoupleStyleV10Activity> = byLevel[level].orEmpty()
+}
