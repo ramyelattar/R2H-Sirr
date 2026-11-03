@@ -8,7 +8,12 @@ import kotlin.random.Random
  *
  * No psychology score, correctness label, or cloud/remote participant identity.
  */
-enum class QuizStage { FIRST, HANDOFF, SECOND, RESULTS }
+enum class QuizStage { FIRST, PREDICT, HANDOFF, SECOND, RESULTS }
+
+/** Matching partner answers, not a relationship or psychological compatibility score. */
+data class QuizPredictionSummary(val matched: Int, val comparable: Int) {
+    init { require(comparable > 0 && matched in 0..comparable) }
+}
 
 data class QuizSession(
     val packId: String,
@@ -19,7 +24,9 @@ data class QuizSession(
     val position: Int = 0,
     val answersA: List<Int> = emptyList(),
     val answersB: List<Int> = emptyList(),
-    val revealPosition: Int = 0
+    val revealPosition: Int = 0,
+    val guessPartner: Boolean = false,
+    val predictionsA: List<Int> = emptyList()
 ) {
     init {
         require(packId.matches(Regex("quiz_0[1-7]")))
@@ -33,23 +40,34 @@ data class QuizSession(
         })
         require(answersA.size <= questions.size && answersB.size <= questions.size)
         require(answersA.all { it in -1..2 } && answersB.all { it in -1..2 })
+        require(!guessPartner || paired)
+        require(predictionsA.size <= questions.size && predictionsA.all { it in -1..2 })
+        if (!guessPartner) require(predictionsA.isEmpty())
         require(revealPosition in questions.indices)
         when (stage) {
             QuizStage.FIRST -> require(
                 answersA.size == position && position in questions.indices &&
-                    answersB.isEmpty() && revealPosition == 0
+                    answersB.isEmpty() && predictionsA.isEmpty() && revealPosition == 0
+            )
+            QuizStage.PREDICT -> require(
+                paired && guessPartner && answersA.size == questions.size &&
+                    answersB.isEmpty() && predictionsA.size == position &&
+                    position in questions.indices && revealPosition == 0
             )
             QuizStage.HANDOFF -> require(
                 paired && answersA.size == questions.size && answersB.isEmpty() &&
+                    predictionsA.size == (if (guessPartner) questions.size else 0) &&
                     position == 0 && revealPosition == 0
             )
             QuizStage.SECOND -> require(
                 paired && answersA.size == questions.size &&
+                    predictionsA.size == (if (guessPartner) questions.size else 0) &&
                     answersB.size == position && position in questions.indices &&
                     revealPosition == 0
             )
             QuizStage.RESULTS -> require(
                 answersA.size == questions.size &&
+                    predictionsA.size == (if (guessPartner) questions.size else 0) &&
                     (!paired || answersB.size == questions.size) &&
                     (paired || answersB.isEmpty()) && position == 0
             )
@@ -69,8 +87,13 @@ data class QuizSession(
             copy(
                 answersA = nextAnswers,
                 position = if (completed) 0 else nextAnswers.size,
-                stage = if (completed) (if (paired) QuizStage.HANDOFF else QuizStage.RESULTS)
-                    else QuizStage.FIRST
+                stage = if (completed) {
+                    when {
+                        guessPartner -> QuizStage.PREDICT
+                        paired -> QuizStage.HANDOFF
+                        else -> QuizStage.RESULTS
+                    }
+                } else QuizStage.FIRST
             )
         } else {
             copy(
@@ -81,12 +104,27 @@ data class QuizSession(
         }
     }
 
-    /** Undo belongs only to the current respondent; never exposes the other person's answers. */
+    /** Record one forecast without exposing the partner's actual choices. */
+    fun predict(choice: Int): QuizSession {
+        require(stage == QuizStage.PREDICT && choice in -1..2)
+        val next = predictionsA + choice
+        val done = next.size == questions.size
+        return copy(
+            predictionsA = next,
+            position = if (done) 0 else next.size,
+            stage = if (done) QuizStage.HANDOFF else QuizStage.PREDICT
+        )
+    }
+
+    /** Undo is limited to the current stage and never changes the partner's answers. */
     fun back(): QuizSession {
-        require(stage in listOf(QuizStage.FIRST, QuizStage.SECOND) && position > 0)
-        return if (stage == QuizStage.FIRST)
-            copy(answersA = answersA.dropLast(1), position = position - 1)
-        else copy(answersB = answersB.dropLast(1), position = position - 1)
+        require(stage in listOf(QuizStage.FIRST, QuizStage.PREDICT, QuizStage.SECOND) && position > 0)
+        return when (stage) {
+            QuizStage.FIRST -> copy(answersA = answersA.dropLast(1), position = position - 1)
+            QuizStage.PREDICT -> copy(predictionsA = predictionsA.dropLast(1), position = position - 1)
+            QuizStage.SECOND -> copy(answersB = answersB.dropLast(1), position = position - 1)
+            else -> error("Unreachable quiz stage")
+        }
     }
 
     fun startPartner(): QuizSession {
@@ -105,13 +143,25 @@ data class QuizSession(
     }
 
     fun comparison(): ComparisonSummary? =
-        if (paired && stage == QuizStage.RESULTS)
+        if (paired && !guessPartner && stage == QuizStage.RESULTS)
             QuizInsights.compareAnswered(answersA, answersB) else null
+
+    /** Ignores both skipped forecasts and unanswered partner choices. */
+    fun predictionSummary(): QuizPredictionSummary? {
+        if (!guessPartner || stage != QuizStage.RESULTS) return null
+        val comparable = predictionsA.indices.filter { predictionsA[it] >= 0 && answersB[it] >= 0 }
+        if (comparable.isEmpty()) return null
+        return QuizPredictionSummary(
+            matched = comparable.count { predictionsA[it] == answersB[it] },
+            comparable = comparable.size
+        )
+    }
 
     companion object {
         fun start(
             packId: String, quiz: Quiz, count: Int,
-            paired: Boolean, random: Random = Random.Default
+            paired: Boolean, random: Random = Random.Default,
+            guessPartner: Boolean = false
         ): QuizSession {
             require(count in listOf(8, 12, 20, 25))
             require(quiz.questions.size == 25)
@@ -124,7 +174,8 @@ data class QuizSession(
                     val q = quiz.questions[index]
                     Question(q.text, q.choices.toList())
                 },
-                paired = paired
+                paired = paired,
+                guessPartner = guessPartner
             )
         }
     }
