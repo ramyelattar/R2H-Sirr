@@ -174,7 +174,7 @@ object SessionFactory {
         require(!group || competition == null)
         require(names.all { it.isNotBlank() && it.length <= 32 })
         require(roundCount in 6..18)
-        require(customPrompts.size <= 60 && customPrompts.all { it.trim().length in 6..200 })
+        require(customPrompts.size <= 60 && customPrompts.all { it.trim().length in 6..500 })
         require(customPrompts.map { it.trim() }.distinct().size == customPrompts.size)
         require(level == Intensity.CUSTOM || customPrompts.isEmpty())
         val levels = listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY, Intensity.HOT, Intensity.HARD)
