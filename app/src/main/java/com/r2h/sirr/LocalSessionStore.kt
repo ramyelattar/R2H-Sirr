@@ -18,7 +18,7 @@ import org.json.JSONObject
 internal object LocalSessionStore {
     fun save(vault:LocalVault,name:String,game:LocalGame) {
         require(game.turns.size in 6..18 && game.round in 0..game.turns.size)
-        val json=JSONObject().put("version",if(game.competition==null) 1 else 3)
+        val json=JSONObject().put("version",if(game.competition==null) 1 else 4)
             .put("group",game.group)
             .put("level",game.level.name).put("round",game.round).put("ended",game.ended)
             .put("names",JSONArray(game.playerNames))
@@ -56,7 +56,8 @@ internal object LocalSessionStore {
             turns.put(JSONObject().put("index",t.roundIndex).put("actor",t.actorIndex)
                 .put("id",t.prompt.id).put("level",t.prompt.level.name).put("text",t.prompt.text)
                 .put("title",t.prompt.title).put("kind",t.prompt.kind.name)
-                .put("durationSeconds",t.prompt.durationSeconds))
+                .put("durationSeconds",t.prompt.durationSeconds)
+                .put("actionCode",t.prompt.actionCode))
         }
         vault.writePrivate(name,json.put("turns",turns).toString())
     }
@@ -65,7 +66,7 @@ internal object LocalSessionStore {
         val raw=vault.readPrivate(name)?:return null
         val json=JSONObject(raw)
         val version=json.getInt("version")
-        require(version in 1..3 && json.getBoolean("group")==expectedGroup)
+        require(version in 1..4 && json.getBoolean("group")==expectedGroup)
         require(version == 1 || !expectedGroup)
         val ns=json.getJSONArray("names")
         val names=(0 until ns.length()).map{ns.getString(it)}
@@ -84,7 +85,8 @@ internal object LocalSessionStore {
                 title=if(version >= 3) t.getString("title") else "",
                 kind=if(version >= 3) CoupleChallengeKind.valueOf(t.getString("kind"))
                     else CoupleChallengeKind.TALK,
-                durationSeconds=if(version >= 3) t.getInt("durationSeconds") else 300
+                durationSeconds=if(version >= 3) t.getInt("durationSeconds") else 300,
+                actionCode=if(version >= 4) t.optString("actionCode","") else ""
             ))
         }
         fun counts(key:String, signed:Boolean=false):List<Int>{
