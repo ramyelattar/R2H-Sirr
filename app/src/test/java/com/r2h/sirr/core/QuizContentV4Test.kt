@@ -45,6 +45,22 @@ class QuizContentV4Test {
         assertFalse(all.any { it.text.startsWith("مين فيكم") })
     }
 
+    @Test fun adultTopicsDiscussSexualityDirectlyWithoutRelabelingTheIntroPack() {
+        // Editorial coverage guard, not a user-experience or content-safety assessment.
+        val keywords = listOf("جنس", "حميم", "رغب", "جسدي", "ممارسة", "إثارة")
+        val minimumPerPack = listOf(0, 6, 8, 12, 12, 12, 12)
+        assertEquals(7, packs.size)
+        packs.forEachIndexed { index, pack ->
+            val questionsAboutSexuality = pack.questions.count { question ->
+                keywords.any(question.text::contains)
+            }
+            assertTrue(
+                "Adult sexuality missing in ${pack.name}: ${questionsAboutSexuality} found",
+                questionsAboutSexuality >= minimumPerPack[index]
+            )
+        }
+    }
+
     @Test fun questionsAcrossAllTopicsHaveUniqueText() {
         val questions = packs.flatMap { it.questions }.map { it.text }
         assertEquals(175, questions.toSet().size)
