@@ -1,6 +1,6 @@
 package com.r2h.sirr.core
 
-/** Staged owner content v10. NOT activated in SessionFactory until reviewed. */
+/** Owner-approved v10 wording. Runtime eligibility is enforced by CoupleV10Policy. */
 internal data class CoupleStyleV10Activity(
     val id: String,
     val level: Intensity,
