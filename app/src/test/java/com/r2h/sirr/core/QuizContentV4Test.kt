@@ -35,6 +35,16 @@ class QuizContentV4Test {
         )
     }
 
+    @Test fun pairedComparisonPromptsAvoidSelfVsOtherActorLabels() {
+        // "أنا" / "الشريك" choices about WHO acted cannot be treated as same meaning
+        // for both respondents merely because the array index matches.
+        val ambiguous = setOf("أنا غالبًا", "هو غالبًا", "التاني غالبًا",
+            "أنا اللي بحب أجرب", "الطرف التاني")
+        val all = packs.flatMap { it.questions }
+        assertFalse(all.any { q -> q.choices.any { it in ambiguous } })
+        assertFalse(all.any { it.text.startsWith("مين فيكم") })
+    }
+
     @Test fun questionsAcrossAllTopicsHaveUniqueText() {
         val questions = packs.flatMap { it.questions }.map { it.text }
         assertEquals(175, questions.toSet().size)
