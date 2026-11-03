@@ -118,7 +118,10 @@ data class QuizSession(
             return QuizSession(
                 packId = packId,
                 packName = quiz.name,
-                questions = indices.map(quiz.questions::get),
+                questions = indices.map { index ->
+                    val q = quiz.questions[index]
+                    Question(q.text, q.choices.toList())
+                },
                 paired = paired
             )
         }
