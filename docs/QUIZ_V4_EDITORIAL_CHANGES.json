@@ -36,10 +36,11 @@
     }
   ],
   "new_review_baseline_commit": "6919df7e978b09fb9ec59dd7a89ce4fc03bd7055",
-  "next_stage": "37 focused replacements to repair role-relative comparisons and enrich three underperforming topics without replacing the rest of the bank.",
+  "next_stage": "43 focused edits including three role-relative comparison defects and expressive material in packs 04/05/07; no quiz answers/IDs added or removed.",
   "reviewed_revision": {
-    "count": 37,
-    "untouched_question_count": 138,
+    "change_count": 43,
+    "untouched_question_count": 132,
+    "owner_approval": "PENDING",
     "changes": [
       {
         "pack": "quiz_02",
@@ -60,7 +61,7 @@
             "أطلب وقت وبعدين نتكلم"
           ]
         },
-        "reason": "Replace role-relative question with participant-neutral preference to make same-index comparison meaningful"
+        "reason": "Comparable first-person action preference (removes self/other role ambiguity)"
       },
       {
         "pack": "quiz_03",
@@ -81,7 +82,7 @@
             "نهدى الأول ونرجع نتكلم"
           ]
         },
-        "reason": "Replace role-relative question with participant-neutral preference to make same-index comparison meaningful"
+        "reason": "Comparable first-person action preference (removes self/other role ambiguity)"
       },
       {
         "pack": "quiz_03",
@@ -102,7 +103,7 @@
             "أغامر وأطلبها من غير توقعات"
           ]
         },
-        "reason": "Replace role-relative question with participant-neutral preference to make same-index comparison meaningful"
+        "reason": "Comparable first-person action preference (removes self/other role ambiguity)"
       },
       {
         "pack": "quiz_04",
@@ -123,7 +124,7 @@
             "أسيب الموقف يوضح نفسه"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_04",
@@ -144,7 +145,7 @@
             "إحساس الشخص وهو معايا"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_04",
@@ -165,7 +166,7 @@
             "أقول بصراحة إني مبسوط بالكلام"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_04",
@@ -186,7 +187,7 @@
             "دعوة لكلام أوضح"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_04",
@@ -207,7 +208,7 @@
             "لما الاهتمام يبقى متبادل باستمرار"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_04",
@@ -228,7 +229,7 @@
             "إن عندي كلام لسه ما اتقالش"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_04",
@@ -249,7 +250,7 @@
             "نفسي نتكلم أكتر لو تحب"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_04",
@@ -270,7 +271,7 @@
             "أدعوه لوقت هادي سوا"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_04",
@@ -291,7 +292,7 @@
             "قعدة هادية من غير ناس كتير"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -312,7 +313,7 @@
             "لحظة هدوء قريبة"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -333,7 +334,7 @@
             "معرفة إذا كان الوقت مناسب"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -354,7 +355,7 @@
             "في رسالة أقدر أرتبها"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -368,14 +369,14 @@
           ]
         },
         "after": {
-          "text": "لو هتخبي أمنية في ورقة، إيه أول كلمة تكتبها؟",
+          "text": "لو هتخبي أمنية في ورقة، هتبدأها بأنهي جملة؟",
           "choices": [
             "نفسي نرجع…",
             "المرة الجاية…",
             "عمري ما قلتلك…"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -396,7 +397,7 @@
             "أول مرة نتجرأ نسأل"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -417,7 +418,7 @@
             "مش عارف أصيغه كويس"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -438,7 +439,7 @@
             "من إحساسي دلوقتي"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -459,7 +460,7 @@
             "إني بحب الوضوح حتى لو صعب"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_05",
@@ -480,7 +481,7 @@
             "اعتراف محتاج لحظة مناسبة"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_06",
@@ -501,7 +502,7 @@
             "يديني مساحة من غير زعل"
           ]
         },
-        "reason": "More specific personal boundaries and agency"
+        "reason": "Respectful, distinct boundaries and personal preferences"
       },
       {
         "pack": "quiz_06",
@@ -522,7 +523,7 @@
             "أقترح بديل أرتاح له"
           ]
         },
-        "reason": "More specific personal boundaries and agency"
+        "reason": "Respectful, distinct boundaries and personal preferences"
       },
       {
         "pack": "quiz_06",
@@ -543,7 +544,7 @@
             "أغيّر الموضوع لو طلب"
           ]
         },
-        "reason": "More specific personal boundaries and agency"
+        "reason": "Respectful, distinct boundaries and personal preferences"
       },
       {
         "pack": "quiz_06",
@@ -564,7 +565,7 @@
             "نقل كلام خاص من غير إذني"
           ]
         },
-        "reason": "More specific personal boundaries and agency"
+        "reason": "Respectful, distinct boundaries and personal preferences"
       },
       {
         "pack": "quiz_07",
@@ -585,7 +586,7 @@
             "لحظة افتكرته فيها فجأة"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -606,7 +607,28 @@
             "نفسي أسألك سؤال شخصي"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 4,
+        "before": {
+          "text": "أنهي حاجة تخليك تتكسف وتضحك؟",
+          "choices": [
+            "مجاملة مفاجئة",
+            "سؤال مباشر",
+            "نظرة طويلة"
+          ]
+        },
+        "after": {
+          "text": "لو شريكك همسلك بجملة جريئة، أنهي تفصيلة هتخليك تبتسم من الكسوف؟",
+          "choices": [
+            "يناديني باسم خاص بينا",
+            "يقول إنه مشتاق لقربي",
+            "يعترف بحاجة كان مكسوف يقولها"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -627,7 +649,28 @@
             "موقف محرج محدش يعرفه"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 7,
+        "before": {
+          "text": "لو هتعترف إنك معجب بحد، تبدأ إزاي؟",
+          "choices": [
+            "أقولها مباشرة",
+            "أبعت رسالة",
+            "أختار وقت مناسب"
+          ]
+        },
+        "after": {
+          "text": "شريكك سألك: «إيه أكتر حاجة فيا بتخليك تقرب؟» تختار إيه؟",
+          "choices": [
+            "نظرة معينة منه",
+            "طريقته وهو بيسمعني",
+            "لمسته لما نكون مرتاحين"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -648,7 +691,7 @@
             "حاجة نفسك تطلبها ومكسوف"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -669,7 +712,28 @@
             "أسيب الموقف يمشي بطبيعته"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 12,
+        "before": {
+          "text": "أنهي نوع غزل ممكن تقوله وش لوش؟",
+          "choices": [
+            "مجاملة في الشخصية",
+            "اعتراف بالاشتياق",
+            "كلمة سر بيننا"
+          ]
+        },
+        "after": {
+          "text": "لو هتقول غزل وش لوش من غير تحضير، هتبدأ بإيه؟",
+          "choices": [
+            "قرب مني شوية",
+            "وحشتني من أول اليوم",
+            "نفسي نسرق وقت لينا"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -690,7 +754,7 @@
             "لحظة فهمت فيها إنه مجرد إعجاب"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -711,7 +775,7 @@
             "مرة كنت عايز أقرب واترددت"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -732,7 +796,7 @@
             "أعترف إني مش جاهز أتكلم"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -753,7 +817,28 @@
             "الصدفة اللي فاكرها لحد دلوقتي"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 18,
+        "before": {
+          "text": "أنهي رد على جملة وحشتني يعجبك؟",
+          "choices": [
+            "وإنت كمان",
+            "قد إيه",
+            "طب نشوف بعض إمتى"
+          ]
+        },
+        "after": {
+          "text": "شريكك قالك «وحشتني» وهو قريب منك، ترد بإيه؟",
+          "choices": [
+            "قرب أكتر",
+            "مش عارف أقولك قد إيه",
+            "كنت مستني أسمعها منك"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -771,10 +856,52 @@
           "choices": [
             "حد يلاحظ إني معجب",
             "أقول مجاملة من قلبي",
-            "يتسألني عن سر مخبيه"
+            "حد يسألني عن سر مخبيه"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 21,
+        "before": {
+          "text": "لو عليك اختيار سؤال للشخص التاني، تهتم بإيه؟",
+          "choices": [
+            "إنه يناسبه",
+            "إنه مختلف",
+            "إنه خفيف"
+          ]
+        },
+        "after": {
+          "text": "سؤال واحد خاص بينك وبين شريكك؛ تحب تعرف إيه؟",
+          "choices": [
+            "لحظة قرب ما نسيهاش",
+            "حاجة بيتكسف يعترف بيها",
+            "حدود نفسه تتفهم أكتر"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
+      },
+      {
+        "pack": "quiz_07",
+        "question": 22,
+        "before": {
+          "text": "إيه الجرأة اللي بتحترمها في الناس؟",
+          "choices": [
+            "الاعتذار",
+            "قول الحقيقة",
+            "التعبير عن المشاعر"
+          ]
+        },
+        "after": {
+          "text": "أنهي نوع من الجرأة بيشدك في كلام شريكك؟",
+          "choices": [
+            "يعبر عن رغبته من غير ضغط",
+            "يسألني لو مرتاح قبل القرب",
+            "يقول اللي حاسس بيه بوضوح"
+          ]
+        },
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -795,7 +922,7 @@
             "وعد بسيط نقدر نحققه"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       },
       {
         "pack": "quiz_07",
@@ -809,31 +936,34 @@
           ]
         },
         "after": {
-          "text": "قبل ما نقفل اللعبة، أنهي سؤال مش عايز يفضل متسألش؟",
+          "text": "قبل ما نقفل اللعبة، أنهي سؤال نفسك تسأله ومش عايز تسيبه لبعدين؟",
           "choices": [
             "إيه أول حاجة فكرت فيها عني؟",
             "إمتى حسيت إننا بقينا أقرب؟",
             "إيه حاجة نفسك أحسنها في تعاملنا؟"
           ]
         },
-        "reason": "More vivid contextual Egyptian-Arabic scenarios and distinctive answer choices"
+        "reason": "Distinct Egyptian-Arabic intimate/personal scenarios and choices"
       }
     ],
     "quality_snapshot": {
-      "distinctQuestions": 175,
-      "distinctWithinEachQuestion": true,
-      "emptyChoices": 0,
-      "total": 175,
+      "packs": 7,
+      "perPack": [
+        25,
+        25,
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "questions": 175,
       "options": 525,
+      "uniqueNormalizedQuestions": 175,
+      "questionIntraChoiceDuplicates": 0,
+      "shortChoicesFourOrLess": 0,
       "startsLo": 65,
-      "startsWhat": 38,
-      "roleRelativeEntries": [
-        95,
-        126,
-        128,
-        146,
-        155
-      ]
+      "startsWhat": 37
     }
   }
 }
