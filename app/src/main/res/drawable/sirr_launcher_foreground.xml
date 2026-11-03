@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Nightfall crescent + sealed keyhole, scalable and crisp at every launcher size. -->
+    <path android:pathData="M54,12 C76,12 96,31 96,54 C96,77 78,96 54,96 C30,96 12,76 12,54 C12,31 32,12 54,12 Z"
+        android:fillColor="#A12767" android:fillAlpha="0.11" />
+    <path android:pathData="M54,15 C76,15 93,33 93,54 C93,75 76,93 54,93 C33,93 15,75 15,54 C15,33 33,15 54,15 Z"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#D64B97" android:strokeWidth="1.4" android:strokeAlpha="0.47" />
+    <path android:pathData="M54,20 C73,20 88,35 88,54 C88,73 73,88 54,88 C35,88 20,73 20,54 C20,35 35,20 54,20 Z"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#F7A1CC" android:strokeWidth="0.8" android:strokeAlpha="0.52" />
+    <!-- Offset luminous crescent: the visual signature of SIRR. -->
+    <path android:pathData="M65,23 C42,16 25,32 25,53 C25,74 43,88 64,84 C48,81 39,69 39,55 C39,40 49,28 65,23 Z"
+        android:fillColor="#B63883" android:fillAlpha="0.26" />
+    <path android:pathData="M69,25 C49,23 33,39 33,55 C33,70 44,83 59,84 C39,87 22,74 22,54 C22,34 42,16 69,25 Z"
+        android:fillColor="#F75EAD" />
+    <path android:pathData="M69,25 C49,23 33,39 33,55 C33,70 44,83 59,84"
+        android:fillColor="#000000" android:fillAlpha="0"
+        android:strokeColor="#FFCCD9" android:strokeWidth="1.7"
+        android:strokeLineCap="round" android:strokeAlpha="0.87" />
+    <!-- Gold mystery seal and keyhole. -->
+    <path android:pathData="M58,41 C49,41 44,48 44,55 C44,61 47,66 52,69 L49,79 L67,79 L64,69 C69,66 72,61 72,55 C72,47 66,41 58,41 Z"
+        android:fillColor="#3C1835" android:strokeColor="#FFD9B1"
+        android:strokeWidth="2.6" android:strokeLineJoin="round" />
+    <path android:pathData="M58,48 C54.8,48 52,50.8 52,54 C52,56.6 54,58.8 56.1,59.5 L54.7,71 L61.3,71 L59.9,59.5 C62,58.8 64,56.6 64,54 C64,50.8 61.2,48 58,48 Z"
+        android:fillColor="#FFCFB6" />
+    <path android:pathData="M81,29 L83.4,35.6 L90,38 L83.4,40.4 L81,47 L78.6,40.4 L72,38 L78.6,35.6 Z"
+        android:fillColor="#FFD8AE" />
+    <path android:pathData="M27,73 L28.5,77.5 L33,79 L28.5,80.5 L27,85 L25.5,80.5 L21,79 L25.5,77.5 Z"
+        android:fillColor="#FF7DC1" />
+</vector>

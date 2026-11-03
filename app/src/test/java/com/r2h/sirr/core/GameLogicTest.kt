@@ -27,11 +27,41 @@ class GameLogicTest {
         assertEquals(6, GameLogic.score(listOf(2, 2, 2)))
         assertTrue(GameLogic.interpretation(2, 6).isNotBlank())
     }
-    @Test fun dataIsConsistent() {
-        assertEquals(7, OriginalContent.quizPacks.size)
-        assertTrue(OriginalContent.quizPacks.all { it.questions.isNotEmpty() })
-        assertTrue(OriginalContent.quizPacks.flatMap { it.questions }.all { it.choices.size == 3 })
-        assertEquals(100, GameLogic.evenWeights.sum())
-        assertEquals(3, OriginalContent.diceTemplates.size)
+    @Test fun activeCanonicalContentIsConsistent() {
+        // Assert the v4 packs used by both local and remote quiz screens.
+        val packs = ExpandedQuizzes.packs
+        assertEquals(7, packs.size)
+        assertTrue(packs.all { it.questions.size == 25 })
+        val questions = packs.flatMap { it.questions }
+        assertEquals(175, questions.size)
+        assertEquals(175, questions.map { it.text }.toSet().size)
+        assertTrue(questions.all { q ->
+            q.text.isNotBlank() && q.choices.size == 3 &&
+                q.choices.all { it.isNotBlank() }
+        })
+
+        val levels = listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY,
+            Intensity.HOT, Intensity.HARD)
+        val allChallenges = listOf(false, true).flatMap { group ->
+            levels.flatMap { level ->
+                val deck = Challenges.deck(level, group)
+                assertEquals(if (group) 20 else 26, deck.size)
+                deck
+            }
+        }
+        assertEquals(230, allChallenges.size)
+        assertEquals(230, allChallenges.map { it.text }.toSet().size)
+
+        assertEquals(listOf(17, 17, 17, 17, 16, 16), GameLogic.evenWeights)
+        Intensity.entries.forEach { level ->
+            val configuration = DiceCatalog.preset(level)
+            configuration.validate()
+            assertEquals(3, configuration.dice.size)
+            assertTrue(configuration.dice.all { die ->
+                die.size == 6 &&
+                    die.map { it.weight } == GameLogic.evenWeights &&
+                    die.all { it.text.isNotBlank() && it.text.length <= 72 }
+            })
+        }
     }
 }

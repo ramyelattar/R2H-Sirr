@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {randomBytes,createCipheriv,createDecipheriv} from 'node:crypto';
+import {randomBytes,createCipheriv,createDecipheriv,createHmac} from 'node:crypto';
 import {newRoom,join,applyAction,publicState} from '../logic.mjs';
 import {CipherMediaStore} from '../media.mjs';
 let eventCounter=0;
@@ -10,20 +10,23 @@ function room(){
  const guest=join(r,r.invite,'الضيف',1100);guest.connected=true;
  act(r,guest,'consent',{value:true});return {r,host,guest};
 }
-test('quiz: 8 verified answers, consent, no exposed individual responses, immutable aggregate',()=>{
+test('quiz: private HMAC answers, consent and aggregate only',()=>{
+ const key=Buffer.alloc(32,7);
+ const tags=(r,values)=>values.map((v,i)=>createHmac('sha256',key)
+    .update(['sirr','v4','quiz',r.id,r.quiz.id,r.quiz.indices[i],v].join(':')).digest('base64url'));
  const {r,host,guest}=room();
  assert.throws(()=>act(r,guest,'quiz_open',{pack:0}));
  act(r,host,'quiz_open',{pack:3});
  assert.equal(publicState(r,1300).quiz.pack,3);
  assert.throws(()=>act(r,guest,'quiz_submit',{quizId:r.quiz.id,answers:[1,1]}));
  assert.throws(()=>act(r,guest,'quiz_submit',{quizId:r.quiz.id,answers:[-1,0,0,0,0,0,0,0]}));
- act(r,host,'quiz_submit',{quizId:r.quiz.id,answers:[0,1,2,1,1,0,2,2]});
+ act(r,host,'quiz_submit',{quizId:r.quiz.id,tags:tags(r,[0,1,2,1,1,0,2,2])});
  assert.equal(publicState(r,1300).quiz.submitted.length,1);
  assert.ok(!JSON.stringify(publicState(r,1300)).includes('answers'));
  assert.throws(()=>act(r,host,'quiz_submit',{quizId:r.quiz.id,answers:Array(8).fill(1)}));
- act(r,guest,'quiz_submit',{quizId:r.quiz.id,answers:[0,1,1,0,1,0,2,2]});
+ act(r,guest,'quiz_submit',{quizId:r.quiz.id,tags:tags(r,[0,1,1,0,1,0,2,2])});
  assert.equal(r.quiz.result.agreement,6);
- assert.deepEqual(r.quiz.result.scores.map(x=>x.score),[9,7]);
+ assert.equal(r.quiz.result.scores,undefined);
  assert.deepEqual(r.quiz.submissions.map(s=>Object.keys(s)),[['id'],['id']]);
  act(r,host,'quiz_close');assert.equal(publicState(r,1300).quiz,null);
 });

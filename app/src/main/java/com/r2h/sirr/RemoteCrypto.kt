@@ -15,6 +15,22 @@ internal object RemoteCrypto {
     private val random = SecureRandom()
     private val allowed = setOf("image/jpeg", "image/png", "image/webp",
         "audio/mpeg", "audio/ogg", "audio/mp4", "video/mp4", "video/webm", "application/vnd.sirr.card+json")
+    fun encryptChunk(room:String,key:ByteArray,transferId:String,index:Int,kind:String,data:ByteArray):Pair<String,ByteArray> {
+        require(key.size==32 && data.size in 1..512*1024 && kind in setOf("image","audio","video"))
+        val iv=ByteArray(12).also(random::nextBytes)
+        val cipher=Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE,SecretKeySpec(key,"AES"),GCMParameterSpec(128,iv))
+        cipher.updateAAD("$room:chunk:$transferId:$index:$kind".toByteArray(Charsets.UTF_8))
+        return encode(iv) to cipher.doFinal(data)
+    }
+    fun decryptChunk(room:String,key:ByteArray,transferId:String,index:Int,kind:String,iv:String,data:ByteArray):ByteArray {
+        require(key.size==32 && kind in setOf("image","audio","video") && data.size in 17..(512*1024+16))
+        val decoded=decode(iv);require(decoded.size==12)
+        val cipher=Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE,SecretKeySpec(key,"AES"),GCMParameterSpec(128,decoded))
+        cipher.updateAAD("$room:chunk:$transferId:$index:$kind".toByteArray(Charsets.UTF_8))
+        return cipher.doFinal(data)
+    }
     fun key(): ByteArray = ByteArray(32).also(random::nextBytes)
     fun encode(bytes: ByteArray): String = Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
     fun decode(text: String): ByteArray = Base64.decode(text, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)

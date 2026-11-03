@@ -1,0 +1,51 @@
+name: R2H Play Source Verification
+on:
+  push:
+    branches: [feature/m8-egyptian-experience, feature/m9-stabilization, 'feature/m23-*']
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'app/src/main/java/com/r2h/sirr/**'
+      - 'tools/**'
+      - 'content/**'
+      - 'app/src/test/**'
+      - 'app/src/main/java/com/r2h/sirr/core/**'
+      - '.github/workflows/m8-source-tests.yml'
+permissions:
+  contents: read
+jobs:
+  canonical-content:
+    name: Canonical Arabic banks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify Kotlin and server content are in sync
+        run: python tools/generate_content_v2.py --check
+      - name: Verify critical Android UX source regressions
+        run: python tools/check_m8_ui_source.py
+      - name: Verify v4 content quality gates
+        run: python tools/check_m22c_content_quality.py
+  backend-protocol:
+    name: Node protocol and gameplay tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install server dependencies
+        working-directory: backend
+        run: npm install --ignore-scripts --no-audit --no-fund --no-package-lock
+      - name: Test Node game protocol
+        working-directory: backend
+        run: npm test
+      - name: Validate web and Node source syntax
+        working-directory: backend
+        run: |
+          node --check server.mjs
+          node --check logic.mjs
+          node --check media.mjs
+          node --check public/app.js

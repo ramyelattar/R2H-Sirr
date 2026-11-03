@@ -5,8 +5,8 @@ import kotlin.random.Random
 fun main() {
     check(ExpandedQuizzes.packs.size == 7)
     val allQuestions = ExpandedQuizzes.packs.flatMap { it.questions }
-    check(allQuestions.size == 140)
-    check(allQuestions.map { it.text }.distinct().size == 140)
+    check(allQuestions.size == 175)
+    check(allQuestions.map { it.text }.distinct().size == 175)
     check(allQuestions.all { it.choices.size == 3 })
     var tested = 0
     for (mode in listOf(false, true)) for (level in Intensity.entries) {
@@ -28,5 +28,5 @@ fun main() {
     check(custom.all {text->session.turns.any {it.prompt.text==text} })
     check(runCatching { SessionFactory.create(listOf("أ","ب"),Intensity.SOFT,false,Random(1),custom) }.isFailure)
     check(runCatching { SessionFactory.create(listOf("أ","ب"),Intensity.CUSTOM,false,Random(1),listOf("مكرر مضبوط", "مكرر مضبوط")) }.isFailure)
-    println("PASS: 140 distinct Arabic questions; 10 intensity/mode game combinations, no repeats; score fairness; custom validation")
+    println("PASS: 175 distinct Arabic questions; 10 intensity/mode game combinations, no repeats; score fairness; custom validation")
 }

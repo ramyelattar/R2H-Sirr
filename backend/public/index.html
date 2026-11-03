@@ -14,10 +14,17 @@
   <button id="join">الانضمام</button>
 </section>
 <section id="game" hidden>
+  <details id="effectsSettings"><summary>الصوت والاهتزاز والمؤثرات</summary>
+    <label class="check"><input type="checkbox" id="fxSound"> أصوات قصيرة اختيارية</label>
+    <label class="check"><input type="checkbox" id="fxVibrate"> اهتزاز اختياري إذا دعمه الجهاز</label>
+    <label class="check"><input type="checkbox" id="fxMotion"> انتقالات سينمائية</label>
+    <label>الصوت <input type="range" id="fxVolume" min="0" max="80" value="30"></label>
+    <button class="secondary" id="fxPreview">تجربة المؤثرات</button>
+  </details>
   <p id="connect">جارِ الاتصال…</p>
   <h1 id="title">جلسة مشتركة</h1>
   <p id="round"></p>
-  <article id="challenge" class="challenge"></article>
+  <article id="challenge" class="challenge"></article><div id="fxParticles" aria-hidden="true"></div>
   <ul id="participants"></ul>
   <div id="actor" hidden>
     <label>رد نصي اختياري <textarea id="reply" rows="2" maxlength="500" placeholder="لن يظهر الرد إلا للمشاركين في الجلسة"></textarea></label>
@@ -32,14 +39,31 @@
       <label>الرسالة الأولى<textarea id="cardOne" maxlength="350" rows="2"></textarea></label>
       <label>الرسالة الثانية<textarea id="cardTwo" maxlength="350" rows="2"></textarea></label>
       <label id="cardThirdLabel">الرسالة الثالثة<textarea id="cardThree" maxlength="350" rows="2"></textarea></label>
+      <label>صورة ختامية اختيارية<input id="cardImage" type="file" accept="image/jpeg,image/png,image/webp"></label>
+      <label>صوت أو موسيقى اختياري<input id="cardAudio" type="file" accept="audio/mpeg,audio/mp4,audio/ogg"></label>
       <button id="sendCard" class="secondary">إرسال البطاقة المشفرة</button>
       <small>تُحذف من الخادم بعد أول استلام، أو عند انتهاء الصلاحية. لا يمكن إلغاء أي نسخة احتفظ بها المستلم.</small>
     </section>
   </div>
+  <section id="lobby" aria-label="غرفة الانتظار">
+    <p id="waitingSummary"></p>
+    <button id="agree" class="secondary" hidden>أوافق على إعدادات الجلسة والمشاركة</button>
+    <section id="waitingConfig" hidden>
+      <h2>تخصيص الجلسة قبل موافقة الضيوف</h2>
+      <label>الجولات <select id="waitingRounds"><option>6</option><option>10</option><option>12</option><option>18</option></select></label>
+      <label>التنويع <select id="waitingVariety"><option value="ONE_LEVEL">مستوى واحد</option><option value="MIX_LOWER">المستوى المختار والأقل</option></select></label>
+      <label>الجرأة <select id="waitingLevel"><option value="SOFT">هادئ</option><option value="NORMAL">متوسط</option><option value="SEXY">غزل</option><option value="HOT">جريء</option><option value="HARD">أعلى</option></select></label>
+      <label>تحديات خاصة مشفرة — تحدٍ لكل سطر <textarea id="waitingCustom" rows="5" maxlength="4400" autocomplete="off"></textarea></label>
+      <button id="applyWaiting">اعتماد إعدادات غرفة الانتظار</button>
+      <small>التحديات الخاصة مشفرة طرفيًا؛ تُقفل الإعدادات بعد موافقة أول ضيف.</small>
+    </section>
+  </section>
   <div id="messages"></div>
   <section id="mediaUpload" hidden>
-    <label>إرسال ملف مشفر في دورك الحالي (صورة أو صوت أو فيديو، بحد أقصى ٨ ميجابايت)
+    <label>إرسال ملف مشفر في دورك الحالي (صورة أو صوت أو فيديو، بحد أقصى ٤٨ ميجابايت)
       <input id="file" type="file" accept="image/*,audio/*,video/*">
+      <button id="resumeUpload" class="secondary">استئناف ملف متوقف</button>
+      <button id="cancelUpload" class="secondary">إلغاء نقل الملف</button>
     </label>
   </section>
   <h2>الوسائط المشتركة المشفرة</h2>
@@ -48,5 +72,5 @@
   <button class="secondary" id="leave">إنهاء مشاركتي والجلسة</button>
 </section>
 <p role="alert" id="notice"></p>
-<footer>يُحذف سجل الجلسة من ذاكرة الخادم بعد انتهاء الصلاحية. ملفات الوسائط مشفرة من جهاز إلى جهاز بمفتاح داخل رابط الدعوة؛ الرسائل وإجابات الاختبارات تعالج على الخادم وليست مشفرة طرفيًا. من يمتلك الرابط ومفتاحه يمكنه فك الملفات إذا انضم للجلسة. لا يمكن منع تسجيل الشاشة خارجيًا.</footer>
-</main><script src="/app.js" defer></script></body></html>
+<footer>يُحذف سجل الجلسة من ذاكرة الخادم بعد انتهاء الصلاحية. ملفات الوسائط مشفرة من جهاز إلى جهاز بمفتاح داخل رابط الدعوة؛ الرسائل مشفرة طرفيًا، وتُقارن الاختيارات باستخدام HMAC دون كشفها للخادم. يعرف الخادم المشاركين وعدد الإجابات المتطابقة. من يمتلك الرابط ومفتاحه يمكنه فك الملفات إذا انضم للجلسة. لا يمكن منع تسجيل الشاشة خارجيًا.</footer>
+</main><script src="/m6-transfer.js" defer></script><script src="/app.js" defer></script></body></html>

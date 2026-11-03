@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.AtomicFile
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import org.json.JSONArray
@@ -84,14 +85,29 @@ internal class LocalVault(private val context: Context) {
     }
     fun writePrivate(name: String, value: String) {
         require(name.matches(Regex("[a-z0-9-]{1,30}")))
-        File(dir, "$name.private").writeBytes(encrypt(value.toByteArray(Charsets.UTF_8)))
+        val plain = value.toByteArray(Charsets.UTF_8)
+        val encrypted = try { encrypt(plain) } finally { plain.fill(0) }
+        val file = AtomicFile(File(dir, "$name.private"))
+        try {
+            val stream = file.startWrite()
+            try {
+                stream.write(encrypted)
+                file.finishWrite(stream)
+            } catch (failure: Throwable) {
+                file.failWrite(stream)
+                throw failure
+            }
+        } finally { encrypted.fill(0) }
     }
     fun readPrivate(name: String): String? = runCatching {
-        String(decrypt(File(dir, "$name.private").readBytes()), Charsets.UTF_8)
+        require(name.matches(Regex("[a-z0-9-]{1,30}")))
+        val encrypted = AtomicFile(File(dir, "$name.private")).openRead().use { it.readBytes() }
+        val plain = try { decrypt(encrypted) } finally { encrypted.fill(0) }
+        try { String(plain, Charsets.UTF_8) } finally { plain.fill(0) }
     }.getOrNull()
     fun deletePrivate(name: String) {
         require(name.matches(Regex("[a-z0-9-]{1,30}")))
-        File(dir, "$name.private").delete()
+        AtomicFile(File(dir, "$name.private")).delete()
     }
     fun clear() { dir.listFiles()?.forEach { it.delete() } }
 }

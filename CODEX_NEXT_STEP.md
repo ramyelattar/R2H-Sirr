@@ -1,3 +1,10 @@
+# After M7 — follow-up without APK build
+
+Extend `feature/m7-arabic-gameplay` after code review. Preserve M6 media/card code.
+Priorities: review Kotlin/Compose integration, confirm browser/Android version-3 handshake against deployed test relay when permitted, test cryptographic protocol cross-language, and implement pending M5 confidentiality work. Do not modify source content through `tools/create_content_m4.py`. No Gradle/APK before explicit owner authorization.
+
+---
+
 # Codex / Next implementation phase (NO APK BUILD)
 
 You are extending the existing M4 Android + Node project. Preserve all functional work from M3 and M4; do not replace architecture or rewrite UI. Do not clone InteractiveWish assets/content or call its private APIs. Content must be original Arabic, for consensual adults 18+ only. Do not use cloud AI.
