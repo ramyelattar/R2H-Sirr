@@ -123,7 +123,7 @@ internal fun QuizScreenV2() {
                     }, modifier = Modifier.weight(1f))
                 }
                 SirrOption(
-                    title = "اتوقع إجابات شريكي",
+                    title = "أتوقّع إجابات شريكي",
                     selected = paired && guessPartner,
                     onClick = { paired = true; guessPartner = true; acceptedContent = false },
                     modifier = Modifier.fillMaxWidth()
