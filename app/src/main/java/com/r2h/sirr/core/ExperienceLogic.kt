@@ -12,9 +12,13 @@ data class Challenge(
     val text: String,
     val title: String = "",
     val kind: CoupleChallengeKind = CoupleChallengeKind.TALK,
-    val durationSeconds: Int = 300
+    val durationSeconds: Int = 300,
+    val actionCode: String = ""
 ) {
-    init { require(durationSeconds in 30..300) }
+    init {
+        require(durationSeconds in 30..300)
+        require(actionCode.length <= 80)
+    }
 }
 
 /** Independent original Arabic challenges; no imported third-party content. */
@@ -183,6 +187,9 @@ object SessionFactory {
             Challenge("custom-${i + 1}", Intensity.CUSTOM, prompt.trim(),
                 title = "تحدي من عندكم", kind = CoupleChallengeKind.PERSONAL)
         }
+        fun sourceDeck(sourceLevel: Intensity): List<Challenge> =
+            if (competition != null) CoupleV10Policy.deck(sourceLevel)
+            else Challenges.deck(sourceLevel, group)
         fun prioritize(items: List<Challenge>): List<Challenge> {
             val unique = items.distinctBy { it.text }
             fun freshFirst(pool: List<Challenge>): List<Challenge> = pool.shuffled(random)
@@ -232,24 +239,19 @@ object SessionFactory {
             level == Intensity.CUSTOM -> (customs.shuffled(random) +
                 prioritize(if (competition != null) {
                     listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY, Intensity.HOT, Intensity.HARD)
-                        .flatMap { CoupleChallengeCatalog.deck(it) }
+                        .flatMap { CoupleV10Policy.deck(it) }
                 } else Challenges.deck(level, group))
                     .filterNot { c -> customs.any { it.text == c.text } })
                 .distinctBy { it.text }.take(roundCount)
-            variety == ChallengeVariety.ONE_LEVEL -> diversified(prioritize(
-                if (competition != null) CoupleChallengeCatalog.deck(level)
-                else Challenges.deck(level, group)
-            ), roundCount)
+            variety == ChallengeVariety.ONE_LEVEL ->
+                diversified(prioritize(sourceDeck(level)), roundCount)
             else -> {
-                val primary = prioritize(if (competition != null) CoupleChallengeCatalog.deck(level)
-                    else Challenges.deck(level, group))
+                val primary = prioritize(sourceDeck(level))
                 val index = levels.indexOf(level)
-                val lower = prioritize(
-                    if (competition != null) CoupleChallengeCatalog.deck(levels[(index - 1).coerceAtLeast(0)])
-                    else Challenges.deck(levels[(index - 1).coerceAtLeast(0)], group)
-                )
+                val lower = prioritize(sourceDeck(levels[(index - 1).coerceAtLeast(0)]))
                     .filterNot { alt -> primary.any { it.text == alt.text } }
-                val required = (roundCount + 1) / 2
+                val required = if (competition != null) minOf(primary.size, (roundCount + 1) / 2)
+                    else (roundCount + 1) / 2
                 val top = diversified(primary, required)
                 val remainder = (lower + primary.filterNot { it in top }).distinctBy { it.text }
                 val mixed = top + diversified(remainder, roundCount - required)
