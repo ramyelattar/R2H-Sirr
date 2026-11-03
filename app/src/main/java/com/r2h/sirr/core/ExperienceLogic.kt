@@ -70,8 +70,13 @@ data class LocalGame(
     }
 
     /** New couple sessions use +10, -10, or 0 exactly as configured. */
-    fun resolve(outcome: CoupleOutcome): LocalGame {
+    fun resolve(outcome: CoupleOutcome, nowMillis: Long = System.currentTimeMillis()): LocalGame {
         require(competition != null && !group && !finished)
+        if (outcome == CoupleOutcome.COMPLETED) {
+            require(competition.roundClock.started && competition.roundClock.remainingSeconds(nowMillis) == 0) {
+                "Complete the agreed challenge countdown before awarding points"
+            }
+        }
         val actor = turns[round].actorIndex
         val nextScores = scores.toMutableList()
         val nextSkipped = skipped.toMutableList()
