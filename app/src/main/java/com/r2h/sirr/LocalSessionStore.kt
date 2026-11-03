@@ -9,6 +9,8 @@ import com.r2h.sirr.core.CoupleOutcome
 import com.r2h.sirr.core.CoupleTieBreak
 import com.r2h.sirr.core.KnowledgePrompt
 import com.r2h.sirr.core.TieStage
+import com.r2h.sirr.core.ChallengeClock
+import com.r2h.sirr.core.CoupleChallengeKind
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -16,7 +18,7 @@ import org.json.JSONObject
 internal object LocalSessionStore {
     fun save(vault:LocalVault,name:String,game:LocalGame) {
         require(game.turns.size in 6..18 && game.round in 0..game.turns.size)
-        val json=JSONObject().put("version",if(game.competition==null) 1 else 2)
+        val json=JSONObject().put("version",if(game.competition==null) 1 else 3)
             .put("group",game.group)
             .put("level",game.level.name).put("round",game.round).put("ended",game.ended)
             .put("names",JSONArray(game.playerNames))
@@ -28,6 +30,12 @@ internal object LocalSessionStore {
                 .put("startedAtMillis",rules.startedAtMillis)
                 .put("settledEarly",rules.settledEarly)
                 .put("outcomes",JSONArray(rules.outcomes.map { it.name }))
+            val clock=rules.roundClock
+            details.put("roundClock",JSONObject()
+                .put("durationSeconds",clock.durationSeconds)
+                .put("remainingSecondsOnPause",clock.remainingSecondsOnPause)
+                .put("runningSinceMillis",clock.runningSinceMillis ?: -1L)
+                .put("started",clock.started))
             rules.tieBreak?.let { tie ->
                 val tieJson=JSONObject().put("stage",tie.stage.name)
                     .put("sharedCompleted",JSONArray(tie.sharedCompleted))
@@ -45,7 +53,9 @@ internal object LocalSessionStore {
         val turns=JSONArray()
         game.turns.forEach { t ->
             turns.put(JSONObject().put("index",t.roundIndex).put("actor",t.actorIndex)
-                .put("id",t.prompt.id).put("level",t.prompt.level.name).put("text",t.prompt.text))
+                .put("id",t.prompt.id).put("level",t.prompt.level.name).put("text",t.prompt.text)
+                .put("title",t.prompt.title).put("kind",t.prompt.kind.name)
+                .put("durationSeconds",t.prompt.durationSeconds))
         }
         vault.writePrivate(name,json.put("turns",turns).toString())
     }
@@ -54,8 +64,8 @@ internal object LocalSessionStore {
         val raw=vault.readPrivate(name)?:return null
         val json=JSONObject(raw)
         val version=json.getInt("version")
-        require(version in 1..2 && json.getBoolean("group")==expectedGroup)
-        require(version != 2 || !expectedGroup)
+        require(version in 1..3 && json.getBoolean("group")==expectedGroup)
+        require(version == 1 || !expectedGroup)
         val ns=json.getJSONArray("names")
         val names=(0 until ns.length()).map{ns.getString(it)}
         require(names.size in 2..4 && (expectedGroup || names.size==2) &&
@@ -68,7 +78,13 @@ internal object LocalSessionStore {
             require(t.getInt("index")==i && actor in names.indices)
             val prompt=t.getString("text")
             require(prompt.length in 1..500)
-            Turn(i,actor,Challenge(t.getString("id"),Intensity.valueOf(t.getString("level")),prompt))
+            Turn(i,actor,Challenge(
+                t.getString("id"),Intensity.valueOf(t.getString("level")),prompt,
+                title=if(version >= 3) t.getString("title") else "",
+                kind=if(version >= 3) CoupleChallengeKind.valueOf(t.getString("kind"))
+                    else CoupleChallengeKind.TALK,
+                durationSeconds=if(version >= 3) t.getInt("durationSeconds") else 300
+            ))
         }
         fun counts(key:String, signed:Boolean=false):List<Int>{
             val values=json.getJSONArray(key)
@@ -81,8 +97,8 @@ internal object LocalSessionStore {
         }
         val round=json.getInt("round")
         require(round in 0..turns.size)
-        val scores=counts("scores",version==2);val skipped=counts("skipped")
-        val competition = if(version == 2) {
+        val scores=counts("scores",version>=2);val skipped=counts("skipped")
+        val competition = if(version >= 2) {
             val rules=json.getJSONObject("competition")
             val rawOutcomes=rules.getJSONArray("outcomes")
             val outcomes=(0 until rawOutcomes.length()).map {
@@ -109,7 +125,16 @@ internal object LocalSessionStore {
                 startedAtMillis=rules.getLong("startedAtMillis"),
                 outcomes=outcomes,
                 settledEarly=rules.optBoolean("settledEarly",false),
-                tieBreak=state
+                tieBreak=state,
+                roundClock=if(version < 3) ChallengeClock() else {
+                    val clock=rules.getJSONObject("roundClock")
+                    ChallengeClock(
+                        durationSeconds=clock.getInt("durationSeconds"),
+                        remainingSecondsOnPause=clock.getInt("remainingSecondsOnPause"),
+                        runningSinceMillis=clock.getLong("runningSinceMillis").takeIf { it > 0L },
+                        started=clock.getBoolean("started")
+                    )
+                }
             )
         } else null
         if(competition == null) {
@@ -127,6 +152,8 @@ internal object LocalSessionStore {
             }
             require(scores==expectedScores && skipped==expectedSkipped)
             require(!competition.settledEarly || round>0)
+            require(competition.roundClock.runningSinceMillis == null ||
+                (!json.getBoolean("ended") && !competition.settledEarly && round < turns.size))
             require(competition.tieBreak==null ||
                 (round==turns.size || competition.settledEarly) && scores[0]==scores[1])
         }
