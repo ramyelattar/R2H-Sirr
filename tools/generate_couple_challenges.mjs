@@ -5,12 +5,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const contentPath = path.join(root, "content", "couple_challenges_v1.json");
+const contentPath = path.join(root, "content", "couple_challenges_v2.json");
 const outputPath = path.join(root,"app","src","main","java","com","r2h","sirr","core","CoupleChallengeCatalog.kt");
 const data = JSON.parse(fs.readFileSync(contentPath,"utf8"));
 const levels=["SOFT","NORMAL","SEXY","HOT","HARD"];
 const kinds=new Set(["TALK","WHISPER","CHOICE","CLOSENESS","TOGETHER","SURPRISE"]);
-if(data.version!==1||Object.keys(data.couple||{}).sort().join(",")!==[...levels].sort().join(","))throw Error("Invalid content schema");
+if(data.version!==2||Object.keys(data.couple||{}).sort().join(",")!==[...levels].sort().join(","))throw Error("Invalid content schema");
 const ids=new Set(),texts=new Set();
 for(const level of levels){
   const rows=data.couple[level];
@@ -27,7 +27,7 @@ const render = function render(d){
   const levels=["SOFT","NORMAL","SEXY","HOT","HARD"];
   const kinds=[["TALK","كلام بينكم"],["WHISPER","همسة"],["CHOICE","اختيار"],["CLOSENESS","قرب"],["TOGETHER","سوا"],["SURPRISE","مفاجأة"],["PERSONAL","من عندكم"]];
   const kotlinString = s => JSON.stringify(s).replaceAll("$", "\\$");
-  const out=["package com.r2h.sirr.core","","/** Generated from content/couple_challenges_v1.json. Do not edit manually. */",
+  const out=["package com.r2h.sirr.core","","/** Generated from content/couple_challenges_v2.json. Do not edit manually. */",
     "enum class CoupleChallengeKind(val arabic: String) {",...kinds.map(([k,v],i)=>`    ${k}(${kotlinString(v)})${i<kinds.length-1?",":""}`),"}","",
     "object CoupleChallengeCatalog {","    private val all: Map<Intensity, List<Challenge>> = mapOf("];
   levels.forEach((level,ix)=>{
