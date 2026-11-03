@@ -26,6 +26,9 @@ internal fun ExperienceScreen(group: Boolean) {
     var avoidRepeat by remember { mutableStateOf(true) }
     var seats by remember { mutableIntStateOf(2) }
     var intensity by remember { mutableStateOf(Intensity.SOFT) }
+    var durationMinutes by remember { mutableIntStateOf(30) }
+    var rewardText by remember { mutableStateOf("") }
+    var clockNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val names = remember { mutableStateListOf("إنت", "اللي معاك", "صاحبكم ٣", "صاحبكم ٤") }
     val consent = remember { mutableStateListOf(false, false, false, false) }
     fun resetStartConsents() { consent.indices.forEach { consent[it] = false } }
@@ -43,6 +46,14 @@ internal fun ExperienceScreen(group: Boolean) {
     // Save each game transition synchronously; a delayed Compose effect can be lost
     // if Android destroys the Activity immediately after a user action.
     var replyStatus by remember { mutableStateOf("") }
+    LaunchedEffect(game?.competition?.startedAtMillis, game?.finished) {
+        if (game?.competition != null && game?.finished == false) {
+            while (true) {
+                clockNow = System.currentTimeMillis()
+                kotlinx.coroutines.delay(10_000L)
+            }
+        }
+    }
     LaunchedEffect(game?.round) {
         reply = game?.takeIf { !it.finished }?.let {
             LocalSessionStore.readReply(vault, replyName, it.round)
@@ -158,8 +169,33 @@ internal fun ExperienceScreen(group: Boolean) {
                 }
                 EffectPreferencesPanel(effects)
             }
+            if (!group) {
+                HorizontalDivider(color = Color(0xFF5C4153))
+                SirrSection("03", "المكافأة ومدة الجلسة",
+                    "اتفقوا على مكافأة الفائز قبل اللعب. المكافأة اختيارية في تنفيذها حتى بعد الفوز.")
+                OutlinedTextField(
+                    value = rewardText, onValueChange = { rewardText = it.take(200); resetStartConsents() },
+                    label = { Text("مكافأة الفائز — اتفقوا عليها سوا") },
+                    modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 3
+                )
+                Text("مدة الجلسة — انتهاء الوقت تنبيه، مش خصم تلقائي")
+                listOf(15, 30, 60, 0).chunked(2).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        row.forEach { minutes ->
+                            SirrOption(
+                                title = if (minutes == 0) "من غير وقت" else "$minutes دقيقة",
+                                selected = durationMinutes == minutes,
+                                onClick = { durationMinutes = minutes; resetStartConsents() },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+                Text("الجولة المكتملة +10، عدم التنفيذ -10، والاتفاق على عدم التنفيذ 0.")
+                Text("الكل يقدر يرفض أو يوقف أي نشاط. المكافأة لا تلزم أي طرف بفعل غير موافق عليه.")
+            }
             HorizontalDivider(color = Color(0xFF5C4153))
-            SirrSection("03", "الكل موافق؟",
+            SirrSection(if (group) "03" else "04", "الكل موافق؟",
                 "كل واحد يوافق بنفسه. تخطي التحدي أو وقف اللعبة متاح في أي وقت.")
             repeat(seats) { i ->
                 SirrConsent(name = names[i], checked = consent[i],
@@ -169,9 +205,11 @@ internal fun ExperienceScreen(group: Boolean) {
             val invalidNames = (0 until seats).any { names[it].isBlank() }
             val invalidCustom = intensity == Intensity.CUSTOM &&
                 (!customValid || customEntries.isEmpty())
+            val invalidReward = !group && rewardText.trim().isEmpty()
             val startHint = when {
                 invalidNames -> "اكتبوا اسم لكل لاعب من الاختيارات الإضافية"
                 invalidCustom -> "كمّل التحديات المخصوصة الأول"
+                invalidReward -> "اتفقوا واكتبوا مكافأة الفائز قبل ما تبدأوا"
                 waiting.isNotEmpty() -> "مستنيين موافقة ${waiting.size} من اللاعبين"
                 else -> "جاهزين؟ السر الأول مستنيكم."
             }
@@ -186,7 +224,12 @@ internal fun ExperienceScreen(group: Boolean) {
                         SessionFactory.create(
                             names.take(seats), intensity, group,
                             customPrompts = if (intensity == Intensity.CUSTOM) customEntries else emptyList(),
-                            roundCount = roundCount, variety = variety, recentlySeen = recent
+                            roundCount = roundCount, variety = variety, recentlySeen = recent,
+                            competition = if (!group) CoupleCompetition(
+                                reward = rewardText.trim(),
+                                sessionMinutes = durationMinutes,
+                                startedAtMillis = System.currentTimeMillis()
+                            ) else null
                         )
                     }.onSuccess { newGame ->
                         runCatching {
@@ -199,20 +242,47 @@ internal fun ExperienceScreen(group: Boolean) {
                         }.onFailure { formError = "تعذر حفظ الجولة بأمان؛ لم تبدأ اللعبة. تأكد إن مساحة التخزين كافية." }
                     }.onFailure { formError = "حصلت مشكلة في تجهيز الجولة. جرّب اختيار مود تاني." }
                 },
-                enabled = !invalidNames && !invalidCustom && waiting.isEmpty(),
+                enabled = !invalidNames && !invalidCustom && !invalidReward && waiting.isEmpty(),
                 modifier = Modifier.fillMaxWidth()
             )
             if (formError.isNotEmpty()) Text(formError, color = MaterialTheme.colorScheme.error)
         } else {
             val current = game!!
             if (!current.finished) {
+                if (current.competition != null) {
+                    Text(
+                        current.playerNames.indices.joinToString("    |    ") {
+                            "${current.playerNames[it]}: ${current.scores[it]} نقطة"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text("الجولة ${current.round + 1} من ${current.turns.size}")
+                    if (current.competition.timeExpired(clockNow)) {
+                        Text("وقت الجلسة المحدد خلص. تقدروا تكملوا أو تحسبوا نتيجة الجولات اللي خلصت.")
+                        OutlinedButton(onClick = {
+                            if (current.round > 0) {
+                                runCatching {
+                                    val next = current.settleEarly()
+                                    LocalSessionStore.save(vault, gameName, next)
+                                    next
+                                }.onSuccess { game = it }
+                                    .onFailure { replyStatus = "تعذر حفظ إنهاء الجلسة" }
+                            }
+                        }, enabled = current.round > 0, modifier = Modifier.fillMaxWidth()) {
+                            Text("نحسب النتيجة دلوقتي")
+                        }
+                    }
+                }
                 val turn = current.turns[current.round]
                 var isRevealed by remember(current.round) { mutableStateOf(false) }
                 // Opt-in is renewed for the current actor after each new reveal.
                 var roundConsent by remember(current.round) { mutableStateOf(false) }
                 LaunchedEffect(current.round) { effects.cue(GameCue.ROUND) }
                 SirrSection("${current.round + 1}", "جولة جديدة · السر مستنيكم",
-                    "لو مش مناسب، عدّوه من غير أي حسابات.")
+                    if (current.competition != null)
+                        "النتيجة حسب القواعد المتفق عليها، والتوقف متاح في أي وقت."
+                    else "لو مش مناسب، عدّوه من غير أي حسابات.")
                 LinearProgressIndicator(
                     progress = { current.round.toFloat() / current.turns.size },
                     modifier = Modifier.fillMaxWidth()
@@ -255,17 +325,18 @@ internal fun ExperienceScreen(group: Boolean) {
                     }
                     }
                 }
-                fun finishRound(completed:Boolean) {
+                fun finishRound(outcome: CoupleOutcome) {
                     if (reply.isNotBlank() && runCatching {
                         LocalSessionStore.writeReply(vault, replyName, current.round, reply)
                     }.isFailure) {
                         replyStatus = "فشل حفظ الرد؛ النص لسه موجود علشان متفقدوش"
                         return
                     }
-                    val next = current.resolve(completed = completed)
+                    val next = if (current.competition != null) current.resolve(outcome)
+                        else current.resolve(outcome == CoupleOutcome.COMPLETED)
                     runCatching { LocalSessionStore.save(vault, gameName, next) }
                         .onSuccess {
-                            effects.cue(if (completed) GameCue.SUCCESS else GameCue.SKIP)
+                            effects.cue(if (outcome == CoupleOutcome.COMPLETED) GameCue.SUCCESS else GameCue.SKIP)
                             game = next
                             reply = ""; mediaOpen = false; replyStatus = ""
                         }.onFailure {
@@ -287,13 +358,24 @@ internal fun ExperienceScreen(group: Boolean) {
                         text = "التحدي اتعمل  ✦",
                         enabled = roundConsent,
                         explanation = if (roundConsent) null else "محتاج موافقة صاحب الدور بعد ما شاف التحدي",
-                        onClick = { finishRound(true) }
+                        onClick = { finishRound(CoupleOutcome.COMPLETED) }
                     )
                 }
-                OutlinedButton(
-                    onClick = { finishRound(false) },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("مش مناسب؟ عَدّي من غير إحراج") }
+                if (current.competition != null) {
+                    OutlinedButton(
+                        onClick = { finishRound(CoupleOutcome.NOT_COMPLETED) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("التحدي ما اتنفذش — خصم 10 نقاط") }
+                    OutlinedButton(
+                        onClick = { finishRound(CoupleOutcome.AGREED_SKIP) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("اتفقنا ما ننفّذوش — 0 نقطة") }
+                } else {
+                    OutlinedButton(
+                        onClick = { finishRound(CoupleOutcome.NOT_COMPLETED) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("مش مناسب؟ عَدّي من غير إحراج") }
+                }
                 TextButton(onClick = {
                     runCatching { LocalSessionStore.save(vault, gameName, current.leave()) }
                         .onSuccess { game = current.leave(); reply = "" }
@@ -305,9 +387,17 @@ internal fun ExperienceScreen(group: Boolean) {
             } else {
                 Text(if (current.ended) "وقفنا هنا… براحتكم" else "كده الليلة خلصت ✦",
                     style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
-                Text("المهم إن الوقت كان على مزاجكم.", style = MaterialTheme.typography.bodyLarge)
-                current.playerNames.forEachIndexed { index, name ->
-                    Text("${name} — ${current.scores[index]} تحدي اتعمل، ${current.skipped[index]} اتعدّى")
+                if (current.competition != null) {
+                    CoupleCompetitionPanel(current) { next ->
+                        runCatching {
+                            LocalSessionStore.save(vault, gameName, next)
+                        }.onSuccess { game = next }.isSuccess
+                    }
+                } else {
+                    Text("المهم إن الوقت كان على مزاجكم.", style = MaterialTheme.typography.bodyLarge)
+                    current.playerNames.forEachIndexed { index, name ->
+                        Text("${name} — ${current.scores[index]} تحدي اتعمل، ${current.skipped[index]} اتعدّى")
+                    }
                 }
                 val pastReplies = remember(current, replyName) {
                     current.turns.indices.mapNotNull { index ->
