@@ -56,7 +56,7 @@ internal fun ExperienceScreen(group: Boolean) {
         if (game?.competition != null && game?.finished == false) {
             while (true) {
                 clockNow = System.currentTimeMillis()
-                kotlinx.coroutines.delay(1_000L)
+                kotlinx.coroutines.delay(10_000L)
             }
         }
     }
@@ -465,31 +465,25 @@ internal fun ExperienceScreen(group: Boolean) {
                     if (current.competition != null) {
                         CoupleRoundClockPanel(
                             game = current,
-                            nowMillis = clockNow,
-                            bothConsent = bothConsent
-                        ) { next ->
-                            runCatching {
-                                LocalSessionStore.save(vault, gameName, next)
-                            }.onSuccess {
-                                game = next
-                                clockNow = System.currentTimeMillis()
-                                replyStatus = ""
-                            }.onFailure { replyStatus = "ما قدرناش نحفظ حالة المؤقت" }.isSuccess
-                        }
+                            bothConsent = bothConsent,
+                            persist = { next ->
+                                runCatching {
+                                    LocalSessionStore.save(vault, gameName, next)
+                                }.onSuccess {
+                                    game = next
+                                    replyStatus = ""
+                                }.onFailure { replyStatus = "ما قدرناش نحفظ حالة المؤقت" }.isSuccess
+                            },
+                            onCompleted = { finishRound(CoupleOutcome.COMPLETED) }
+                        )
+                    } else {
+                        SirrAction(
+                            text = "التحدي اتعمل  ✦",
+                            enabled = bothConsent,
+                            explanation = if (bothConsent) null else "محتاج موافقة صاحب الدور",
+                            onClick = { finishRound(CoupleOutcome.COMPLETED) }
+                        )
                     }
-                    val clockFinished = current.competition == null ||
-                        (current.competition.roundClock.started &&
-                            current.competition.roundClock.remainingSeconds(clockNow) == 0)
-                    SirrAction(
-                        text = "التحدي اتعمل  ✦",
-                        enabled = bothConsent && clockFinished,
-                        explanation = when {
-                            !bothConsent -> "محتاج موافقة الطرفين قبل تسجيل التنفيذ"
-                            !clockFinished -> "كمّلوا وقت التحدي قبل احتساب النقاط"
-                            else -> null
-                        },
-                        onClick = { finishRound(CoupleOutcome.COMPLETED) }
-                    )
                 }
                 if (current.competition != null) {
                     OutlinedButton(
