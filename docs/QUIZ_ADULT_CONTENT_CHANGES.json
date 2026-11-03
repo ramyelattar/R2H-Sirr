@@ -1,6 +1,6 @@
 {
   "purpose": "Adult-question editorial revision; accurate disclosure of sexual themes; non-graphic, consent-aware content.",
-  "content_status": "DRAFT_OWNER_REVIEW_PENDING",
+  "content_status": "OWNER_APPROVED_AS_IS",
   "from_commit": "27779839a53247e67ffbc81589ea28c8c74202d9",
   "base_source_blob_sha": "140a122add41f426e469ec094a65518755a6c3e8",
   "canonical_file": "content/quizzes_ar_v4.json",
@@ -1877,5 +1877,15 @@
         ]
       }
     }
-  ]
+  ],
+  "owner_approval": {
+    "approved_on": "2026-11-03",
+    "approved_content": "content/quizzes_ar_v4.json",
+    "approved_git_blob_sha": "fd35caee10e9159fd27f7bc85c28f5bfcaa7cd78",
+    "scope": "Current 7 packs, 175 question prompts, 525 response options; exact texts and ordering are editorially frozen; includes this 92-question adult-focused pass.",
+    "further_text_edits_require_new_approval": true,
+    "compilation_verified": false,
+    "tests_executed": false,
+    "release_signoff": false
+  }
 }
