@@ -34,10 +34,24 @@ data class LocalGame(
     val turns: List<Turn>, val round: Int = 0,
     val scores: List<Int> = List(playerNames.size) { 0 },
     val skipped: List<Int> = List(playerNames.size) { 0 },
-    val ended: Boolean = false
+    val ended: Boolean = false,
+    val competition: CoupleCompetition? = null
 ) {
-    val finished: Boolean get() = ended || round >= turns.size
-    fun resolve(completed: Boolean): LocalGame {
+    val finished: Boolean get() = ended || round >= turns.size || competition?.settledEarly == true
+    val competitionEnded: Boolean get() = !ended && (round >= turns.size || competition?.settledEarly == true)
+    val tiePending: Boolean get() = competition != null && competitionEnded &&
+        scores[0] == scores[1] && competition.tieBreak?.stage != TieStage.DECIDED
+    val winnerIndex: Int?
+        get() = if (!competitionEnded || competition == null) null
+            else if (scores[0] != scores[1]) scores.indices.maxByOrNull { scores[it] }
+            else competition.tieBreak?.winnerIndex
+
+    /** Compatibility with the original +1 scoring for parties and v1 sessions. */
+    fun resolve(completed: Boolean): LocalGame =
+        if (competition != null) resolve(if (completed) CoupleOutcome.COMPLETED else CoupleOutcome.NOT_COMPLETED)
+        else resolveLegacy(completed)
+
+    private fun resolveLegacy(completed: Boolean): LocalGame {
         require(!finished)
         val current = turns[round]
         val scoresNext = scores.toMutableList()
@@ -45,6 +59,68 @@ data class LocalGame(
         if (completed) scoresNext[current.actorIndex] += 1 else skippedNext[current.actorIndex] += 1
         return copy(round = round + 1, scores = scoresNext, skipped = skippedNext)
     }
+
+    /** New couple sessions use +10, -10, or 0 exactly as configured. */
+    fun resolve(outcome: CoupleOutcome): LocalGame {
+        require(competition != null && !group && !finished)
+        val actor = turns[round].actorIndex
+        val nextScores = scores.toMutableList()
+        val nextSkipped = skipped.toMutableList()
+        when (outcome) {
+            CoupleOutcome.COMPLETED -> nextScores[actor] += 10
+            CoupleOutcome.NOT_COMPLETED -> { nextScores[actor] -= 10; nextSkipped[actor]++ }
+            CoupleOutcome.AGREED_SKIP -> nextSkipped[actor]++
+        }
+        return copy(round = round + 1, scores = nextScores, skipped = nextSkipped,
+            competition = competition.copy(outcomes = competition.outcomes + outcome))
+    }
+
+    /** End early and count only resolved rounds. Never marks an unwilling player as losing. */
+    fun settleEarly(): LocalGame {
+        require(competition != null && !finished && round > 0)
+        return copy(competition = competition.copy(settledEarly = true))
+    }
+
+    fun resolveSharedTieBreak(completedByPlayer: List<Boolean>): LocalGame {
+        require(tiePending && completedByPlayer.size == 2)
+        val rules = requireNotNull(competition)
+        require((rules.tieBreak ?: CoupleTieBreak()).stage == TieStage.SHARED_CHALLENGE)
+        val winner = if (completedByPlayer[0] != completedByPlayer[1])
+            completedByPlayer.indexOf(true) else null
+        val state = if (winner != null) CoupleTieBreak(
+            stage = TieStage.DECIDED, sharedCompleted = completedByPlayer, winnerIndex = winner
+        ) else CoupleTieBreak(stage = TieStage.KNOWLEDGE, sharedCompleted = completedByPlayer)
+        return copy(competition = rules.copy(tieBreak = state))
+    }
+
+    /** Both questions and reference answers are committed before the other player answers. */
+    fun registerKnowledgeQuestions(questions: List<KnowledgePrompt>): LocalGame {
+        require(tiePending && questions.size == 2)
+        val rules = requireNotNull(competition)
+        val state = rules.tieBreak ?: error("Shared tie break has not been resolved")
+        require(state.stage == TieStage.KNOWLEDGE && state.questions.isEmpty())
+        return copy(competition = rules.copy(tieBreak = state.copy(
+            questions = questions.map { it.copy(question = it.question.trim(),
+                expectedAnswer = it.expectedAnswer.trim()) }
+        )))
+    }
+
+    /**
+     * correctByPlayer[0] means player 0 answered the question asked by player 1.
+     * Both question authors judge using the pre-registered reference answers.
+     */
+    fun resolveKnowledgePair(correctByPlayer: List<Boolean>): LocalGame {
+        require(tiePending && correctByPlayer.size == 2)
+        val rules = requireNotNull(competition)
+        val state = rules.tieBreak ?: error("Missing tie break state")
+        require(state.stage == TieStage.KNOWLEDGE && state.questions.size == 2)
+        val winner = if (correctByPlayer[0] != correctByPlayer[1])
+            correctByPlayer.indexOf(true) else null
+        val next = if (winner != null) state.copy(stage = TieStage.DECIDED, winnerIndex = winner)
+            else state.copy(questions = emptyList(), knowledgeRound = state.knowledgeRound + 1)
+        return copy(competition = rules.copy(tieBreak = next))
+    }
+
     fun leave() = copy(ended = true)
 }
 
@@ -58,8 +134,10 @@ object SessionFactory {
         random: Random = Random.Default, customPrompts: List<String> = emptyList(),
         roundCount: Int = if (group) 12 else 10,
         variety: ChallengeVariety = ChallengeVariety.ONE_LEVEL,
-        recentlySeen: Set<String> = emptySet()): LocalGame {
+        recentlySeen: Set<String> = emptySet(),
+        competition: CoupleCompetition? = null): LocalGame {
         require(names.size in 2..4 && (group || names.size == 2))
+        require(!group || competition == null)
         require(names.all { it.isNotBlank() && it.length <= 32 })
         require(roundCount in 6..18)
         require(customPrompts.size <= 60 && customPrompts.all { it.trim().length in 6..200 })
@@ -100,7 +178,7 @@ object SessionFactory {
         val deck = selection.shuffled(random)
         val start = random.nextInt(names.size)
         val turns = deck.mapIndexed { i, prompt -> Turn(i, (start + i) % names.size, prompt) }
-        return LocalGame(names, level, group, turns)
+        return LocalGame(names, level, group, turns, competition = competition)
     }
 }
 
