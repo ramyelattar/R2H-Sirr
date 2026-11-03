@@ -21,7 +21,9 @@ import com.r2h.sirr.core.*
 internal fun QuizScreenV2() {
     val context = LocalContext.current
     val vault = remember(context) { LocalVault(context.applicationContext) }
-    var session by remember(vault) { mutableStateOf(QuizSessionStore.load(vault)) }
+    val restoration = remember(vault) { QuizSessionStore.restore(vault) }
+    var session by remember(vault) { mutableStateOf(restoration.session) }
+    var unreadableSession by remember(vault) { mutableStateOf(restoration.unreadable) }
     var topic by remember { mutableIntStateOf(-1) }
     var paired by remember { mutableStateOf(false) }
     var guessPartner by remember { mutableStateOf(false) }
@@ -45,13 +47,14 @@ internal fun QuizScreenV2() {
     )
     fun persist(next: QuizSession) {
         runCatching { QuizSessionStore.save(vault, next) }
-            .onSuccess { session = next; error = "" }
+            .onSuccess { session = next; unreadableSession = false; error = "" }
             .onFailure { error = "تعذر حفظ الجولة مشفّرة. المحاولة ما اتحسبتش؛ حاول تاني." }
     }
     fun clearRound() {
         runCatching { QuizSessionStore.clear(vault) }
             .onSuccess {
                 session = null
+                unreadableSession = false
                 topic = -1
                 paired = false
                 guessPartner = false
@@ -83,7 +86,24 @@ internal fun QuizScreenV2() {
 
     Page("هتعرفوا بعض أكتر؟", "أسئلة للكبار عن الرومانسية والجنس والرغبة والحدود — من غير إجابات إجبارية.") {
         val run = session
-        if (run == null) {
+        if (unreadableSession) {
+            SirrIntro(
+                overline = "حماية الجلسة",
+                title = "في جولة محفوظة مش قادرين نقراها",
+                description = "يمكن بيانات الحفظ اتلفت أو مفتاح التشفير بقى غير متاح. مش هنبدأ جولة جديدة فوقها من غير قرار واضح منك.",
+                accent = Color(0xFF64538A),
+                motif = "quiz"
+            )
+            Text(
+                "ممكن ترجع وتجرب تفتح اللعبة تاني، أو تمسح بيانات الجولة دي وتبدأ من جديد. المسح نهائي.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            OutlinedButton(
+                onClick = { showResetConfirm = true },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("امسح الجولة غير المقروءة وابدأ من جديد") }
+        } else if (run == null) {
             if (topic < 0) {
                 SirrIntro(
                     overline = "7 أبواب · 25 سؤال في كل باب",
