@@ -14,7 +14,7 @@ enum class CoupleChallengeKind(val arabic: String) {
 object CoupleChallengeCatalog {
     private val all: Map<Intensity, List<Challenge>> = mapOf(
         Intensity.SOFT to listOf(
-            Challenge("couple2-SOFT-1", Intensity.SOFT, "قرّب من شريكك وهمس في ودنه: «وحشني جسمك و طعمه، نفسك لساني يلحس فين دلوقتي؟» وخليه يختار المكان.",
+            Challenge("couple2-SOFT-1", Intensity.SOFT, "قرّب من شريكك واهمس في ودنه: «وحشني جسمك وطعمه، نفسك لساني يلحس فين دلوقتي؟» وخليه يختار المكان.",
                 title = "همس خفيف", kind = CoupleChallengeKind.WHISPER,
                 durationSeconds = 90),
             Challenge("couple2-SOFT-2", Intensity.SOFT, "حط إيدك على فخذ شريكك بلطف وقول: «كده تمام ولا أقرب أكتر؟» واستنى رده.",
@@ -53,7 +53,7 @@ object CoupleChallengeCatalog {
             Challenge("couple2-SOFT-13", Intensity.SOFT, "اهمس في ودن شريكك حاجة عايز تعملها معاه بس لسه متقولهاش.",
                 title = "سر صغير", kind = CoupleChallengeKind.WHISPER,
                 durationSeconds = 90),
-            Challenge("couple2-SOFT-14", Intensity.SOFT, "ارسم بإيدك على ظهر شريكك وسأله: «اللمسة دي بتحسسك بإيه؟»",
+            Challenge("couple2-SOFT-14", Intensity.SOFT, "ارسم بإيدك على ظهر شريكك واسأله: «اللمسة دي بتحسسك بإيه؟»",
                 title = "لمس الظهر", kind = CoupleChallengeKind.CLOSENESS,
                 durationSeconds = 120),
             Challenge("couple2-SOFT-15", Intensity.SOFT, "خلّي شريكك يختار مين يبدأ بلمسة خفيفة ومين يرد عليها.",
@@ -71,7 +71,7 @@ object CoupleChallengeCatalog {
             Challenge("couple2-SOFT-19", Intensity.SOFT, "اهمس: «قولي حاجة واحدة نفسك أعملها فيك دلوقتي».",
                 title = "نفسك في إيه", kind = CoupleChallengeKind.WHISPER,
                 durationSeconds = 90),
-            Challenge("couple2-SOFT-20", Intensity.SOFT, "امسك إيد شريكك وحطها على صدرك أو على جسمك، واسأله: «لمستي دي بتحسسك بإيه؟»",
+            Challenge("couple2-SOFT-20", Intensity.SOFT, "امسك إيد شريكك وحطها على صدرك أو على جسمك، وقوله إيه اللي بتحس بيه من اللمسة دي.",
                 title = "إيد في الإيد", kind = CoupleChallengeKind.CLOSENESS,
                 durationSeconds = 120)
         ),
@@ -97,7 +97,7 @@ object CoupleChallengeCatalog {
             Challenge("couple2-NORMAL-7", Intensity.NORMAL, "اهمس: «عايز أبوس رقبتك وألمس صدرك في نفس الوقت».",
                 title = "في ودنك", kind = CoupleChallengeKind.WHISPER,
                 durationSeconds = 90),
-            Challenge("couple2-NORMAL-8", Intensity.NORMAL, "خلّي شريكك يقعد على رجلك، ولمس فخذه أو مؤخرته بلطف.",
+            Challenge("couple2-NORMAL-8", Intensity.NORMAL, "خلّي شريكك يقعد على رجلك، والمس فخذه أو مؤخرته بلطف.",
                 title = "قعدة قريبة", kind = CoupleChallengeKind.CLOSENESS,
                 durationSeconds = 120),
             Challenge("couple2-NORMAL-9", Intensity.NORMAL, "شريكك يختار مين يخلع البنطلون الأول ومين يلمس التاني.",
@@ -121,7 +121,7 @@ object CoupleChallengeCatalog {
             Challenge("couple2-NORMAL-15", Intensity.NORMAL, "خلّي شريكك يختار لمسة: على المؤخرة ولا بين الفخذين ولا على الصدر.",
                 title = "اختيار اللمسة", kind = CoupleChallengeKind.CHOICE,
                 durationSeconds = 120),
-            Challenge("couple2-NORMAL-16", Intensity.NORMAL, "قول: «نفسك تشوفني عريان؟» أو «نفسك أشوفك».",
+            Challenge("couple2-NORMAL-16", Intensity.NORMAL, "قول لشريكك الجملة الأولى، وسيبه يرد عليك بالجملة التانية لو حابب.",
                 title = "صراحة", kind = CoupleChallengeKind.TALK,
                 durationSeconds = 150),
             Challenge("couple2-NORMAL-17", Intensity.NORMAL, "حط جسمك على جسم شريكك وقول: «حاسس بيك».",
@@ -133,7 +133,7 @@ object CoupleChallengeCatalog {
             Challenge("couple2-NORMAL-19", Intensity.NORMAL, "اهمس كلمة صريحة واحدة عايز تعملها الليلة.",
                 title = "كلمة واحدة", kind = CoupleChallengeKind.WHISPER,
                 durationSeconds = 90),
-            Challenge("couple2-NORMAL-20", Intensity.NORMAL, "لو موافقين، حط إيدك جوا هدوم شريكك ولمس بلطف.",
+            Challenge("couple2-NORMAL-20", Intensity.NORMAL, "لو موافقين، حط إيدك جوا هدوم شريكك والمس بلطف.",
                 title = "إيد جوا", kind = CoupleChallengeKind.CLOSENESS,
                 durationSeconds = 120)
         ),
@@ -177,7 +177,7 @@ object CoupleChallengeCatalog {
             Challenge("couple2-SEXY-13", Intensity.SEXY, "اهمس: «افتح رجليك عايز أشوفك وألمسك».",
                 title = "عايزك تفتح", kind = CoupleChallengeKind.WHISPER,
                 durationSeconds = 90),
-            Challenge("couple2-SEXY-14", Intensity.SEXY, "اقرب من ورا ولمس المؤخرة وقول: «نفسك أدخل؟»",
+            Challenge("couple2-SEXY-14", Intensity.SEXY, "اقرب من ورا والمس المؤخرة وقول: «نفسك أدخل؟»",
                 title = "من ورا", kind = CoupleChallengeKind.CLOSENESS,
                 durationSeconds = 120),
             Challenge("couple2-SEXY-15", Intensity.SEXY, "شريكك يختار وضع واحد للنيك أو للمص.",
@@ -262,7 +262,7 @@ object CoupleChallengeCatalog {
                 durationSeconds = 180)
         ),
         Intensity.HARD to listOf(
-            Challenge("couple2-HARD-1", Intensity.HARD, "اهمس لشريكك بالأمر اللي كتبته، لكن اتفقوا الأول إن أي طرف يقدر يوقف التحدي فورًا، من غير اعتراض.",
+            Challenge("couple2-HARD-1", Intensity.HARD, "اهمس لشريكك بطلب واضح من اختيارك، واتفقوا من البداية إن من حق أي طرف يوقف التحدي فورًا.",
                 title = "أمر صريح", kind = CoupleChallengeKind.WHISPER,
                 durationSeconds = 120),
             Challenge("couple2-HARD-2", Intensity.HARD, "نيكوا بقوة لمدة دقيقتين، واللي تحت يقول إيه اللي عايزه.",
