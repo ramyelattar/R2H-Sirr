@@ -1,0 +1,38 @@
+{
+  "source": "content/quizzes_ar_v4.json",
+  "original_main_blob_sha": "82983dc859a8bc29f65361fb0e0006e257ea5bc0",
+  "current_version": 4,
+  "counts": {
+    "packs": 7,
+    "questions_per_pack": 25,
+    "questions": 175,
+    "answer_options": 525
+  },
+  "review": "source editorial review only; not owner-approved and not on-device verified",
+  "changes": [
+    {
+      "pack": "quiz_02",
+      "question": 20,
+      "before": "لما توحشك حد، أول حاجة بتعملها إيه؟",
+      "after": "لما يوحشك حد، أول حاجة بتعملها إيه؟",
+      "type": "wording",
+      "rationale": "Egyptian Arabic agreement"
+    },
+    {
+      "pack": "quiz_05",
+      "question": 9,
+      "before": "لو تقدر تعيد لحظة واحدة، تختار ليه؟",
+      "after": "لو تقدر تعيد لحظة واحدة، إيه اللي يخليك تختارها؟",
+      "type": "clarity",
+      "rationale": "Resolve incomplete/ambiguous phrasing"
+    },
+    {
+      "pack": "quiz_05",
+      "question": 24,
+      "before": "لو اتاح لك يوم كامل من غير مسئوليات، تقضيه إزاي؟",
+      "after": "لو جالك يوم كامل من غير مسؤوليات، هتقضيه إزاي؟",
+      "type": "wording",
+      "rationale": "Fix grammar and keep colloquial tone"
+    }
+  ]
+}
