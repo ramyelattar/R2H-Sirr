@@ -25,6 +25,7 @@ data class QuizSession(
         require(packId.matches(Regex("quiz_0[1-7]")))
         require(packName.isNotBlank() && packName.length <= 100)
         require(questions.size in listOf(8, 12, 20, 25))
+        require(questions.map { it.text }.distinct().size == questions.size)
         require(questions.all { q ->
             q.text.isNotBlank() && q.text.length <= 240 &&
                 q.choices.size == 3 &&
@@ -113,7 +114,8 @@ data class QuizSession(
             paired: Boolean, random: Random = Random.Default
         ): QuizSession {
             require(count in listOf(8, 12, 20, 25))
-            require(quiz.questions.size >= count)
+            require(quiz.questions.size == 25)
+            require(quiz.questions.map { it.text }.distinct().size == 25)
             val indices = quiz.questions.indices.shuffled(random).take(count)
             return QuizSession(
                 packId = packId,
