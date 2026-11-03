@@ -37,7 +37,8 @@ data class CoupleCompetition(
     val startedAtMillis: Long,
     val outcomes: List<CoupleOutcome> = emptyList(),
     val settledEarly: Boolean = false,
-    val tieBreak: CoupleTieBreak? = null
+    val tieBreak: CoupleTieBreak? = null,
+    val roundClock: ChallengeClock = ChallengeClock()
 ) {
     init {
         require(reward.trim().length in 1..200)
