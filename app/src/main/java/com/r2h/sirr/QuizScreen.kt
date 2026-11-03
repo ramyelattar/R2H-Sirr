@@ -31,11 +31,8 @@ internal fun QuizScreenV2() {
     var error by remember { mutableStateOf("") }
 
     val packs = ExpandedQuizzes.packs
-    val topics = listOf(
-        "إنت من جوّه", "الحب على مزاجك", "إحنا شبه بعض؟",
-        "الجاذبية والإشارات", "أمنيات متخبية", "راحة وحدود",
-        "جرأة ولا صراحة؟"
-    )
+    // Titles come directly from the canonical generated quiz catalog.
+    val topics = packs.map { it.name }
     val hints = listOf(
         "أسئلة تكتشف بيها نفسك من غير أحكام",
         "كلام عن الاهتمام والتفاصيل الصغيرة",
