@@ -137,7 +137,14 @@ internal fun WhispersScreenV2() {
                 SecretTier.entries.forEach { tier ->
                     FilterChip(
                         selected = suggestionTier == tier,
-                        onClick = { suggestionTier = tier; chosenStoryId = null },
+                        onClick = {
+                            if (chosenStoryId != null && suggestionTier != tier) {
+                                messages.indices.forEach { messages[it] = "" }
+                                composeStep = 0
+                            }
+                            suggestionTier = tier
+                            chosenStoryId = null
+                        },
                         label = { Text(tier.arabic) }
                     )
                 }
@@ -162,7 +169,10 @@ internal fun WhispersScreenV2() {
             }
             OutlinedTextField(
                 messages[composeStep],
-                { messages[composeStep] = it.take(350) },
+                {
+                    messages[composeStep] = it.take(350)
+                    chosenStoryId = null
+                },
                 label = { Text(whisperStages[composeStep]) },
                 placeholder = { Text("مثلاً: عندي حاجة عايز أقولهالك…") },
                 modifier = Modifier.fillMaxWidth(), minLines = 4, maxLines = 6
