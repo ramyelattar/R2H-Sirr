@@ -1,7 +1,7 @@
 # R2H-Play — Whispers + Scratch combined source review
 
 **Branch:** `feat/whispers-scratch-closeout-20261103`, based on the Quiz source branch.  
-**State:** both features revised at source level; **editorial approval and Android verification pending**. No Kotlin/Gradle build, emulator, APK, JUnit, or device session was executed.
+**State:** both features revised at source level; **owner-approved editorial content (2026-11-03), Android compilation and verification pending**. No Kotlin/Gradle build, emulator, APK, JUnit, or device session was executed.
 
 ## Product goal
 
@@ -19,7 +19,7 @@ Both remain **offline-first**. Built-in suggestions offer **هادي**, **غزل
 - Prior inlined banks are preserved in parent Git source and in full side-by-side form in `docs/WHISPERS_SCRATCH_EDITORIAL_REVIEW.json`.
 - Each mode has **20** complete stories × **3** chronological lines = **60** lines per mode, **120** total.
 - Each mode has 6 SOFT, 7 FLIRT, 7 ADULT stories; all IDs and line texts are unique.
-- All new copy is **DRAFT_OWNER_REVIEW_PENDING**, not approved or frozen yet. Earlier Challenge v10 and Quiz v4 owner-approved content is untouched.
+- All 40 new stories (120 lines), IDs, tiers and sequence are **OWNER_APPROVED_AS_IS** and frozen. Canonical Git blob SHA: `fdceffe1210af47a33d86486780088436b424f0c`. Earlier Challenge v10 and Quiz v4 owner-approved content is untouched.
 
 ## Whispers — behavior implemented in source
 
@@ -53,11 +53,15 @@ Both remain **offline-first**. Built-in suggestions offer **هادي**, **غزل
 
 ## Remaining editorial/release acceptance
 
-- Owner to review the 120 proposed lines and approve or request targeted edits. Exact before/after is recorded; nothing is silently overwritten.
+- Owner accepted the current 120 lines exactly as-is on 2026-11-03. Future editorial modifications require fresh approval. Exact before/after remains recorded.
 - Compile Kotlin and run the 11 new source tests alongside the wider app suite, *after* the user-requested integrated build phase.
 - Test on device: stage handoff, 3/6/24 h expiry, screen rotation, navigation loss, media stop/reselect/prepareAsync, malformed content, photo cleanup, Scratch threshold/drag/tap/multitouch, display size, TalkBack and no-gesture reveal.
 - Confirm no automatic release of adult-tier stories into a lighter tier.
 - Confirm the newly protected Challenge v10 and Quiz v4 source blobs are unchanged.
 - Only merge/release after evidence, not just source assertions.
 
-**Verdict:** Both features now have distinct, coherent source-backed content and integrated user flows. They are **not compiled, tested, owner-editorially accepted, merged, or production-ready**.
+**Verdict:** Both content banks are owner-approved and frozen; feature source is implemented. They are **not compiled, tested, merged, or production-ready**.
+
+## Approval record — 2026-11-03
+
+The owner approved **all 20 Whispers + 20 Scratch stories** in `content/whispers_scratch_stories_v1.json` as they currently stand. The approval covers all 120 stage texts, story IDs, 3-part order and tier placements. The source text is frozen. Approval is editorial only; it is not evidence that playback, scratch masking, expiration, accessibility, Android compilation or unit tests work on a device. The approval is recorded in `docs/WHISPERS_SCRATCH_EDITORIAL_REVIEW.json`.
