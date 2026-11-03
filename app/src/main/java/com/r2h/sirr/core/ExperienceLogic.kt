@@ -202,6 +202,31 @@ object SessionFactory {
                     legacyOrder(unique.filter { it.id in recentlySeen || it.text in recentlySeen })
             }
         }
+        fun diversified(items: List<Challenge>, count: Int): List<Challenge> {
+            if (competition == null) return items.take(count)
+            fun interleave(source: List<Challenge>): List<Challenge> {
+                val buckets = source.groupBy { it.kind }.mapValues { it.value.toMutableList() }
+                val kinds = buckets.keys.shuffled(random)
+                val result = mutableListOf<Challenge>()
+                while (result.size < source.size) {
+                    var added = false
+                    kinds.forEach { kind ->
+                        val bucket = buckets.getValue(kind)
+                        if (bucket.isNotEmpty()) {
+                            result.add(bucket.removeAt(0))
+                            added = true
+                        }
+                    }
+                    if (!added) break
+                }
+                return result
+            }
+            // Fresh content always precedes previously seen content.
+            val fresh = items.filterNot { it.id in recentlySeen || it.text in recentlySeen }
+            val seen = items.filter { it.id in recentlySeen || it.text in recentlySeen }
+            return (interleave(fresh) + interleave(seen)).take(count)
+        }
+
         val selection = when {
             level == Intensity.CUSTOM -> (customs.shuffled(random) +
                 prioritize(if (competition != null) {
@@ -210,10 +235,10 @@ object SessionFactory {
                 } else Challenges.deck(level, group))
                     .filterNot { c -> customs.any { it.text == c.text } })
                 .distinctBy { it.text }.take(roundCount)
-            variety == ChallengeVariety.ONE_LEVEL -> prioritize(
+            variety == ChallengeVariety.ONE_LEVEL -> diversified(prioritize(
                 if (competition != null) CoupleChallengeCatalog.deck(level)
                 else Challenges.deck(level, group)
-            ).take(roundCount)
+            ), roundCount)
             else -> {
                 val primary = prioritize(if (competition != null) CoupleChallengeCatalog.deck(level)
                     else Challenges.deck(level, group))
@@ -224,9 +249,10 @@ object SessionFactory {
                 )
                     .filterNot { alt -> primary.any { it.text == alt.text } }
                 val required = (roundCount + 1) / 2
-                val top = primary.take(required)
-                val remainder = (lower + primary.drop(required)).distinctBy { it.text }
-                (top + remainder.take(roundCount - required))
+                val top = diversified(primary, required)
+                val remainder = (lower + primary.filterNot { it in top }).distinctBy { it.text }
+                val mixed = top + diversified(remainder, roundCount - required)
+                mixed.distinctBy { it.text }
             }
         }
         require(selection.size == roundCount) { "لا توجد تحديات كافية لجلسة بلا تكرار" }
