@@ -6,7 +6,16 @@ enum class Intensity(val arabic: String) {
     SOFT("على الهادي"), NORMAL("كلام قريب"), SEXY("جريء"), HOT("نار شوية"), HARD("من الآخر"), CUSTOM("بتاعي")
 }
 
-data class Challenge(val id: String, val level: Intensity, val text: String)
+data class Challenge(
+    val id: String,
+    val level: Intensity,
+    val text: String,
+    val title: String = "",
+    val kind: CoupleChallengeKind = CoupleChallengeKind.TALK,
+    val durationSeconds: Int = 300
+) {
+    init { require(durationSeconds in 30..300) }
+}
 
 /** Independent original Arabic challenges; no imported third-party content. */
 object Challenges {
@@ -72,7 +81,24 @@ data class LocalGame(
             CoupleOutcome.AGREED_SKIP -> nextSkipped[actor]++
         }
         return copy(round = round + 1, scores = nextScores, skipped = nextSkipped,
-            competition = competition.copy(outcomes = competition.outcomes + outcome))
+            competition = competition.copy(
+                outcomes = competition.outcomes + outcome,
+                roundClock = ChallengeClock()
+            ))
+    }
+
+    fun startRoundClock(nowMillis: Long): LocalGame {
+        require(competition != null && !finished)
+        return copy(competition = competition.copy(
+            roundClock = competition.roundClock.start(nowMillis, turns[round].prompt.durationSeconds)
+        ))
+    }
+
+    fun pauseRoundClock(nowMillis: Long): LocalGame {
+        require(competition != null && !finished)
+        return copy(competition = competition.copy(
+            roundClock = competition.roundClock.pause(nowMillis)
+        ))
     }
 
     /** End early and count only resolved rounds. Never marks an unwilling player as losing. */
@@ -145,28 +171,49 @@ object SessionFactory {
         require(level == Intensity.CUSTOM || customPrompts.isEmpty())
         val levels = listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY, Intensity.HOT, Intensity.HARD)
         val customs = customPrompts.mapIndexed { i, prompt ->
-            Challenge("custom-${i + 1}", Intensity.CUSTOM, prompt.trim())
+            Challenge("custom-${i + 1}", Intensity.CUSTOM, prompt.trim(),
+                title = "تحدي من عندكم", kind = CoupleChallengeKind.PERSONAL)
         }
         fun prioritize(items: List<Challenge>): List<Challenge> {
             val unique = items.distinctBy { it.text }
-            fun freshFirst(pool: List<Challenge>): List<Challenge> {
-                val featured = pool.filter {
-                    (it.id.substringAfterLast('-').toIntOrNull() ?: 999) in 1..10
+            fun freshFirst(pool: List<Challenge>): List<Challenge> = pool.shuffled(random)
+            // Keep the previous ranking for historical sessions, but remove the
+            // "first 10 always win" bias from the new couple pack.
+            return if (competition != null) {
+                freshFirst(unique.filterNot { it.id in recentlySeen || it.text in recentlySeen }) +
+                    freshFirst(unique.filter { it.id in recentlySeen || it.text in recentlySeen })
+            } else {
+                fun legacyOrder(pool: List<Challenge>): List<Challenge> {
+                    val featured = pool.filter {
+                        (it.id.substringAfterLast('-').toIntOrNull() ?: 999) in 1..10
+                    }
+                    return featured.shuffled(random) +
+                        pool.filterNot { it in featured }.shuffled(random)
                 }
-                return featured.shuffled(random) + pool.filterNot { it in featured }.shuffled(random)
+                legacyOrder(unique.filterNot { it.id in recentlySeen || it.text in recentlySeen }) +
+                    legacyOrder(unique.filter { it.id in recentlySeen || it.text in recentlySeen })
             }
-            return freshFirst(unique.filterNot { it.id in recentlySeen || it.text in recentlySeen }) +
-                freshFirst(unique.filter { it.id in recentlySeen || it.text in recentlySeen })
         }
         val selection = when {
             level == Intensity.CUSTOM -> (customs.shuffled(random) +
-                prioritize(Challenges.deck(level, group)).filterNot { c -> customs.any { it.text == c.text } })
+                prioritize(if (competition != null) {
+                    listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY, Intensity.HOT, Intensity.HARD)
+                        .flatMap { CoupleChallengeCatalog.deck(it) }
+                } else Challenges.deck(level, group))
+                    .filterNot { c -> customs.any { it.text == c.text } })
                 .distinctBy { it.text }.take(roundCount)
-            variety == ChallengeVariety.ONE_LEVEL -> prioritize(Challenges.deck(level, group)).take(roundCount)
+            variety == ChallengeVariety.ONE_LEVEL -> prioritize(
+                if (competition != null) CoupleChallengeCatalog.deck(level)
+                else Challenges.deck(level, group)
+            ).take(roundCount)
             else -> {
-                val primary = prioritize(Challenges.deck(level, group))
+                val primary = prioritize(if (competition != null) CoupleChallengeCatalog.deck(level)
+                    else Challenges.deck(level, group))
                 val index = levels.indexOf(level)
-                val lower = prioritize(Challenges.deck(levels[(index - 1).coerceAtLeast(0)], group))
+                val lower = prioritize(
+                    if (competition != null) CoupleChallengeCatalog.deck(levels[(index - 1).coerceAtLeast(0)])
+                    else Challenges.deck(levels[(index - 1).coerceAtLeast(0)], group)
+                )
                     .filterNot { alt -> primary.any { it.text == alt.text } }
                 val required = (roundCount + 1) / 2
                 val top = primary.take(required)
