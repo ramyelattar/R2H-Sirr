@@ -128,9 +128,18 @@ internal fun ExperienceScreen(group: Boolean) {
                     if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
+            if (!group) {
+                OutlinedButton(
+                    onClick = { intensity = Intensity.CUSTOM; advanced = true; resetStartConsents() },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("العبوا بتحدياتكم الخاصة (TXT أو كتابة)") }
+            }
             Text(
-                if (intensity == Intensity.SOFT) "المود ده أخف في المحتوى. لو مش مناسب، اختاروا غيره."
-                else "تنبيه للكبار: كل ما المود يعلى، التحديات ممكن تبقى شديدة الخصوصية وصريحة. اختاروا مستوى يناسب كل المشاركين.",
+                when (intensity) {
+                    Intensity.SOFT -> "المود ده أخف في المحتوى. لو مش مناسب، اختاروا غيره."
+                    Intensity.CUSTOM -> "تحدياتكم الخاصة بتفضل على الموبايل. راجعوا محتواها سوا قبل البدء."
+                    else -> "المستويات فيها تدرّج في نوع القرب والكلام. اختاروا مستوى يناسب الطرفين."
+                },
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
