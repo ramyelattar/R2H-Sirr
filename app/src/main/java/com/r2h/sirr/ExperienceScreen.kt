@@ -213,6 +213,7 @@ internal fun ExperienceScreen(group: Boolean) {
                         onClick = { exportChallenges.launch("R2H-Play-Couple-Challenges.txt") },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("صدّر تحدياتي لملف TXT") }
+                    Text("تنبيه خصوصية: ملف TXT اللي بتصدّره بيكون نص عادي غير مشفّر خارج التطبيق.")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(enabled = customValid, onClick = {
                             runCatching { vault.writePrivate(storageName, customText) }
