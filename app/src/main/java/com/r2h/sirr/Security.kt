@@ -80,6 +80,29 @@ internal class LocalVault(private val context: Context) {
             bitmap
         }.getOrNull()
     }
+    /**
+     * Lightweight encrypted-photo preview for animated 3D cube tiles.
+     * Never writes a plaintext thumbnail to disk or changes the stored photo.
+     * Bounds the decoded preview to roughly 384 px rather than retaining
+     * twelve full 1280px photo bitmaps in Compose state.
+     */
+    fun readPhotoThumbnail(fileId: String?): ImageBitmap? {
+        if (fileId == null || !Regex("[0-9a-f-]{36}").matches(fileId)) return null
+        return runCatching {
+            val bytes = decrypt(File(dir, "$fileId.bin").readBytes())
+            try {
+                val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, dimensions)
+                require(dimensions.outWidth > 0 && dimensions.outHeight > 0)
+                var sample = 1
+                while (maxOf(dimensions.outWidth, dimensions.outHeight) / sample > 384)
+                    sample *= 2
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size,
+                    BitmapFactory.Options().apply { inSampleSize = sample }
+                )?.asImageBitmap()
+            } finally { bytes.fill(0) }
+        }.getOrNull()
+    }
     fun delete(fileId: String?) {
         if (fileId != null && Regex("[0-9a-f-]{36}").matches(fileId)) File(dir, "$fileId.bin").delete()
     }
