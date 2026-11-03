@@ -51,7 +51,7 @@ internal fun CoupleCompetitionPanel(game: LocalGame, persist: (LocalGame) -> Boo
     Text("النقاط متعادلة — هنحسمها بتحدي مشترك.", style = MaterialTheme.typography.titleMedium)
     when (tie.stage) {
         TieStage.SHARED_CHALLENGE -> {
-            Text("تحدي كسر التعادل: كل طرف يقول للتاني 3 حاجات بيقدّرها فيه، ويسمع رده من غير مقاطعة.")
+            Text("تحدي كسر التعادل: ${rules.tieChallenge}")
             Text("من ينفذه لوحده يفوز؛ لو الاتنين نفذوه أو الاتنين ما نفذوهوش ننتقل للأسئلة.")
             var doneA by remember(game.round) { mutableStateOf(false) }
             var doneB by remember(game.round) { mutableStateOf(false) }
