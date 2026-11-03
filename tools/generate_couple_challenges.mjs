@@ -26,14 +26,15 @@ for(const level of levels){
 const render = function render(d){
   const levels=["SOFT","NORMAL","SEXY","HOT","HARD"];
   const kinds=[["TALK","كلام بينكم"],["WHISPER","همسة"],["CHOICE","اختيار"],["CLOSENESS","قرب"],["TOGETHER","سوا"],["SURPRISE","مفاجأة"],["PERSONAL","من عندكم"]];
+  const kotlinString = s => JSON.stringify(s).replaceAll("$", "\\$");
   const out=["package com.r2h.sirr.core","","/** Generated from content/couple_challenges_v1.json. Do not edit manually. */",
-    "enum class CoupleChallengeKind(val arabic: String) {",...kinds.map(([k,v],i)=>`    ${k}(${JSON.stringify(v)})${i<kinds.length-1?",":""}`),"}","",
+    "enum class CoupleChallengeKind(val arabic: String) {",...kinds.map(([k,v],i)=>`    ${k}(${kotlinString(v)})${i<kinds.length-1?",":""}`),"}","",
     "object CoupleChallengeCatalog {","    private val all: Map<Intensity, List<Challenge>> = mapOf("];
   levels.forEach((level,ix)=>{
     out.push(`        Intensity.${level} to listOf(`);
     d.couple[level].forEach((row,i)=>{
-      out.push(`            Challenge(${JSON.stringify(row.id)}, Intensity.${level}, ${JSON.stringify(row.text)},`);
-      out.push(`                title = ${JSON.stringify(row.title)}, kind = CoupleChallengeKind.${row.kind},`);
+      out.push(`            Challenge(${kotlinString(row.id)}, Intensity.${level}, ${kotlinString(row.text)},`);
+      out.push(`                title = ${kotlinString(row.title)}, kind = CoupleChallengeKind.${row.kind},`);
       out.push(`                durationSeconds = ${row.seconds})${i<d.couple[level].length-1?",":""}`);
     });
     out.push(`        )${ix<levels.length-1?",":""}`);
