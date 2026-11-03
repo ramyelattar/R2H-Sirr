@@ -317,6 +317,15 @@ internal fun DiceScreenV2() {
                             )
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            TextButton(
+                                enabled = !rolling,
+                                onClick = {
+                                    visibleIndices = visibleIndices.toMutableList().also {
+                                        it[cube] = index
+                                    }
+                                    clearResult()
+                                }
+                            ) { Text("عاين الوجه") }
                             OutlinedButton(
                                 enabled = !rolling,
                                 onClick = {
