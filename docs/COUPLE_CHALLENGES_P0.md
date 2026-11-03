@@ -17,7 +17,7 @@ This change covers **offline local two-player couple challenge sessions**. It do
 - **Exported TXT is plaintext outside the app** and must be handled as sensitive by the owner.
 - When the user's private pack has enough activities for a session, the game chooses only from those custom activities. A smaller pack is supplemented with built-in content.
 - Fresh prompts are prioritized over recently seen prompts; within a session prompt text does not repeat. New local couple selection balances activity kinds rather than repeating only one category.
-- Built-in catalog is **not approved as erotic/explicit final copy**. It deliberately includes only the user-supplied approved-direction sample and additional non-graphic draft activities. Owner review or user-authored private content is required to reach the desired editorial identity.
+- Built-in catalog is **not approved as erotic/explicit final copy**. It deliberately includes only a draft adapted from the user's challenge-001 direction and additional non-graphic draft activities. Owner review or user-authored private content is required to reach the desired editorial identity.
 
 ## Competition rules (approved product intent)
 
