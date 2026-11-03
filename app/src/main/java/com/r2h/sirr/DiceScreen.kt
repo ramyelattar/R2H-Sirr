@@ -2,199 +2,401 @@ package com.r2h.sirr
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
-import com.r2h.sirr.core.*
-import kotlinx.coroutines.delay
+import com.r2h.sirr.core.PersonalDiceConfiguration
+import com.r2h.sirr.core.PersonalDiceFace
 
+/**
+ * Two dice matching the physical reference concept.
+ * ALL 12 faces are deliberately blank until authored by the user.
+ * The original three-dice experience lives in LegacyDiceScreen().
+ */
 @Composable
 internal fun DiceScreenV2() {
-    val effects=rememberGameEffects()
     val context = LocalContext.current
-    val vault = remember { LocalVault(context.applicationContext) }
-    var selected by remember { mutableStateOf(Intensity.SOFT) }
-    val dice = remember { mutableStateListOf<List<DieFace>>().apply { addAll(DiceCatalog.preset(Intensity.SOFT).dice) } }
-    var duration by remember { mutableIntStateOf(3) }
-    var advanced by remember { mutableStateOf(false) }
-    var imagesFor by remember { mutableStateOf<Pair<Int, Int>?>(null) }
-    val chooseImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        val index = imagesFor
-        if (uri != null && index != null) runCatching {
-            val id = vault.importPhoto(uri)
-            val (die, face) = index
-            vault.delete(dice[die][face].imageId)
-            dice[die] = dice[die].toMutableList().also { it[face] = it[face].copy(imageId = id) }
-        }
-        imagesFor = null
+    val vault = remember(context) { LocalVault(context.applicationContext) }
+    val effects = rememberGameEffects()
+    val restore = remember(vault) { PersonalDiceStore.load(vault) }
+    var config by remember(vault) {
+        mutableStateOf(restore.configuration ?: PersonalDiceConfiguration.blank())
     }
-    var rolled by remember { mutableStateOf<List<Int>?>(null) }
-    // Freeze the visible result at roll time; editing the dice must not rewrite past results.
-    var rolledFaces by remember { mutableStateOf<List<DieFace>?>(null) }
-    var rolling by remember { mutableStateOf(false) }
-    var nonce by remember { mutableIntStateOf(0) }
+    var saved by remember(vault) { mutableStateOf(config) }
+    var unreadable by remember(vault) { mutableStateOf(restore.unreadable) }
+    var showLegacy by remember { mutableStateOf(false) }
+    var showEditor by remember { mutableStateOf(false) }
+    var confirmClear by remember { mutableStateOf(false) }
+    var photoTarget by remember { mutableStateOf<Pair<Int,Int>?>(null) }
     var error by remember { mutableStateOf("") }
-    var success by remember { mutableStateOf("") }
-    val config = DiceConfiguration(dice.toList(), duration, effects.preferences.sound)
-    LaunchedEffect(nonce) {
-        if (nonce == 0) return@LaunchedEffect
-        val final = runCatching { config.roll() }.getOrElse { error = "راجع إعدادات النرد الأول"; rolling = false; return@LaunchedEffect }
-        rolling = true
-        repeat(if(effects.animate)duration * 8 else 0) {
-            rolled = List(3) { kotlin.random.Random.nextInt(6) }
-            delay(125)
-        }
-        rolled = final
-        rolledFaces = final.mapIndexed { i, index -> config.dice[i][index] }
-        rolling = false
-        effects.cue(GameCue.REVEAL)
+    var notice by remember { mutableStateOf("") }
+    val progress = remember { Animatable(1f) }
+    var rollNumber by remember { mutableIntStateOf(0) }
+    var rolling by remember { mutableStateOf(false) }
+    var visibleIndices by remember { mutableStateOf(listOf(0,0)) }
+    var revealedFaces by remember { mutableStateOf<List<PersonalDiceFace>?>(null) }
+    var pendingFaces by remember { mutableStateOf<List<PersonalDiceFace>?>(null) }
+
+    fun clearResult() {
+        revealedFaces = null
+        pendingFaces = null
+        error = ""
+        notice = ""
     }
-    Page("سيبها على النرد", "3 نردات هتقرروا تعملوا إيه… خليك جاهز.") {
-        SirrIntro(
-            "3 نردات · اختيار واحد",
-            "الحظ ليه كلمة… والباقي عليكم.",
-            "اختاروا المود، ارْموا النرد، وشوفوا التحدي اللي طلع.",
-            accent = Color(0xFFAD6450), motif = "dice"
-        )
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            listOf("الفعل", "الفكرة", "الطريقة").forEachIndexed { index, label ->
-                Column(
-                    Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(7.dp)
-                ) {
-                    MysteryDie((rolled?.getOrNull(index) ?: index) + 1, rolling, Modifier.fillMaxWidth())
-                    Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelMedium)
+    fun editFace(cube: Int, index: Int, transform: (PersonalDiceFace) -> PersonalDiceFace) {
+        val face = config.cubes[cube][index]
+        config = config.changeFace(cube, index, transform(face))
+        clearResult()
+    }
+    fun persist(next: PersonalDiceConfiguration, done: () -> Unit = {}) {
+        runCatching { PersonalDiceStore.save(vault, next) }
+            .onSuccess {
+                config = next
+                saved = next
+                notice = "تم حفظ الأوجه في التخزين المحلي المشفّر"
+                error = ""
+                done()
+            }
+            .onFailure { error = "تعذر حفظ الأوجه. الإعدادات القديمة لم تُستبدل." }
+    }
+
+    val choosePhoto = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val target = photoTarget
+        photoTarget = null
+        if (uri != null && target != null && !rolling && !unreadable) {
+            var importedId: String? = null
+            runCatching {
+                val (cube, faceIndex) = target
+                val old = config.cubes[cube][faceIndex].imageId
+                importedId = vault.importPhoto(uri)
+                val next = config.changeFace(cube, faceIndex,
+                    config.cubes[cube][faceIndex].copy(imageId = importedId))
+                // Save before deleting the previous photo; rollback a failed import.
+                PersonalDiceStore.save(vault, next)
+                config = next
+                saved = next
+                clearResult()
+                notice = "تم حفظ الصورة على وجه المكعب"
+                if (old != null && next.cubes.flatten().none { it.imageId == old }) {
+                    vault.delete(old)
                 }
+            }.onFailure {
+                vault.delete(importedId)
+                error = "تعذر إضافة الصورة وحفظها. لم يتم استبدال الوجه القديم."
             }
         }
-        SirrSection("01", if(rolling) "النرد بيلف…" else if(rolled==null)
-            "أول رمية مستنياكم" else "الرمية خلصت",
-            "تقدروا تغيّروا المود قبل الرمية الجاية")
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Intensity.entries.forEach { level ->
-                FilterChip(selected == level, enabled = !rolling, onClick = {
-                    selected = level
-                    if (level != Intensity.CUSTOM) {
-                        val preset = DiceCatalog.preset(level)
-                        dice.clear(); dice.addAll(preset.dice)
-                    } else {
-                        val saved = DiceStorage.load(vault) ?: DiceCatalog.preset(Intensity.CUSTOM)
-                        dice.clear(); dice.addAll(saved.dice)
-                        duration = saved.durationSeconds
-                    }
-                    rolled = null; rolledFaces = null; error = ""; success = ""
-                }, label = { Text(level.arabic) })
-            }
+    }
+
+    LaunchedEffect(rollNumber) {
+        if (rollNumber == 0) return@LaunchedEffect
+        val faces = pendingFaces ?: return@LaunchedEffect
+        try {
+            progress.snapTo(0f)
+            if (effects.animate) {
+                progress.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(
+                        durationMillis = config.durationSeconds * 1000,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            } else progress.snapTo(1f)
+            revealedFaces = faces
+            effects.cue(GameCue.REVEAL)
+        } finally {
+            rolling = false
         }
-        SirrAction(
-            text = if(rolling) "استنّى الرمية…" else if(rolled == null) "ارمي النرد  ✦" else "ارمي تاني  ✦",
-            enabled = !rolling,
-            onClick = { error = ""; rolling = true; nonce++ },
-            explanation = if (rolling) "النتيجة هتظهر هنا أول ما النرد يقف" else null
+    }
+
+    if (showLegacy) {
+        TextButton(
+            onClick = { showLegacy = false },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("ارجع للمكعبين الجديدين") }
+        LegacyDiceScreen()
+        return
+    }
+
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text("تمسح الأوجه اللي كتبتها؟") },
+            text = { Text("هيتمسح تخصيص المكعبين والصور الخاصة بيهم فقط. وضع الـ3 نردات القديم مش هيتغير.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val previousIds = (config.cubes + saved.cubes).flatten()
+                        .mapNotNull { it.imageId }.toSet()
+                    runCatching { PersonalDiceStore.clear(vault) }
+                        .onSuccess {
+                            previousIds.forEach(vault::delete)
+                            val blank = PersonalDiceConfiguration.blank()
+                            config = blank
+                            saved = blank
+                            unreadable = false
+                            clearResult()
+                            notice = "اتمسحت أوجه المكعبين"
+                        }
+                        .onFailure { error = "تعذر مسح الإعدادات. جرّب تاني." }
+                    confirmClear = false
+                }) { Text("امسح الأوجه") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClear = false }) { Text("إلغاء") }
+            }
         )
-        if (rolled != null && !rolling) {
-            val outcome = requireNotNull(rolled)
-            val faces = rolledFaces ?: outcome.mapIndexed { i, faceIndex -> dice[i][faceIndex] }
-            SirrSection("02", "دي الرمية اللي طلعت", "كل نرد اختار جزء مستقل من الحكاية")
-            val parts = listOf("الفعل", "الفكرة", "الطريقة")
-            ChallengeRevealCard(
-                if (selected == Intensity.CUSTOM) {
-                    faces.mapIndexed { index, face -> "${parts[index]}: ${face.text}" }
-                        .joinToString("\n")
-                } else {
-                    DiceCatalog.sentence(faces)
-                }
-            )
+    }
+
+    Page("مكعباتك إنت", "مكعبين ثلاثيي الأبعاد — اكتب أو ارفع محتوى كل وجه بنفسك.") {
+        if (unreadable) {
+            SirrSection("!", "إعدادات قديمة مش مقروءة",
+                "مش هنكتب فوق بياناتك المحفوظة من غير اختيار واضح.")
             Text(
-                "لو النتيجة مش مناسبة ليكم، ارْموا تاني أو اختاروا مود أهدى. مفيش أي حاجة إجبارية.",
-                style = MaterialTheme.typography.bodySmall,
+                "ممكن تسيب البيانات وتجرّب تفتح التطبيق تاني، أو تمسح إعدادات المكعبين فقط.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            if (selected == Intensity.CUSTOM) {
-                faces.forEachIndexed { index, face ->
-                    val bitmap = remember(face.imageId) { vault.readPhoto(face.imageId) }
-                    if (bitmap != null) {
-                        Text("الصورة اللي طلعت في النرد ${index + 1}",
-                            color = MaterialTheme.colorScheme.primary)
-                        Image(
-                            bitmap,
-                            contentDescription = "الصورة المختارة للنرد ${index + 1}",
-                            modifier = Modifier.fillMaxWidth().height(170.dp),
-                            contentScale = ContentScale.Fit
+            OutlinedButton(onClick = { confirmClear = true },
+                modifier = Modifier.fillMaxWidth()) {
+                Text("مسح إعدادات المكعبين غير المقروءة")
+            }
+        } else {
+            SirrIntro(
+                "مكعبان × 6 أوجه",
+                "كل رمية بتجمع وجه من كل مكعب.",
+                "المكعب البنفسجي والفضي زي الفكرة اللي اخترتها. المحتوى اللي بيظهر عليهم من إضافتك أنت.",
+                accent = Color(0xFFCBA7E4),
+                motif = "dice"
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                repeat(2) { cube ->
+                    Column(
+                        Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        PersonalCube3D(
+                            faces = config.cubes[cube],
+                            visibleFace = visibleIndices[cube],
+                            spinProgress = progress.value,
+                            metallic = cube == 1,
+                            vault = vault,
+                            label = "المكعب ${cube + 1}",
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f)
+                        )
+                        Text(
+                            "المكعب ${cube + 1}",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
-        }
-        OutlinedButton(onClick={advanced=!advanced},modifier=Modifier.fillMaxWidth()) {
-            Text(if(advanced)"اقفل الإعدادات" else "عايز تغيّر الوقت أو تعمل نرد مخصوص؟")
-        }
-        if(advanced) {
-            EffectPreferencesPanel(effects)
-            Text("النرد يلف قد إيه؟", color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.Bold)
-            Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(5.dp)) {
-                listOf(2,3,5,7,10,13,20).forEach { seconds ->
-                    FilterChip(duration==seconds,enabled=!rolling,onClick={duration=seconds},label={Text("$seconds ث")})
-                }
+
+            val remaining = config.cubes.sumOf { cube ->
+                cube.count { it.weight > 0 && !it.configured }
             }
-        if (selected == Intensity.CUSTOM) {
-            Text("اكتب الأوجه على مزاجك. لازم مجموع نسب كل نرد يبقى 100٪.")
-            repeat(3) { die ->
-                Text("النرد ${die + 1}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                repeat(6) { face ->
-                    val item = dice[die][face]
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(value = item.text, enabled = !rolling, onValueChange = { text ->
-                            dice[die] = dice[die].toMutableList().also { it[face] = item.copy(text = text.take(72)) }
-                        }, label = { Text("الوجه ${face + 1}") }, modifier = Modifier.weight(2f), singleLine = true)
-                        OutlinedTextField(value = item.weight.toString(), enabled = !rolling, onValueChange = { number ->
-                            val parsed = number.toIntOrNull()?.coerceIn(0, 100) ?: 0
-                            dice[die] = dice[die].toMutableList().also { it[face] = item.copy(weight = parsed) }
-                        }, label = { Text("النسبة") }, modifier = Modifier.weight(1f), singleLine = true)
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(enabled=!rolling,onClick = { imagesFor = die to face; chooseImage.launch("image/*") }) { Text("صورة لهذا الوجه") }
-                        if (item.imageId != null) TextButton(enabled=!rolling,onClick = {
-                            vault.delete(item.imageId)
-                            dice[die] = dice[die].toMutableList().also { it[face] = item.copy(imageId = null) }
-                        }) { Text("حذف الصورة") }
+            if (!config.playable) {
+                Text(
+                    if (remaining > 0)
+                        "لسه في $remaining وجه محتاج نص أو صورة. الأوجه اللي وزنها صفر مش بتدخل السحب."
+                    else
+                        "لازم مجموع أوزان كل مكعب يبقى 100٪ علشان يبدأ الرمي.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (config != saved) {
+                Text(
+                    "في تغييرات غير محفوظة. احفظها قبل ما تخرج.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+            SirrAction(
+                text = if (rolling) "المكعبات بتلف…" else
+                    if (revealedFaces != null) "ارمي المكعبين تاني" else "ارمي المكعبين",
+                enabled = !rolling && config.playable,
+                explanation = if (!config.playable) "كمّل الأوجه والأوزان من زر التخصيص" else null,
+                onClick = {
+                    val pick = runCatching { config.roll() }
+                        .onFailure { error = "راجع الأوجه والأوزان الأول" }.getOrNull()
+                    if (pick != null) {
+                        visibleIndices = pick
+                        pendingFaces = pick.mapIndexed { cube, face ->
+                            config.cubes[cube][face]
+                        }
+                        revealedFaces = null
+                        rolling = true
+                        error = ""
+                        rollNumber++
                     }
                 }
-                Text("المجموع: ${dice[die].sumOf { it.weight }}٪", color = if (dice[die].sumOf { it.weight } == 100) Color.LightGray else MaterialTheme.colorScheme.error)
+            )
+            if (revealedFaces != null && !rolling) {
+                SirrSection("01", "الوجهان اللي ظهروا",
+                    "كل وجه نتيجة مستقلة، من غير تركيب جملة تلقائية")
+                revealedFaces!!.forEachIndexed { index, face ->
+                    val caption = face.text.ifBlank {
+                        if (face.imageId != null) "وجه بصورة من إضافتك"
+                        else "الوجه غير مخصص"
+                    }
+                    Text(
+                        "المكعب ${index + 1}: $caption",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Text("ممكن ترمي تاني أو ترفض أي نتيجة. مفيش أي تنفيذ إجباري.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Button(onClick = {
-                runCatching { DiceStorage.save(vault, config) }.onSuccess { success = "اتحفظت إعداداتك مشفّرة على الموبايل"; error = "" }
-                    .onFailure { error = "معرفناش نحفظ. اتأكد من مجموع النسب" }
-            }, modifier = Modifier.fillMaxWidth(), enabled = !rolling) { Text("احفظ النرد بتاعي") }
-            OutlinedButton(enabled=!rolling,onClick = {
-                val preset = DiceCatalog.preset(Intensity.CUSTOM)
-                dice.clear(); dice.addAll(preset.dice)
-                rolled = null;rolledFaces = null;error = ""; success = ""
-            }) { Text("رجّع الإعدادات الأصلية") }
+
+            OutlinedButton(
+                enabled = !rolling,
+                onClick = { showEditor = !showEditor },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(if (showEditor) "اقفل تخصيص الأوجه" else "خصص الأوجه والصور والأوزان") }
+
+            if (showEditor) {
+                SirrSection("02", "الأوجه بتاعتك", "المكعبان مستقلان. تقدر تحفظ إعدادات ناقصة وتكملها بعدين.")
+                Text(
+                    "لكل مكعب 6 أوجه. اكتب النص أو ضيف صورة من جهازك. لا توجد عبارات جاهزة.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                config.cubes.forEachIndexed { cube, faces ->
+                    val weightSum = faces.sumOf { it.weight }
+                    Text(
+                        "المكعب ${cube + 1} — مجموع الأوزان: $weightSum٪",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (weightSum == 100) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.error
+                    )
+                    faces.forEachIndexed { index, face ->
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = face.text,
+                                enabled = !rolling,
+                                onValueChange = { value ->
+                                    editFace(cube, index) { it.copy(text = value.take(72)) }
+                                },
+                                label = { Text("وجه ${index + 1}") },
+                                modifier = Modifier.weight(3f),
+                                maxLines = 2
+                            )
+                            OutlinedTextField(
+                                value = face.weight.toString(),
+                                enabled = !rolling,
+                                onValueChange = { value ->
+                                    val number = value.toIntOrNull()?.coerceIn(0,100) ?: 0
+                                    editFace(cube,index) { it.copy(weight = number) }
+                                },
+                                label = { Text("الوزن ٪") },
+                                modifier = Modifier.weight(1.4f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            TextButton(
+                                enabled = !rolling,
+                                onClick = {
+                                    visibleIndices = visibleIndices.toMutableList().also {
+                                        it[cube] = index
+                                    }
+                                    clearResult()
+                                }
+                            ) { Text("عاين الوجه") }
+                            OutlinedButton(
+                                enabled = !rolling,
+                                onClick = {
+                                    photoTarget = cube to index
+                                    choosePhoto.launch("image/*")
+                                }
+                            ) {
+                                Text(if (face.imageId == null) "ضيف صورة" else "غيّر الصورة")
+                            }
+                            if (face.imageId != null) TextButton(
+                                enabled = !rolling,
+                                onClick = {
+                                    val oldImage = face.imageId
+                                    val next = config.changeFace(cube,index,face.copy(imageId = null))
+                                    clearResult()
+                                    persist(next) {
+                                        if (next.cubes.flatten().none { it.imageId == oldImage })
+                                            vault.delete(oldImage)
+                                    }
+                                }
+                            ) { Text("امسح الصورة") }
+                        }
+                    }
+                }
+                Text("مدة حركة المكعبين",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold)
+                Row(Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(2,3,5,7,10,13,20).forEach { seconds ->
+                        FilterChip(
+                            selected = config.durationSeconds == seconds,
+                            enabled = !rolling,
+                            onClick = {
+                                config = config.copy(durationSeconds = seconds)
+                                clearResult()
+                            },
+                            label = { Text("$seconds ث") }
+                        )
+                    }
+                }
+                EffectPreferencesPanel(effects)
+                Button(
+                    onClick = { persist(config) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !rolling
+                ) { Text("احفظ تخصيص المكعبين مشفّرًا") }
+                OutlinedButton(
+                    onClick = { confirmClear = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !rolling
+                ) { Text("امسح التخصيص وابدأ من جديد") }
+            }
+            HorizontalDivider()
+            OutlinedButton(
+                onClick = { showLegacy = true },
+                enabled = !rolling && config == saved,
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("افتح وضع الـ3 نردات القديم") }
+            if (config != saved) Text(
+                "احفظ التعديلات علشان تقدر تبدّل بين الوضعين.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (notice.isNotBlank()) Text(notice, color = MaterialTheme.colorScheme.primary)
+            if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
+            Text(
+                "الصور والأوجه اللي تضيفها بتتحفظ محليًا ومشفّرة. لا يوجد رفع تلقائي أو محتوى جاهز.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        }
-        if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
-        if (success.isNotBlank()) Text(success)
-        Text("تقدر تقفل في أي لحظة. صورك الخاصة بتفضل مشفّرة على الموبايل.",
-            style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
