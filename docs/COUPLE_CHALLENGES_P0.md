@@ -8,7 +8,7 @@ This change covers **offline local two-player couple challenge sessions**. It do
 
 ## Content architecture
 
-- Canonical editorial file: `content/couple_challenges_v1.json` (100 original non-graphic drafts, 20 per intensity).
+- Canonical editorial file: `content/couple_challenges_v2.json` (100 owner-supplied, language-edited explicit challenges, 20 per intensity).
 - Generated Kotlin catalog: `app/src/main/java/com/r2h/sirr/core/CoupleChallengeCatalog.kt`.
 - Deterministic local generator: `node tools/generate_couple_challenges.mjs`.
 - Planned future sync check: `node tools/generate_couple_challenges.mjs --check` (**not run**).
@@ -67,4 +67,9 @@ Unit-test source has been added for scoring, timing, early stop, custom content,
 
 ## Owner/content acceptance remaining
 
-The owner explicitly asked to finish the complete feature before building and testing. Source implementation alone is **not** evidence of readiness. The non-graphic draft copy is subject to editorial review and replacement where the owner wants different user-provided private copy; do not automatically treat it as accepted.
+The owner explicitly asked to finish the complete feature before building and testing. Source implementation alone is **not** evidence of readiness. The owner-supplied v2 copy has undergone editorial cleanup, but edits that affect meaning still require owner review and acceptance where the owner wants different user-provided private copy; do not automatically treat it as accepted.
+
+
+## Owner-authored explicit content import
+
+The attached `couple_challenges_explicit_v2.json` was used as the input for canonical `content/couple_challenges_v2.json`. All 100 IDs, five levels and six challenge kinds were preserved. A subset of entries received language corrections, and 12 durations were aligned. The owner's source was not copied to the public backend or remote party catalog. The repository is private at the time of this edit. **Final wording and level progression still require owner review**. No application build or automated tests were run.
