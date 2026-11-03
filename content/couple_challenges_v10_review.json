@@ -292,7 +292,7 @@
     }
   ],
   "note": "Owner approved the current refined text without additional edits. Editorial approval does not override the recorded health/consent/physical-risk flags, and does not imply safe runtime activation.",
-  "runtime_activation": "NOT_ENABLED",
+  "runtime_activation": "ELIGIBLE_SUBSET_WIRED_TO_NEW_LOCAL_SESSIONS_UNVERIFIED",
   "build": "NOT_RUN",
   "tests": "NOT_RUN",
   "owner_approval": {
@@ -302,5 +302,22 @@
     "further_copy_edits_allowed_without_new_approval": false,
     "safety_signoff": false,
     "runtime_activation_signoff": false
+  },
+  "runtime_eligibility": {
+    "approved_total": 100,
+    "automatic_session_eligible": 81,
+    "excluded_pending_safety_resolution": 19,
+    "eligible_by_level": {
+      "SOFT": 16,
+      "NORMAL": 20,
+      "SEXY": 20,
+      "HOT": 17,
+      "HARD": 8
+    },
+    "source": "app/src/main/java/com/r2h/sirr/core/CoupleV10Policy.kt",
+    "source_of_truth": "content/couple_challenges_v10_refined.json",
+    "approved_copy_untouched": true,
+    "explicit_mixed_lower_levels_only": true,
+    "caution": "Source integration only; no Android compilation or runtime behavior has been verified."
   }
 }
