@@ -17,6 +17,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import android.net.Uri
 import com.r2h.sirr.core.EphemeralEnvelope
+import com.r2h.sirr.core.SecretStoryCatalog
+import com.r2h.sirr.core.SecretTier
 import kotlinx.coroutines.delay
 
 /** One-use on-device experience; this screen intentionally does not persist message text. */
@@ -30,88 +32,10 @@ internal fun WhispersScreenV2() {
     val whisperStages = remember { listOf(
         "أول همسة", "الكلام اللي وراها", "المفاجأة الأخيرة"
     ) }
-    val suggestions=remember { listOf(
-        // Group 01
-        "في كلمة على لساني من أول ما شفتك.",
-        "مش هقولها غير لما تكون مستعد تسمعها.",
-        "جاهز تسمعها ولا نسيبها سر شوية؟",
-        // Group 02
-        "ممكن رسالة واحدة تغير شكل سهرة كاملة.",
-        "رسالتي ليك بتبدأ باعتراف صغير.",
-        "عايز تسمع الاعتراف ولا تخمنه الأول؟",
-        // Group 03
-        "ضحكتك آخر حاجة كنت متوقع إنها تلخبطني كده.",
-        "لقيت نفسي بفتكرها وأنا راجع البيت.",
-        "إيه أكتر لحظة بينا بتخليك تبتسم لوحدك؟",
-        // Group 04
-        "في نظرة منك مش عارف أنساها.",
-        "يمكن إنت مش واخد بالك من تأثيرها عليا.",
-        "تفتكر كانت في أنهي يوم؟",
-        // Group 05
-        "لو عندي دقيقة أقولك فيها كل اللي جوايا.",
-        "هختار كلمة واحدة وأسيب الباقي لعيونك.",
-        "تحب الكلمة تكون صريحة ولا غامضة؟",
-        // Group 06
-        "النهارده عندي سؤال مش عارف أبدأه إزاي.",
-        "كل ما بفكر فيه بضحك من الإحراج.",
-        "أقوله دلوقتي ولا تستناني أتشجع؟",
-        // Group 07
-        "في حاجة بينا عمرها ما كانت محتاجة شرح.",
-        "لما بتحصل، بعرف إنك فاهمني من غير كلام.",
-        "تقدر تقول هي إيه من وجهة نظرك؟",
-        // Group 08
-        "نفسي أختارلك أغنية محدش غيرنا يفهم معناها.",
-        "هخبي عنوانها لحد ما تخمن نوعها.",
-        "رومانسية هادية ولا فيها شقاوة؟",
-        // Group 09
-        "أوقات أحلى اعتراف بيبدأ بالهزار.",
-        "لكن اللي نفسي أقوله النهارده جد شوية.",
-        "تحب أبدأ بإيه: ذكرى ولا أمنية؟",
-        // Group 10
-        "أنا بحفظ تفاصيل صغيرة محدش بياخد باله منها.",
-        "في تفصيلة ليك دايمًا بتخليني أبتسم.",
-        "تفتكر أنا باخد بالي من إيه؟",
-        // Group 11
-        "عندي حكاية بدأت برسالة واتأخرت نهايتها.",
-        "كنت مستني الوقت الصح علشان أقول باقي الكلام.",
-        "تحب النهاية تبقى مفاجأة ولا أقولها بصراحة؟",
-        // Group 12
-        "لو اتقابلنا لأول مرة النهارده.",
-        "كنت هحاول ألفت نظرك بطريقة مختلفة.",
-        "خمن الطريقة، وبعدها أقولك كنت هعمل إيه.",
-        // Group 13
-        "مش كل سر لازم يكون تقيل على القلب.",
-        "في سر خفيف كده هيخليك تضحك.",
-        "تختار تسمعه دلوقتي ولا في آخر الجولة؟",
-        // Group 14
-        "في لحظة حسيت إن الوقت وقف وأنا بكلمك.",
-        "مكنتش مستعد أقولك ده ساعتها.",
-        "إنت كمان حصل معاك إحساس شبه ده؟",
-        // Group 15
-        "في جملة من فيلم كل ما أسمعها بافتكرك.",
-        "الغريب إنها مش جملة غزل أصلًا.",
-        "تحب أقولها ولا نخليها لغز؟",
-        // Group 16
-        "أنا نفسي في سهرة من غير تليفونات ولا استعجال.",
-        "نتكلم فيها عن حاجات عمرنا ما فتحناها.",
-        "اختار أول موضوع، وأنا هسمعك للآخر.",
-        // Group 17
-        "في حاجة نفسك تعرفها عني ومكسوف تسأل؟",
-        "النهارده ممكن تسأل سؤال واحد براحتك.",
-        "ولو مش مناسب، نتخطاه من غير تبرير.",
-        // Group 18
-        "في ذكرى بتخليني أحس إننا اتغيرنا للأحسن.",
-        "كل مرة بافتكرها بلاحظ تفصيلة جديدة.",
-        "تحب نحكيها كل واحد بطريقته؟",
-        // Group 19
-        "أنا عندي اعتراف بسيط مش محتاج شجاعة كبيرة.",
-        "لكن محتاج لحظة هادية علشان يتقال صح.",
-        "دلوقتي وقت مناسب ولا نأجله؟",
-        // Group 20
-        "دي آخر همسة، بس مش آخر حكاية بينا.",
-        "نفسي نفتكر الليلة دي بابتسامة مش بإحراج.",
-        "نختم بأمنية حلوة ولا بكلمة من القلب؟",
-    ) }
+    // The story bank is shared with Scratch and is never silently mixed across tiers.
+    var suggestionTier by remember { mutableStateOf(SecretTier.SOFT) }
+    var chosenStoryId by remember { mutableStateOf<String?>(null) }
+    var recipientReady by remember { mutableStateOf(false) }
     var sender by remember { mutableStateOf("") }
     var receiver by remember { mutableStateOf("") }
     var signature by remember { mutableStateOf("") }
@@ -181,24 +105,24 @@ internal fun WhispersScreenV2() {
     fun clear() {
         messages.indices.forEach { messages[it] = "" }
         sender = ""; receiver = ""; signature = ""; page = -1; envelope = null
-        composeStep=0; extras=false
+        composeStep=0; extras=false; recipientReady=false; chosenStoryId=null
         runCatching { player.reset() }; playing = false
         overrideBackgroundMusic(false)
         vault.delete(photoId); photoId = null; audioUri = null; error = ""
     }
     LaunchedEffect(envelope, page) {
         val current = envelope ?: return@LaunchedEffect
-        if (page < 0) return@LaunchedEffect
+        if (page == -1) return@LaunchedEffect
         val remaining = current.expiresAtMillis - System.currentTimeMillis()
         if (remaining > 0) delay(remaining)
         clear()
     }
-    Page("همسة ليك وبس", "كل سر هيوصل في وقته… وملوش إعادة بعد ما يتفتح.") {
+    Page("همسة ليك وبس", "3 رسائل خاصة وراء بعض — في نفس الموبايل، من غير إرسال سحابي.") {
         if(page == -1) {
             SirrIntro(
-                overline = "رسالة مش هتتقري مرتين",
+                overline = "قصة من 3 همسات — عرض محلي مؤقت",
                 title = "3 همسات. سر واحد.",
-                description = "اكتب 3 رسائل متتابعة. كل رسالة بتختفي بعد ما تعدّيها.",
+                description = "اكتب 3 همسات أو اختار حكاية جاهزة. الهمسة بتختفي من الشاشة لما تنتقل للي بعدها.",
                 accent = Color(0xFF9F4D72),
                 motif = "whispers"
             )
@@ -208,13 +132,33 @@ internal fun WhispersScreenV2() {
                 progress = { (composeStep + 1).toFloat() / 3f },
                 modifier = Modifier.fillMaxWidth()
             )
+            Text("مستوى الاقتراحات الجاهزة", style = MaterialTheme.typography.titleMedium)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                SecretTier.entries.forEach { tier ->
+                    FilterChip(
+                        selected = suggestionTier == tier,
+                        onClick = { suggestionTier = tier; chosenStoryId = null },
+                        label = { Text(tier.arabic) }
+                    )
+                }
+            }
+            if (suggestionTier == SecretTier.ADULT) {
+                Text(
+                    "الاقتراحات دي فيها كلام مباشر عن الجنس والرغبة والخيال الحميم، للبالغين 18+ فقط. مش مطلوب أي فعل أو مشاركة إجابة.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
             OutlinedButton(onClick = {
-                // Preserve the original three-part arc in the author's chosen order.
-                val groupStart = (0 until (suggestions.size / 3)).random() * 3
-                repeat(3) { i -> messages[i] = suggestions[groupStart + i] }
+                val options = SecretStoryCatalog.whispers.filter { it.tier == suggestionTier }
+                val candidates = options.filterNot { it.id == chosenStoryId }
+                val chosen = (if (candidates.isEmpty()) options else candidates).random()
+                chosen.lines.forEachIndexed { index, line -> messages[index] = line }
+                chosenStoryId = chosen.id
                 composeStep = 2
+                error = ""
             }, modifier = Modifier.fillMaxWidth()) {
-                Text("✦  مش عارف تكتب إيه؟ اختار 3 همسات جاهزين")
+                Text("✦  اختارلي 3 همسات مترابطين")
             }
             OutlinedTextField(
                 messages[composeStep],
@@ -238,7 +182,8 @@ internal fun WhispersScreenV2() {
                     onClick = {
                         val now = System.currentTimeMillis()
                         envelope = EphemeralEnvelope(now, now + ttlHours * 3_600_000L)
-                        page = 0
+                        recipientReady = false
+                        page = -2
                     },
                     explanation = if (messages.any { it.isBlank() })
                         "لازم التلات همسات يكونوا جاهزين" else
@@ -247,13 +192,13 @@ internal fun WhispersScreenV2() {
             }
             if(composeStep>0)TextButton(onClick={composeStep--}){Text("أرجع للهمسة اللي قبلها")}
             OutlinedButton(onClick={extras=!extras},modifier=Modifier.fillMaxWidth()){
-                Text(if(extras)"اقفل الإضافات" else "حط اسم أو صورة أو أغنية في المفاجأة")
+                Text(if(extras)"اقفل الإضافات" else "ضيف اسم أو صورة أو أغنية للمفاجأة")
             }
             if(extras) {
                 OutlinedTextField(sender,{sender=it.take(35)},label={Text("من مين؟ (اختياري)")},modifier=Modifier.fillMaxWidth())
                 OutlinedTextField(receiver,{receiver=it.take(35)},label={Text("لمين؟ (اختياري)")},modifier=Modifier.fillMaxWidth())
                 OutlinedTextField(signature,{signature=it.take(80)},label={Text("توقيعك (اختياري)")},modifier=Modifier.fillMaxWidth())
-                Text("المفاجأة تفضل متاحة قد إيه؟")
+                Text("الحد الأقصى للجلسة وهي مفتوحة على الموبايل (الرسائل مش بتتحفظ بعد الخروج):")
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
                     listOf(3,6,24).forEach{value->
                         FilterChip(ttlHours==value,onClick={ttlHours=value},label={Text("$value ساعات")})
@@ -274,10 +219,32 @@ internal fun WhispersScreenV2() {
                 }
             }
             if(error.isNotBlank())Text(error,color=MaterialTheme.colorScheme.error)
+        } else if (page == -2) {
+            SirrIntro(
+                overline = "سلّم الموبايل لصاحب الرسالة",
+                title = "الهمسات جاهزة… لسه مقفولة",
+                description = "الرسائل شخصية، وممكن تتضمن كلام حميم. خلي صاحبها يقرر بنفسه إذا حابب يفتحها.",
+                accent = Color(0xFF9F4D72),
+                motif = "whispers"
+            )
+            SirrConsent(
+                name = "أنا مستعد أشوف الرسائل الخاصة، وعارف إني ممكن أقفل من غير ما أقرأها",
+                checked = recipientReady,
+                onChange = { recipientReady = it }
+            )
+            SirrAction(
+                text = "افتح أول همسة",
+                enabled = recipientReady,
+                onClick = { page = 0 }
+            )
+            OutlinedButton(
+                onClick = { clear() },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("مش حابب أفتحها — امسح الرسائل") }
         } else if (page < 3) {
             if (receiver.isNotBlank()) Text("إلى $receiver", color = MaterialTheme.colorScheme.primary)
             SirrSection("0${page + 1}", whisperStages[page],
-                "الهمسة دي هتختفي أول ما تكمل")
+                "لو مش مرتاح، تقدر تقفل وتمسح من غير ما تكمل")
             SecretLetter(messages[page],page+1,3)
             if (audioUri != null) {
                 OutlinedButton(onClick = { toggleAudio() },modifier=Modifier.fillMaxWidth()) {
@@ -308,7 +275,7 @@ internal fun WhispersScreenV2() {
             }
             val photo = remember(photoId) { vault.readPhoto(photoId) }
             if (photo != null) Image(photo, contentDescription = "الصورة الختامية", modifier = Modifier.fillMaxWidth().height(260.dp), contentScale = ContentScale.Fit)
-            Text("لما تقفل، الرسائل والصورة هيتمسحوا من الجلسة دي.", color = Color.LightGray)
+            Text("المحتوى مش بيتبعت أو يتحفظ في حساب. لو عملت لقطة شاشة أو حد صوّر الموبايل، التطبيق مش هيقدر يمنع ده.", color = Color.LightGray)
             SirrAction(text = "اقفل وامسح السر", onClick = { clear() })
         }
     }
