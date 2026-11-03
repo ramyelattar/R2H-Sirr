@@ -147,6 +147,81 @@ class QuizSessionTest {
         assertEquals("واحد", started.questions.first().choices.first())
     }
 
+
+    private fun predictionStart() = QuizSession.start(
+        "quiz_01", pack(), 8, paired = true, random = Random(12), guessPartner = true
+    )
+
+    @Test fun predictionModeMustHaveTwoParticipants() {
+        try {
+            QuizSession.start("quiz_01", pack(), 8, paired = false,
+                random = Random(12), guessPartner = true)
+            fail("prediction mode cannot be single-player")
+        } catch (_: IllegalArgumentException) {}
+    }
+
+    @Test fun firstPlayerFinishesBeforePrivateForecastStage() {
+        val run = fillFirst(predictionStart())
+        assertEquals(QuizStage.PREDICT, run.stage)
+        assertEquals(0, run.position)
+        assertEquals(8, run.answersA.size)
+        assertTrue(run.predictionsA.isEmpty())
+        assertNull(run.predictionSummary())
+    }
+
+    @Test fun privatePredictionCanSkipAndUndoWithoutChangingOriginalAnswers() {
+        val run = fillFirst(predictionStart())
+        val withPredictions = run.predict(1).predict(-1).back()
+        assertEquals(QuizStage.PREDICT, withPredictions.stage)
+        assertEquals(1, withPredictions.position)
+        assertEquals(listOf(1), withPredictions.predictionsA)
+        assertEquals(run.answersA, withPredictions.answersA)
+        assertTrue(withPredictions.answersB.isEmpty())
+    }
+
+    @Test fun forecastingMustFinishBeforeHandoffToPartner() {
+        var run = fillFirst(predictionStart())
+        repeat(8) { run = run.predict(it % 3) }
+        assertEquals(QuizStage.HANDOFF, run.stage)
+        assertEquals(8, run.predictionsA.size)
+        assertNull(run.predictionSummary())
+        run = run.startPartner()
+        assertEquals(QuizStage.SECOND, run.stage)
+        assertEquals(8, run.answersA.size)
+    }
+
+    @Test fun predictionResultsCountOnlyBothAnsweredMatches() {
+        var run = fillFirst(predictionStart())
+        listOf(0, 1, -1, 2, 2, 0, 1, 2).forEach { run = run.predict(it) }
+        run = run.startPartner()
+        listOf(0, 2, 1, 2, -1, 0, 1, 1).forEach { run = run.answer(it) }
+        assertEquals(QuizStage.RESULTS, run.stage)
+        assertNull(run.comparison())
+        assertEquals(6, run.predictionSummary()!!.comparable)
+        assertEquals(4, run.predictionSummary()!!.matched)
+    }
+
+    @Test fun predictionAllSkippedShowsNoComparableForecast() {
+        var run = fillFirst(predictionStart())
+        repeat(8) { run = run.predict(-1) }
+        run = run.startPartner()
+        repeat(8) { run = run.answer(0) }
+        assertNull(run.predictionSummary())
+        assertNull(run.comparison())
+    }
+
+    @Test fun predictionResultRejectsInvalidPartialRestoreState() {
+        val run = fillFirst(predictionStart())
+        try {
+            run.copy(stage = QuizStage.HANDOFF)
+            fail("cannot bypass required prediction phase")
+        } catch (_: IllegalArgumentException) {}
+        try {
+            run.copy(stage = QuizStage.RESULTS)
+            fail("cannot reveal either player's answers mid-game")
+        } catch (_: IllegalArgumentException) {}
+    }
+
     @Test fun malformedRestoredStateIsRejected() {
         val original = session()
         try {
