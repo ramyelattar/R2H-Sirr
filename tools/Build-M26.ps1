@@ -10,8 +10,8 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Push-Location $root
 try {
     $branch = (& git branch --show-current).Trim()
-    if ($LASTEXITCODE -ne 0 -or $branch -ne "feature/m26-egyptian-content-rewrite") {
-        throw "Wrong Git branch: '$branch'. Check out feature/m26-egyptian-content-rewrite first."
+    if ($LASTEXITCODE -ne 0 -or $branch -notin @("main", "feature/m26-egyptian-content-rewrite")) {
+        throw "Wrong Git branch: '$branch'. Check out main or feature/m26-egyptian-content-rewrite first."
     }
 
     # Do not produce a successful APK that silently lacks the requested image.
