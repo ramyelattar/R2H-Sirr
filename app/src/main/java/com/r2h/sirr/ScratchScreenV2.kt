@@ -14,6 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import com.r2h.sirr.core.SecretStory
+import com.r2h.sirr.core.SecretStoryCatalog
+import com.r2h.sirr.core.SecretTier
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.pointer.pointerInput
@@ -34,109 +39,13 @@ internal fun ScratchScreenV2() {
     var stages by remember { mutableIntStateOf(1) }
     val texts = remember { mutableStateListOf("", "", "") }
     var extras by remember { mutableStateOf(false) }
-    val secretGroups = remember {
-        listOf(
-            listOf(
-                "في سر صغير جوايا بيفكرني بيك كل ما اليوم يهدى.",
-                "السر إني بستنى أول فرصة نتكلم فيها لوحدنا.",
-                "اختار: أسألك سؤال مش متوقع ولا أقولك اعتراف من عندي؟"
-            ),
-            listOf(
-                "في حاجة في ضحكتك بتخليني أنسى كنت هقول إيه.",
-                "كل مرة بتضحك فيها بحس إن القعدة بقت أخف.",
-                "تفتكر أول مرة ضحكنا سوا كانت إمتى؟"
-            ),
-            listOf(
-                "أوقات النظرة بتقول اللي الكلام مش بيعرف يقوله.",
-                "أنا فاكر نظرة منك فضلت في بالي فترة طويلة.",
-                "اسألني كانت إمتى، ولو خمنت صح هقولك التفاصيل."
-            ),
-            listOf(
-                "في رسالة قديمة بدأت أكتبها ليك ومكملتهاش.",
-                "وقتها افتكرت إن الكلام ممكن يبان جريء زيادة.",
-                "تختار أقولك أول سطر ولا أخليها مفاجأة؟"
-            ),
-            listOf(
-                "أنا بحب اللحظات اللي بنكون فيها على طبيعتنا.",
-                "أكتر حاجة بتشدني لما بتتكلم بحماس عن حاجة بتحبها.",
-                "قولي عن حاجة نفسك نجربها سوا من غير ترتيب."
-            ),
-            listOf(
-                "لو سهرتنا فيلم، هيبقى له مشهد محدش غيرنا فاهمه.",
-                "أنا عندي عنوان للمشهد ده بس مش هقوله بسهولة.",
-                "قول عنوانك الأول، وبعدها هنشوف مين فينا أشطر."
-            ),
-            listOf(
-                "في سؤال نفسي أسألهولك من زمان.",
-                "كل مرة بلاقي فرصة بتراجع في آخر ثانية.",
-                "جاهز لسؤال صريح ولا نختار سؤال أخف؟"
-            ),
-            listOf(
-                "ممكن أبقى ساكت وبفكر في كلام كتير نفسي أقوله.",
-                "النهارده قررت إن سؤال واحد كفاية يبدأ الحكاية.",
-                "إيه أكتر حاجة بتحس إنها بتقربنا من بعض؟"
-            ),
-            listOf(
-                "أحيانًا مفاجأة صغيرة بتغير شكل اليوم كله.",
-                "أنا مخبي فكرة لوقت يكون مناسب لينا إحنا الاتنين.",
-                "تحب المفاجأة تبقى رسالة ولا خروجة؟"
-            ),
-            listOf(
-                "في حاجة اتغيرت فيا من ساعة ما عرفتك.",
-                "بقيت باخد بالي من تفاصيل صغيرة كنت بطنشها.",
-                "اسألني عن أول تفصيلة لاحظتها فيك."
-            ),
-            listOf(
-                "نفسي نرجع لأول خروجة كأنها بتحصل تاني.",
-                "المرة دي هقول حاجة سكت عنها وقتها.",
-                "لو رجع بيك الزمن، كنت هتغير إيه في اليوم ده؟"
-            ),
-            listOf(
-                "كل واحد فينا عنده لحظة شجاعة مش بينساها.",
-                "لحظتي كانت لما قررت أقول رأيي بصراحة.",
-                "احكي لي عن مرة قلت الحقيقة رغم إنك كنت متردد."
-            ),
-            listOf(
-                "في غزل بيضحك، وفي غزل بيفضل في الذاكرة.",
-                "أنا عندي جملة مخصوص ليك بس هسيبك تخمن بدايتها.",
-                "تختار تبدأ بـ«وحشتني» ولا بـ«كان نفسي»؟"
-            ),
-            listOf(
-                "في مكان بسيط نفسي نروحه من غير خطة.",
-                "مش مهم المكان قد ما يهم إننا نضحك ونتكلم.",
-                "اختار معايا: قهوة هادية ولا تمشية بالليل؟"
-            ),
-            listOf(
-                "أكتر حاجة غامضة مش لازم تبقى سر كبير.",
-                "ساعات كلمة عادية بتبقى لها معنى خاص بين اتنين.",
-                "نخترع كلمة تخصنا ونشوف هنستخدمها إمتى؟"
-            ),
-            listOf(
-                "أنا فاكر مجاملة قلتها لي يمكن إنت نسيتها.",
-                "كانت جاية في وقت محتاج أسمعها فيه فعلًا.",
-                "تحب أقولك كانت إيه ولا تحاول تفتكر؟"
-            ),
-            listOf(
-                "في حكاية صغيرة مش مرتبطة بمكان ولا بتاريخ.",
-                "الحكاية كلها بدأت بابتسامة مفاجئة منك.",
-                "لو قلتلك أول كلمة منها، هتعرف بقيتها؟"
-            ),
-            listOf(
-                "الليلة فيها مساحة لكلام مختلف شوية.",
-                "مش لازم كل سؤال يتجاوب، بس ممكن يفتح حكاية.",
-                "تختار سؤال جريء ولا اعتراف بسيط؟"
-            ),
-            listOf(
-                "أنا بحب إننا نعرف نضحك حتى وإحنا بنتكلم بجد.",
-                "في موقف واحد كل ما بفتكره ببتسم من غير سبب.",
-                "خمن الموقف، وليك ثلاث محاولات بس."
-            ),
-            listOf(
-                "آخر سر في الكارت ده مرتبط بحاجه هتفضل بيننا.",
-                "هو وعد صغير إننا نقول اللي جوانا من غير خوف.",
-                "تحب نختم بجملة تقدير ولا بأمنية للي جاي؟"
-            )
-        )
+    var suggestionTier by remember { mutableStateOf(SecretTier.SOFT) }
+    var selectedStory by remember { mutableStateOf<SecretStory?>(null) }
+    var handoff by remember { mutableStateOf(false) }
+    var viewerReady by remember { mutableStateOf(false) }
+    fun applyPreset(story: SecretStory, count: Int) {
+        val chosen = SecretStoryCatalog.scratchLayers(story, count)
+        texts.indices.forEach { i -> texts[i] = chosen.getOrElse(i) { "" } }
     }
     var photoId by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf(true) }
@@ -155,6 +64,7 @@ internal fun ScratchScreenV2() {
     }
     fun close() {
         editing = true; stage = 0; stageRevealed = false; reset++; expiresAt = 0
+        handoff = false; viewerReady = false; selectedStory = null; error = ""
         texts.indices.forEach { texts[it] = "" } // Destroy private session messages on close/expiry.
         vault.delete(photoId); photoId = null
     }
@@ -174,24 +84,60 @@ internal fun ScratchScreenV2() {
                 accent = Color(0xFF93604B), motif = "scratch"
             )
             SirrSection("01", "حضّروا المفاجأة", "اكتبوا سر أو اختاروا سر جاهز")
+            Text("مستوى الأسرار الجاهزة", style = MaterialTheme.typography.titleMedium)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                SecretTier.entries.forEach { tier ->
+                    FilterChip(
+                        selected = suggestionTier == tier,
+                        onClick = {
+                            if (selectedStory != null && suggestionTier != tier) {
+                                texts.indices.forEach { texts[it] = "" }
+                            }
+                            suggestionTier = tier
+                            selectedStory = null
+                        },
+                        label = { Text(tier.arabic) }
+                    )
+                }
+            }
+            if (suggestionTier == SecretTier.ADULT) Text(
+                "المستوى الحميم فيه كلام مباشر عن الجنس والرغبة، للكبار 18+ فقط. مفيش نشاط مطلوب تنفيذه.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             OutlinedButton(
                 onClick = {
-                    val group = secretGroups.random()
-                    repeat(3) { i -> texts[i] = group[i] }
-                    // Keep the user's selected layer count (1, 2 or 3).
+                    val options = SecretStoryCatalog.scratch.filter { it.tier == suggestionTier }
+                    val candidates = options.filterNot { it.id == selectedStory?.id }
+                    val chosen = (if (candidates.isEmpty()) options else candidates).random()
+                    selectedStory = chosen
+                    applyPreset(chosen, stages)
+                    error = ""
                 },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("✦  اختارلي سر جاهز") }
+            ) { Text("✦  اختارلي حكاية سرية جاهزة") }
             SirrSection("02", "كام غطا هيتكشف؟", "من مفاجأة واحدة لتلات مفاجآت ورا بعض")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 (1..3).forEach { n ->
-                    SirrOption("$n", stages == n, onClick = { stages = n },
+                    SirrOption("$n", stages == n, onClick = {
+                        stages = n
+                        selectedStory?.let { applyPreset(it, n) }
+                    },
                         modifier = Modifier.weight(1f),
                         subtitle = if (n == 1) "سر واحد" else "$n أسرار")
                 }
             }
             repeat(stages) { i ->
-                OutlinedTextField(texts[i], { texts[i] = it.take(280) }, label = { Text("السر المستخبي ${i+1}") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    texts[i],
+                    {
+                        texts[i] = it.take(280)
+                        selectedStory = null
+                    },
+                    label = { Text("السر المستخبي ${i+1}") },
+                    minLines = 2,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             OutlinedButton(onClick={extras=!extras},modifier=Modifier.fillMaxWidth()){
                 Text(if(extras)"اقفل الاختيارات الإضافية" else "ممكن تزود صورة أو تغيّر وقت العرض")
@@ -199,7 +145,7 @@ internal fun ScratchScreenV2() {
             if(extras) {
                 OutlinedButton(onClick={pickPhoto.launch("image/*")}){Text("حط صورة في الآخر")}
                 if(photoId!=null)TextButton(onClick={vault.delete(photoId);photoId=null}){Text("امسح الصورة")}
-                Text("المفاجأة تفضل مفتوحة قد إيه؟")
+                Text("حد عرض الجلسة وهي مفتوحة على الموبايل (لا يُستعاد السر بعد الخروج):")
                 Row(horizontalArrangement=Arrangement.spacedBy(7.dp)){
                     listOf(3,6,24).forEach{hours->
                         FilterChip(ttlHours==hours,onClick={ttlHours=hours},label={Text("$hours ساعات")})
@@ -211,13 +157,35 @@ internal fun ScratchScreenV2() {
                 text = "خبّي المفاجأة  ✦",
                 enabled = texts.take(stages).all { it.isNotBlank() },
                 onClick = {
-                    editing = false; stage = 0; stageRevealed = false; reset++
+                    editing = false; handoff = true; viewerReady = false
+                    stage = 0; stageRevealed = false; reset++
                     expiresAt = System.currentTimeMillis() + ttlHours * 3_600_000L
                 },
                 explanation = if (texts.take(stages).any { it.isBlank() })
                     "كمّل الكلام المستخبي علشان تبدأ"
                 else "جاهزة… سلّم الموبايل للشخص اللي هيكشفها"
             )
+        } else if (handoff) {
+            SirrIntro(
+                overline = "المفاجأة مقفولة",
+                title = "جاهز تكشف السر؟",
+                description = "سلّم الموبايل للشخص المقصود. الحكاية ممكن تكون شخصية أو حميمة، ومن حقه يقفل من غير ما يكشفها.",
+                accent = Color(0xFF93604B),
+                motif = "scratch"
+            )
+            SirrConsent(
+                name = "أنا جاهز أشوف السر، وعارف إني أقدر أوقف في أي وقت",
+                checked = viewerReady,
+                onChange = { viewerReady = it }
+            )
+            SirrAction(
+                text = "ابدأ كشف أول كارت",
+                enabled = viewerReady,
+                onClick = { handoff = false }
+            )
+            OutlinedButton(onClick = { close() }, modifier = Modifier.fillMaxWidth()) {
+                Text("مش حابب أشوفها — امسح الأسرار")
+            }
         } else {
             SirrSection("0${stage + 1}", "الغطا ${stage + 1} من $stages",
                 if (stageRevealed) "المفاجأة اتكشفت!" else
@@ -245,7 +213,7 @@ internal fun ScratchScreenV2() {
                 }
             }
             OutlinedButton(onClick = { stageRevealed = false; reset++ }, modifier = Modifier.fillMaxWidth()) { Text("خبّيها تاني") }
-            TextButton(onClick = { close() }) { Text("اقفل وامسح الصورة") }
+            TextButton(onClick = { close() }) { Text("اقفل وامسح الأسرار والصورة") }
         }
     }
 }
@@ -254,17 +222,18 @@ internal fun ScratchScreenV2() {
 internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
     val effects = rememberGameEffects()
     val brushRadiusPx = with(LocalDensity.current) { 17.dp.toPx() }
-    // Nested observable lists append in O(1), avoiding quadratic copy-on-each-pointer-event.
-    val strokes = remember { mutableStateListOf<androidx.compose.runtime.snapshots.SnapshotStateList<Offset>>() }
-    var savedPoints by remember { mutableIntStateOf(0) }
-    val cells = remember { BooleanArray(192) }
+    // A bounded mask uses constant memory no matter how long the user scratches.
+    // Coverage and the visible erased cells share the same 32 x 24 mask.
+    val columns = 32
+    val rows = 24
+    val cells = remember { BooleanArray(columns * rows) }
     var coveredCells by remember { mutableIntStateOf(0) }
     var dimensions by remember { mutableStateOf(IntSize.Zero) }
     var alreadyRevealed by remember { mutableStateOf(false) }
-    // Coverage measures the same brush-sized trail that is visibly cleared.
-    // 16×12 cells are sampled along the line and inside the brush radius.
-    val coverage = (coveredCells / 192f).coerceIn(0f, 1f)
-    val revealed = coverage >= .58f
+    var revealWithoutTouch by remember { mutableStateOf(false) }
+    val coverage = coveredCells / (columns * rows).toFloat()
+    val revealed = revealWithoutTouch || coverage >= 0.58f
+
     LaunchedEffect(revealed) {
         if (revealed && !alreadyRevealed) {
             alreadyRevealed = true
@@ -272,102 +241,129 @@ internal fun ScratchPanel(hiddenText: String, onRevealed: () -> Unit) {
             onRevealed()
         }
     }
+
     fun mark(center: Offset) {
+        if (revealed) return
         val w = dimensions.width.toFloat()
         val h = dimensions.height.toFloat()
-        if (w < 1f || h < 1f) return
-        // The brush width and hit testing both scale in density-independent
-        // physical pixels; clamp the edge so swiping outside has no effect.
-        if (center.x < 0f || center.y < 0f || center.x > w || center.y > h) return
+        if (w < 1f || h < 1f || center.x < 0f || center.y < 0f ||
+            center.x > w || center.y > h) return
+        val cellWidth = w / columns
+        val cellHeight = h / rows
         val radius = brushRadiusPx
-        val startX = ((center.x - radius) / w * 16).toInt().coerceIn(0, 15)
-        val endX = ((center.x + radius) / w * 16).toInt().coerceIn(0, 15)
-        val startY = ((center.y - radius) / h * 12).toInt().coerceIn(0, 11)
-        val endY = ((center.y + radius) / h * 12).toInt().coerceIn(0, 11)
+        val startX = ((center.x - radius) / cellWidth).toInt().coerceIn(0, columns - 1)
+        val endX = ((center.x + radius) / cellWidth).toInt().coerceIn(0, columns - 1)
+        val startY = ((center.y - radius) / cellHeight).toInt().coerceIn(0, rows - 1)
+        val endY = ((center.y + radius) / cellHeight).toInt().coerceIn(0, rows - 1)
         for (y in startY..endY) for (x in startX..endX) {
-            val midX = (x + .5f) * w / 16f
-            val midY = (y + .5f) * h / 12f
-            val dx = midX - center.x
-            val dy = midY - center.y
-            val index = y * 16 + x
+            val dx = (x + 0.5f) * cellWidth - center.x
+            val dy = (y + 0.5f) * cellHeight - center.y
+            val index = y * columns + x
             if (dx * dx + dy * dy <= radius * radius && !cells[index]) {
                 cells[index] = true
                 coveredCells++
             }
         }
     }
-    fun begin(p: Offset) {
-        if (savedPoints < 2400) { strokes.add(mutableStateListOf(p)); savedPoints++ }
-        mark(p)
-    }
-    fun append(p: Offset) {
-        val previous = strokes.lastOrNull()?.lastOrNull()
-        if (previous == null) { begin(p); return }
-        val dx = p.x - previous.x
-        val dy = p.y - previous.y
-        val distance = hypot(dx, dy)
-        if (distance < 1f) return
-        val count = ceil(distance / 7f).toInt().coerceIn(1, 180)
-        for (i in 1..count) {
-            val t = i.toFloat() / count
-            mark(Offset(previous.x + dx * t, previous.y + dy * t))
-        }
-        if (savedPoints < 2400 && strokes.isNotEmpty()) {
-            strokes.last().add(p)
-            savedPoints++
+
+    fun markBetween(start: Offset, end: Offset) {
+        val distance = hypot(end.x - start.x, end.y - start.y)
+        val steps = ceil(distance / 7f).toInt().coerceIn(1, 256)
+        for (i in 0..steps) {
+            val ratio = i.toFloat() / steps
+            mark(Offset(
+                start.x + (end.x - start.x) * ratio,
+                start.y + (end.y - start.y) * ratio
+            ))
         }
     }
-    Text(if(revealed) "السر بان! ✦" else "امسح بإيدك لحد ما يظهر السر — ${(coverage * 100).toInt()}٪",
-        color=MaterialTheme.colorScheme.onSurfaceVariant)
-    Box(Modifier.fillMaxWidth().height(265.dp).clip(RoundedCornerShape(27.dp)),contentAlignment=Alignment.Center) {
-        Surface(color=Color(0xFF321B2B),modifier=Modifier.fillMaxSize()) {
+
+    Text(
+        if (revealed) "السر اتكشف!" else
+            "امسح على الغطا — ${(coverage * 100).toInt()}٪ اتكشف",
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Box(
+        Modifier.fillMaxWidth().height(265.dp).clip(RoundedCornerShape(27.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(color = Color(0xFF321B2B), modifier = Modifier.fillMaxSize()) {
             Box(Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
-                Text(hiddenText, color = Color.White, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge)
-            }
-        }
-        if (!revealed) Canvas(Modifier.fillMaxSize()
-            .onSizeChanged { dimensions = it }
-            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .pointerInput(dimensions) {
-                detectDragGestures(
-                    onDragStart = { begin(it) },
-                    onDrag = { change, _ ->
-                        append(change.position)
-                        change.consume()
-                    }
+                // Prevent TalkBack and accessibility services from reading covered secrets.
+                Text(
+                    hiddenText,
+                    modifier = if (revealed) Modifier else Modifier.clearAndSetSemantics {},
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
-            .pointerInput(dimensions) { detectTapGestures { begin(it) } }
+        }
+        if (!revealed) Canvas(
+            Modifier.fillMaxSize()
+                .onSizeChanged { dimensions = it }
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .pointerInput(dimensions) {
+                    var previous: Offset? = null
+                    detectDragGestures(
+                        onDragStart = {
+                            previous = it
+                            mark(it)
+                        },
+                        onDrag = { change, _ ->
+                            val old = previous
+                            if (old == null) mark(change.position)
+                            else markBetween(old, change.position)
+                            previous = change.position
+                            change.consume()
+                        },
+                        onDragEnd = { previous = null },
+                        onDragCancel = { previous = null }
+                    )
+                }
+                .pointerInput(dimensions) { detectTapGestures { mark(it) } }
         ) {
-            drawRect(Brush.linearGradient(listOf(Color(0xFFDCB98D),Color(0xFF8C5169),Color(0xFF50283A))))
-            drawCircle(Color.White.copy(alpha=.1f),radius=size.minDimension*.3f,
-                center=Offset(size.width*.83f,size.height*.27f))
+            drawRect(Brush.linearGradient(
+                listOf(Color(0xFFDCB98D), Color(0xFF8C5169), Color(0xFF50283A))
+            ))
+            drawCircle(
+                Color.White.copy(alpha = 0.1f),
+                radius = size.minDimension * 0.3f,
+                center = Offset(size.width * 0.83f, size.height * 0.27f)
+            )
             for (i in 0..19) {
-                val x = (i*41 % 97) / 97f * size.width
-                val y = (i*73 % 97) / 97f * size.height
+                val x = (i * 41 % 97) / 97f * size.width
+                val y = (i * 73 % 97) / 97f * size.height
                 drawCircle(
-                    color = Color(0xFFFFEDCF).copy(alpha = if(i%2==0) .38f else .2f),
-                    radius = (if(i%3==0) 2.3f else 1.3f).dp.toPx(),
+                    color = Color(0xFFFFEDCF).copy(alpha = if (i % 2 == 0) 0.38f else 0.2f),
+                    radius = (if (i % 3 == 0) 2.3f else 1.3f).dp.toPx(),
                     center = Offset(x, y)
                 )
             }
-            // Keep the visual clearing as connected lines rather than isolated dots.
-            strokes.forEach { stroke ->
-                if (stroke.isNotEmpty()) {
-                    val path = Path().apply {
-                        moveTo(stroke.first().x, stroke.first().y)
-                        if (stroke.size == 1) {
-                            lineTo(stroke.first().x + .1f, stroke.first().y)
-                        } else {
-                            for (i in 1 until stroke.size) lineTo(stroke[i].x, stroke[i].y)
-                        }
-                    }
-                    drawPath(path, color = Color.Transparent, style = Stroke(
-                        width = 34.dp.toPx(), cap = StrokeCap.Round
-                    ), blendMode = BlendMode.Clear)
-                }
+            val cellWidth = size.width / columns
+            val cellHeight = size.height / rows
+            cells.forEachIndexed { i, erased ->
+                if (erased) drawRect(
+                    color = Color.Transparent,
+                    topLeft = Offset(
+                        (i % columns) * cellWidth,
+                        (i / columns) * cellHeight
+                    ),
+                    size = Size(cellWidth + 0.5f, cellHeight + 0.5f),
+                    blendMode = BlendMode.Clear
+                )
             }
         }
     }
-    if (revealed) Text("بان السر!", color = MaterialTheme.colorScheme.primary)
+    if (!revealed) {
+        Text(
+            "مش لازم تقدر تستخدم السحب علشان تعرف السر.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall
+        )
+        OutlinedButton(
+            onClick = { revealWithoutTouch = true },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("اظهر السر بدون كشط") }
+    }
 }
