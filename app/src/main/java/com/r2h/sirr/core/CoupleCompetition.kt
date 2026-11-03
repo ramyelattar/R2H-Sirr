@@ -35,6 +35,7 @@ data class CoupleCompetition(
     val reward: String,
     val sessionMinutes: Int,
     val startedAtMillis: Long,
+    val tieChallenge: String = "كل واحد يقول لشريكه 3 حاجات جديدة بيقدّرها فيه، من غير ما يقاطع التاني.",
     val outcomes: List<CoupleOutcome> = emptyList(),
     val settledEarly: Boolean = false,
     val tieBreak: CoupleTieBreak? = null,
@@ -42,6 +43,7 @@ data class CoupleCompetition(
 ) {
     init {
         require(reward.trim().length in 1..200)
+        require(tieChallenge.trim().length in 6..500)
         require(sessionMinutes in listOf(0, 15, 30, 60))
         require(startedAtMillis > 0L)
         require(outcomes.size <= 18)
