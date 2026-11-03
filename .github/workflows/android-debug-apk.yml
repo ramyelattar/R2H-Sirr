@@ -1,0 +1,60 @@
+name: Android debug APK for testing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-debug-apk.yml'
+      - 'app/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - 'gradle/wrapper/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug-apk:
+    name: Build Android debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android 36 SDK
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+      # Repo contains gradle/wrapper.properties but no gradlew script or wrapper JAR.
+      # Install the pinned Gradle version explicitly rather than inventing a wrapper.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Assemble the test APK
+        shell: bash
+        run: |
+          gradle :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee android-debug-build.log
+      - name: Run unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle :app:testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee android-unit-tests.log
+      - name: Upload unsigned debug APK and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r2h-play-debug-test-apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            android-debug-build.log
+            android-unit-tests.log
+            app/build/reports/tests/testDebugUnitTest/**
+          if-no-files-found: warn
+          retention-days: 14
