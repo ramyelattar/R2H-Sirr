@@ -24,6 +24,7 @@ internal fun QuizScreenV2() {
     var session by remember(vault) { mutableStateOf(QuizSessionStore.load(vault)) }
     var topic by remember { mutableIntStateOf(-1) }
     var paired by remember { mutableStateOf(false) }
+    var guessPartner by remember { mutableStateOf(false) }
     var count by remember { mutableIntStateOf(8) }
     var acceptedContent by remember { mutableStateOf(false) }
     var acceptedPartner by remember { mutableStateOf(false) }
@@ -53,6 +54,7 @@ internal fun QuizScreenV2() {
                 session = null
                 topic = -1
                 paired = false
+                guessPartner = false
                 count = 8
                 acceptedContent = false
                 acceptedPartner = false
@@ -99,6 +101,7 @@ internal fun QuizScreenV2() {
                     ) {
                         topic = index
                         paired = false
+                        guessPartner = false
                         count = 8
                         acceptedContent = false
                         error = ""
@@ -113,12 +116,28 @@ internal fun QuizScreenV2() {
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     SirrOption("أنا لوحدي", !paired, onClick = {
-                        paired = false; acceptedContent = false
+                        paired = false; guessPartner = false; acceptedContent = false
                     }, modifier = Modifier.weight(1f))
-                    SirrOption("إحنا الاتنين", paired, onClick = {
-                        paired = true; acceptedContent = false
+                    SirrOption("نقارن إجاباتنا", paired && !guessPartner, onClick = {
+                        paired = true; guessPartner = false; acceptedContent = false
                     }, modifier = Modifier.weight(1f))
                 }
+                SirrOption(
+                    title = "اتوقع إجابات شريكي",
+                    selected = paired && guessPartner,
+                    onClick = { paired = true; guessPartner = true; acceptedContent = false },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    if (paired && guessPartner)
+                        "الأول هتجاوب عن نفسك، وبعدها تتوقع إجابات شريكك. شريكك يجاوب من غير ما يشوف توقعاتك. النتيجة بتقيس عدد التوقعات المطابقة بس."
+                    else if (paired)
+                        "هتجاوبوا عن نفس الأسئلة كل واحد لوحده، ونشوف مواضع التشابه من غير درجات توافق."
+                    else
+                        "هتجاوب عن نفسك وتراجع إجاباتك في الآخر. كل إجابة اختيارية.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Text(
                     "الأسئلة شخصية وممكن تكون محرجة. لكل واحد حق التخطي أو التوقف في أي وقت. المقارنة مش اختبار نفسي ولا مقياس للتوافق.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -146,7 +165,8 @@ internal fun QuizScreenV2() {
                     onClick = {
                         persist(QuizSession.start(
                             packId = "quiz_%02d".format(java.util.Locale.US, topic + 1),
-                            quiz = packs[topic], count = count, paired = paired
+                            quiz = packs[topic], count = count, paired = paired,
+                            guessPartner = guessPartner
                         ))
                     }
                 )
@@ -156,15 +176,21 @@ internal fun QuizScreenV2() {
             }
         } else {
             when (run.stage) {
-                QuizStage.FIRST, QuizStage.SECOND -> {
+                QuizStage.FIRST, QuizStage.PREDICT, QuizStage.SECOND -> {
                     val isFirst = run.stage == QuizStage.FIRST
+                    val predicting = run.stage == QuizStage.PREDICT
                     val question = run.currentQuestion
                     SirrSection(
                         "${run.position + 1}", run.packName,
-                        "كل سؤال اختياري. اللي مش مناسب ممكن يتعدّى من غير إجابة."
+                        if (predicting) "التوقعات اختيارية ومش هتظهر لشريكك قبل ما يجاوب."
+                        else "كل سؤال اختياري. اللي مش مناسب ممكن يتعدّى من غير إجابة."
                     )
                     Text(
-                        if (isFirst) "دور الشخص الأول" else "دور الشخص التاني",
+                        when {
+                            predicting -> "تفتكر شريكك هيختار إيه؟"
+                            isFirst -> "دور الشخص الأول"
+                            else -> "دور الشخص التاني"
+                        },
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -187,7 +213,9 @@ internal fun QuizScreenV2() {
                                 fontWeight = FontWeight.SemiBold)
                             question.choices.forEachIndexed { i, choice ->
                                 Surface(
-                                    onClick = { persist(run.answer(i)) },
+                                    onClick = {
+                                        persist(if (predicting) run.predict(i) else run.answer(i))
+                                    },
                                     color = Color.Transparent,
                                     shape = RoundedCornerShape(17.dp),
                                     modifier = Modifier.fillMaxWidth()
@@ -209,9 +237,11 @@ internal fun QuizScreenV2() {
                         }
                     }
                     OutlinedButton(
-                        onClick = { persist(run.answer(-1)) },
+                        onClick = {
+                            persist(if (predicting) run.predict(-1) else run.answer(-1))
+                        },
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text("مش حابب أجاوب؟ عدّي السؤال") }
+                    ) { Text(if (predicting) "مش متأكد؟ عدّي التوقع" else "مش حابب أجاوب؟ عدّي السؤال") }
                     if (run.position > 0) {
                         TextButton(
                             onClick = { persist(run.back()) },
@@ -219,7 +249,9 @@ internal fun QuizScreenV2() {
                         ) { Text("ارجع للسؤال اللي فات وغيّر إجابتي") }
                     }
                     Text(
-                        "مفيش إجابة صح أو غلط. الرجوع بيخص إجاباتك في دورك بس.",
+                        if (predicting)
+                            "خمن بهدوء. الشريك مش مطالب يختار نفس اللي توقعته."
+                        else "مفيش إجابة صح أو غلط. الرجوع بيخص إجاباتك في دورك بس.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -229,7 +261,9 @@ internal fun QuizScreenV2() {
                     SirrIntro(
                         overline = "تبادل الأدوار",
                         title = "الدور على الشخص التاني",
-                        description = "إجابات الشخص الأول متخزنة مشفّرة ومش هتظهر هنا. سلّمه الموبايل لما يكون جاهز.",
+                        description = if (run.guessPartner)
+                            "إجابات الشخص الأول وتوقعاته مش هتظهر هنا. سلّم الموبايل للشخص التاني وهو يختار بنفسه."
+                        else "إجابات الشخص الأول متخزنة مشفّرة ومش هتظهر هنا. سلّمه الموبايل لما يكون جاهز.",
                         accent = Color(0xFF64538A),
                         motif = "quiz"
                     )
@@ -265,15 +299,27 @@ internal fun QuizScreenV2() {
                     if (run.paired) {
                         Text("الشخص التاني أجاب عن ${run.answersB.count { it >= 0 }} من ${run.questions.size}",
                             style = MaterialTheme.typography.bodyMedium)
-                        val comparison = run.comparison()
-                        Text(
-                            if (comparison == null) "مفيش أسئلة مشتركة اتجاوبت علشان نقارن"
-                            else "اتفقتوا في ${comparison.agreement} من ${comparison.questions} سؤال اتجاوب من الاتنين",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text("التخطي خارج المقارنة، والنتيجة وصفية بس.",
-                            style = MaterialTheme.typography.bodySmall)
+                        if (run.guessPartner) {
+                            val prediction = run.predictionSummary()
+                            Text(
+                                if (prediction == null) "مفيش توقعات اتجاوب عليها الطرف التاني علشان نقارن"
+                                else "توقعت صح في ${prediction.matched} من ${prediction.comparable} توقع قابل للمقارنة",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text("التوقع المتخطّى أو السؤال اللي شريكك عدّاه مش بيتحسب. ده لعب وتخمين، مش تقييم للعلاقة.",
+                                style = MaterialTheme.typography.bodySmall)
+                        } else {
+                            val comparison = run.comparison()
+                            Text(
+                                if (comparison == null) "مفيش أسئلة مشتركة اتجاوبت علشان نقارن"
+                                else "اتفقتوا في ${comparison.agreement} من ${comparison.questions} سؤال اتجاوب من الاتنين",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text("التخطي خارج المقارنة، والنتيجة وصفية بس.",
+                                style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                     LinearProgressIndicator(
                         progress = { (run.revealPosition + 1).toFloat() / run.questions.size },
@@ -303,15 +349,33 @@ internal fun QuizScreenV2() {
                                     else "الشخص التاني عدّى السؤال ده",
                                     style = MaterialTheme.typography.bodyLarge
                                 )
-                                Text(
-                                    when {
-                                        a < 0 || b < 0 -> "السؤال ده مش داخل في المقارنة علشان فيه تخطي."
-                                        a == b -> "نفس الإجابة… افتحوا الكلام فيها!"
-                                        else -> "إجابتين مختلفتين… اسألوا بعض ليه."
-                                    },
-                                    color = MaterialTheme.colorScheme.primary,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                if (run.guessPartner) {
+                                    val guess = run.predictionsA[run.revealPosition]
+                                    Text(
+                                        if (guess >= 0) "توقع الشخص الأول: ${current.choices[guess]}"
+                                        else "الشخص الأول ما توقعش إجابة للسؤال ده",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        when {
+                                            guess < 0 || b < 0 -> "السؤال ده مش داخل في حساب التوقعات."
+                                            guess == b -> "التوقع طلع مطابق. اتكلموا عن السبب!"
+                                            else -> "التوقع كان مختلف. اسألوا بعض إيه اللي فاجأكم."
+                                        },
+                                        color = MaterialTheme.colorScheme.primary,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                } else {
+                                    Text(
+                                        when {
+                                            a < 0 || b < 0 -> "السؤال ده مش داخل في المقارنة علشان فيه تخطي."
+                                            a == b -> "نفس الاختيار… افتحوا الكلام فيه!"
+                                            else -> "اختيارين مختلفين… اسألوا بعض ليه."
+                                        },
+                                        color = MaterialTheme.colorScheme.primary,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                }
                             } else {
                                 Text(
                                     if (a >= 0) "تقدر تحكي ليه اخترت الإجابة دي لو حابب."
