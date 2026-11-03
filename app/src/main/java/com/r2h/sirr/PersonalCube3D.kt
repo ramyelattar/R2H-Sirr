@@ -47,7 +47,7 @@ internal fun PersonalCube3D(
     require(faces.size == 6 && visibleFace in 0..5)
     val faceTiles = faces.map { face ->
         val original = remember(face.imageId) {
-            vault.readPhoto(face.imageId)?.asAndroidBitmap()
+            vault.readPhotoThumbnail(face.imageId)?.asAndroidBitmap()
         }
         remember(face.text, face.imageId, metallic) {
             createFaceTile(face.text, original, metallic)
