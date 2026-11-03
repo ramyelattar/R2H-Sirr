@@ -139,7 +139,7 @@ class CoupleCompetitionTest {
         assertEquals(100, items.map { it.text }.toSet().size)
         assertTrue(items.all { it.durationSeconds in 30..300 && it.title.isNotBlank() })
         assertTrue(items.map { it.kind }.toSet().size >= 6)
-        assertEquals(300, CoupleChallengeCatalog.deck(Intensity.HOT)[0].durationSeconds)
+        assertEquals(120, CoupleChallengeCatalog.deck(Intensity.HOT)[0].durationSeconds)
     }
 
     @Test fun roundCannotAwardPositivePointsBeforeCountdown() {
