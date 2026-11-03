@@ -11,9 +11,21 @@ import org.json.JSONObject
  * Data is encrypted by the existing Android Keystore-backed LocalVault.
  * No quiz answers are copied into savedInstanceState or sent to a server.
  */
+/** Null session can mean empty or corrupt storage; callers must distinguish the two. */
+internal data class QuizRestore(
+    val session: QuizSession?,
+    val unreadable: Boolean
+)
+
 internal object QuizSessionStore {
     private const val KEY = "quiz-local-session-v1"
     private const val VERSION = 2
+
+    fun restore(vault: LocalVault): QuizRestore {
+        if (!vault.hasPrivate(KEY)) return QuizRestore(session = null, unreadable = false)
+        val stored = load(vault)
+        return QuizRestore(session = stored, unreadable = stored == null)
+    }
 
     fun save(vault: LocalVault, session: QuizSession) {
         val selected = JSONArray()
