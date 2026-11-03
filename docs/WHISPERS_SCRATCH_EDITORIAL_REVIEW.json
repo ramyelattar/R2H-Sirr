@@ -1,5 +1,5 @@
 {
-  "content_status": "DRAFT_OWNER_REVIEW_PENDING",
+  "content_status": "OWNER_APPROVED_AS_IS",
   "baseline_ref": "feat/quiz-v4-source-closeout-20261103",
   "original_whisper_blob_sha": "d4e120b144aae36a3603f24992fc1be0b307d842",
   "original_scratch_blob_sha": "ad096b0bbd2454bb7b9cc9ac9c623b4272e1e3ce",
@@ -620,5 +620,16 @@
       "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
     }
   ],
-  "note": "All 120 old lines remain in Git history and explicitly in this review file. None of these edits are owner-approved yet. Build and runtime testing have not been performed."
+  "note": "Owner explicitly approved the current 40-story canonical content. Source implementation and any future runtime, accessibility, audio, expiry and content delivery assertions remain unverified until actual tests. No owner-approved challenge v10 or quiz v4 content was changed.",
+  "owner_approval": {
+    "approved_on": "2026-11-03",
+    "approved_content": "content/whispers_scratch_stories_v1.json",
+    "approved_git_blob_sha": "fdceffe1210af47a33d86486780088436b424f0c",
+    "scope": "All current 20 Whispers and 20 Scratch stories, including all 120 lines, story IDs, stage order and tiers (6 SOFT / 7 FLIRT / 7 ADULT per feature), accepted without further edits.",
+    "further_copy_edits_require_new_approval": true,
+    "source_build_verified": false,
+    "tests_executed": false,
+    "runtime_approved": false,
+    "release_signoff": false
+  }
 }
