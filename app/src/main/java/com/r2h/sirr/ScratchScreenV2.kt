@@ -14,6 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import com.r2h.sirr.core.SecretStory
+import com.r2h.sirr.core.SecretStoryCatalog
+import com.r2h.sirr.core.SecretTier
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.pointer.pointerInput
@@ -34,109 +39,13 @@ internal fun ScratchScreenV2() {
     var stages by remember { mutableIntStateOf(1) }
     val texts = remember { mutableStateListOf("", "", "") }
     var extras by remember { mutableStateOf(false) }
-    val secretGroups = remember {
-        listOf(
-            listOf(
-                "في سر صغير جوايا بيفكرني بيك كل ما اليوم يهدى.",
-                "السر إني بستنى أول فرصة نتكلم فيها لوحدنا.",
-                "اختار: أسألك سؤال مش متوقع ولا أقولك اعتراف من عندي؟"
-            ),
-            listOf(
-                "في حاجة في ضحكتك بتخليني أنسى كنت هقول إيه.",
-                "كل مرة بتضحك فيها بحس إن القعدة بقت أخف.",
-                "تفتكر أول مرة ضحكنا سوا كانت إمتى؟"
-            ),
-            listOf(
-                "أوقات النظرة بتقول اللي الكلام مش بيعرف يقوله.",
-                "أنا فاكر نظرة منك فضلت في بالي فترة طويلة.",
-                "اسألني كانت إمتى، ولو خمنت صح هقولك التفاصيل."
-            ),
-            listOf(
-                "في رسالة قديمة بدأت أكتبها ليك ومكملتهاش.",
-                "وقتها افتكرت إن الكلام ممكن يبان جريء زيادة.",
-                "تختار أقولك أول سطر ولا أخليها مفاجأة؟"
-            ),
-            listOf(
-                "أنا بحب اللحظات اللي بنكون فيها على طبيعتنا.",
-                "أكتر حاجة بتشدني لما بتتكلم بحماس عن حاجة بتحبها.",
-                "قولي عن حاجة نفسك نجربها سوا من غير ترتيب."
-            ),
-            listOf(
-                "لو سهرتنا فيلم، هيبقى له مشهد محدش غيرنا فاهمه.",
-                "أنا عندي عنوان للمشهد ده بس مش هقوله بسهولة.",
-                "قول عنوانك الأول، وبعدها هنشوف مين فينا أشطر."
-            ),
-            listOf(
-                "في سؤال نفسي أسألهولك من زمان.",
-                "كل مرة بلاقي فرصة بتراجع في آخر ثانية.",
-                "جاهز لسؤال صريح ولا نختار سؤال أخف؟"
-            ),
-            listOf(
-                "ممكن أبقى ساكت وبفكر في كلام كتير نفسي أقوله.",
-                "النهارده قررت إن سؤال واحد كفاية يبدأ الحكاية.",
-                "إيه أكتر حاجة بتحس إنها بتقربنا من بعض؟"
-            ),
-            listOf(
-                "أحيانًا مفاجأة صغيرة بتغير شكل اليوم كله.",
-                "أنا مخبي فكرة لوقت يكون مناسب لينا إحنا الاتنين.",
-                "تحب المفاجأة تبقى رسالة ولا خروجة؟"
-            ),
-            listOf(
-                "في حاجة اتغيرت فيا من ساعة ما عرفتك.",
-                "بقيت باخد بالي من تفاصيل صغيرة كنت بطنشها.",
-                "اسألني عن أول تفصيلة لاحظتها فيك."
-            ),
-            listOf(
-                "نفسي نرجع لأول خروجة كأنها بتحصل تاني.",
-                "المرة دي هقول حاجة سكت عنها وقتها.",
-                "لو رجع بيك الزمن، كنت هتغير إيه في اليوم ده؟"
-            ),
-            listOf(
-                "كل واحد فينا عنده لحظة شجاعة مش بينساها.",
-                "لحظتي كانت لما قررت أقول رأيي بصراحة.",
-                "احكي لي عن مرة قلت الحقيقة رغم إنك كنت متردد."
-            ),
-            listOf(
-                "في غزل بيضحك، وفي غزل بيفضل في الذاكرة.",
-                "أنا عندي جملة مخصوص ليك بس هسيبك تخمن بدايتها.",
-                "تختار تبدأ بـ«وحشتني» ولا بـ«كان نفسي»؟"
-            ),
-            listOf(
-                "في مكان بسيط نفسي نروحه من غير خطة.",
-                "مش مهم المكان قد ما يهم إننا نضحك ونتكلم.",
-                "اختار معايا: قهوة هادية ولا تمشية بالليل؟"
-            ),
-            listOf(
-                "أكتر حاجة غامضة مش لازم تبقى سر كبير.",
-                "ساعات كلمة عادية بتبقى لها معنى خاص بين اتنين.",
-                "نخترع كلمة تخصنا ونشوف هنستخدمها إمتى؟"
-            ),
-            listOf(
-                "أنا فاكر مجاملة قلتها لي يمكن إنت نسيتها.",
-                "كانت جاية في وقت محتاج أسمعها فيه فعلًا.",
-                "تحب أقولك كانت إيه ولا تحاول تفتكر؟"
-            ),
-            listOf(
-                "في حكاية صغيرة مش مرتبطة بمكان ولا بتاريخ.",
-                "الحكاية كلها بدأت بابتسامة مفاجئة منك.",
-                "لو قلتلك أول كلمة منها، هتعرف بقيتها؟"
-            ),
-            listOf(
-                "الليلة فيها مساحة لكلام مختلف شوية.",
-                "مش لازم كل سؤال يتجاوب، بس ممكن يفتح حكاية.",
-                "تختار سؤال جريء ولا اعتراف بسيط؟"
-            ),
-            listOf(
-                "أنا بحب إننا نعرف نضحك حتى وإحنا بنتكلم بجد.",
-                "في موقف واحد كل ما بفتكره ببتسم من غير سبب.",
-                "خمن الموقف، وليك ثلاث محاولات بس."
-            ),
-            listOf(
-                "آخر سر في الكارت ده مرتبط بحاجه هتفضل بيننا.",
-                "هو وعد صغير إننا نقول اللي جوانا من غير خوف.",
-                "تحب نختم بجملة تقدير ولا بأمنية للي جاي؟"
-            )
-        )
+    var suggestionTier by remember { mutableStateOf(SecretTier.SOFT) }
+    var selectedStory by remember { mutableStateOf<SecretStory?>(null) }
+    var handoff by remember { mutableStateOf(false) }
+    var viewerReady by remember { mutableStateOf(false) }
+    fun applyPreset(story: SecretStory, count: Int) {
+        val chosen = SecretStoryCatalog.scratchLayers(story, count)
+        texts.indices.forEach { i -> texts[i] = chosen.getOrElse(i) { "" } }
     }
     var photoId by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf(true) }
@@ -155,6 +64,7 @@ internal fun ScratchScreenV2() {
     }
     fun close() {
         editing = true; stage = 0; stageRevealed = false; reset++; expiresAt = 0
+        handoff = false; viewerReady = false; selectedStory = null; error = ""
         texts.indices.forEach { texts[it] = "" } // Destroy private session messages on close/expiry.
         vault.delete(photoId); photoId = null
     }
@@ -174,24 +84,54 @@ internal fun ScratchScreenV2() {
                 accent = Color(0xFF93604B), motif = "scratch"
             )
             SirrSection("01", "حضّروا المفاجأة", "اكتبوا سر أو اختاروا سر جاهز")
+            Text("مستوى الأسرار الجاهزة", style = MaterialTheme.typography.titleMedium)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                SecretTier.entries.forEach { tier ->
+                    FilterChip(
+                        selected = suggestionTier == tier,
+                        onClick = { suggestionTier = tier; selectedStory = null },
+                        label = { Text(tier.arabic) }
+                    )
+                }
+            }
+            if (suggestionTier == SecretTier.ADULT) Text(
+                "المستوى الحميم فيه كلام مباشر عن الجنس والرغبة، للكبار 18+ فقط. مفيش نشاط مطلوب تنفيذه.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             OutlinedButton(
                 onClick = {
-                    val group = secretGroups.random()
-                    repeat(3) { i -> texts[i] = group[i] }
-                    // Keep the user's selected layer count (1, 2 or 3).
+                    val options = SecretStoryCatalog.scratch.filter { it.tier == suggestionTier }
+                    val candidates = options.filterNot { it.id == selectedStory?.id }
+                    val chosen = (if (candidates.isEmpty()) options else candidates).random()
+                    selectedStory = chosen
+                    applyPreset(chosen, stages)
+                    error = ""
                 },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("✦  اختارلي سر جاهز") }
+            ) { Text("✦  اختارلي حكاية سرية جاهزة") }
             SirrSection("02", "كام غطا هيتكشف؟", "من مفاجأة واحدة لتلات مفاجآت ورا بعض")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 (1..3).forEach { n ->
-                    SirrOption("$n", stages == n, onClick = { stages = n },
+                    SirrOption("$n", stages == n, onClick = {
+                        stages = n
+                        selectedStory?.let { applyPreset(it, n) }
+                    },
                         modifier = Modifier.weight(1f),
                         subtitle = if (n == 1) "سر واحد" else "$n أسرار")
                 }
             }
             repeat(stages) { i ->
-                OutlinedTextField(texts[i], { texts[i] = it.take(280) }, label = { Text("السر المستخبي ${i+1}") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    texts[i],
+                    {
+                        texts[i] = it.take(280)
+                        selectedStory = null
+                    },
+                    label = { Text("السر المستخبي ${i+1}") },
+                    minLines = 2,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             OutlinedButton(onClick={extras=!extras},modifier=Modifier.fillMaxWidth()){
                 Text(if(extras)"اقفل الاختيارات الإضافية" else "ممكن تزود صورة أو تغيّر وقت العرض")
@@ -199,7 +139,7 @@ internal fun ScratchScreenV2() {
             if(extras) {
                 OutlinedButton(onClick={pickPhoto.launch("image/*")}){Text("حط صورة في الآخر")}
                 if(photoId!=null)TextButton(onClick={vault.delete(photoId);photoId=null}){Text("امسح الصورة")}
-                Text("المفاجأة تفضل مفتوحة قد إيه؟")
+                Text("حد عرض الجلسة وهي مفتوحة على الموبايل (لا يُستعاد السر بعد الخروج):")
                 Row(horizontalArrangement=Arrangement.spacedBy(7.dp)){
                     listOf(3,6,24).forEach{hours->
                         FilterChip(ttlHours==hours,onClick={ttlHours=hours},label={Text("$hours ساعات")})
@@ -211,13 +151,35 @@ internal fun ScratchScreenV2() {
                 text = "خبّي المفاجأة  ✦",
                 enabled = texts.take(stages).all { it.isNotBlank() },
                 onClick = {
-                    editing = false; stage = 0; stageRevealed = false; reset++
+                    editing = false; handoff = true; viewerReady = false
+                    stage = 0; stageRevealed = false; reset++
                     expiresAt = System.currentTimeMillis() + ttlHours * 3_600_000L
                 },
                 explanation = if (texts.take(stages).any { it.isBlank() })
                     "كمّل الكلام المستخبي علشان تبدأ"
                 else "جاهزة… سلّم الموبايل للشخص اللي هيكشفها"
             )
+        } else if (handoff) {
+            SirrIntro(
+                overline = "المفاجأة مقفولة",
+                title = "جاهز تكشف السر؟",
+                description = "سلّم الموبايل للشخص المقصود. الحكاية ممكن تكون شخصية أو حميمة، ومن حقه يقفل من غير ما يكشفها.",
+                accent = Color(0xFF93604B),
+                motif = "scratch"
+            )
+            SirrConsent(
+                name = "أنا جاهز أشوف السر، وعارف إني أقدر أوقف في أي وقت",
+                checked = viewerReady,
+                onChange = { viewerReady = it }
+            )
+            SirrAction(
+                text = "ابدأ كشف أول كارت",
+                enabled = viewerReady,
+                onClick = { handoff = false }
+            )
+            OutlinedButton(onClick = { close() }, modifier = Modifier.fillMaxWidth()) {
+                Text("مش حابب أشوفها — امسح الأسرار")
+            }
         } else {
             SirrSection("0${stage + 1}", "الغطا ${stage + 1} من $stages",
                 if (stageRevealed) "المفاجأة اتكشفت!" else
@@ -245,7 +207,7 @@ internal fun ScratchScreenV2() {
                 }
             }
             OutlinedButton(onClick = { stageRevealed = false; reset++ }, modifier = Modifier.fillMaxWidth()) { Text("خبّيها تاني") }
-            TextButton(onClick = { close() }) { Text("اقفل وامسح الصورة") }
+            TextButton(onClick = { close() }) { Text("اقفل وامسح الأسرار والصورة") }
         }
     }
 }
