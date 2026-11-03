@@ -1,5 +1,7 @@
 package com.r2h.sirr
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.tween
@@ -65,8 +67,38 @@ internal fun ExperienceScreen(group: Boolean) {
     var customText by remember(group) { mutableStateOf(vault.readPrivate(storageName).orEmpty()) }
     var customStatus by remember { mutableStateOf("") }
     val customEntries = remember(customText) { customText.lineSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList() }
-    val customValid = customEntries.size <= 60 && customEntries.all { it.length in 6..200 } &&
+    val customValid = customEntries.size <= 60 && customEntries.all { it.length in 6..500 } &&
         customEntries.distinct().size == customEntries.size
+
+    val importChallenges = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use {
+                    it.readText()
+                } ?: error("Cannot read text file")
+            }.onSuccess { imported ->
+                if (imported.length > 30_000) {
+                    customStatus = "الملف كبير جدًا — الحد 30 ألف حرف"
+                } else {
+                    customText = imported
+                    resetStartConsents()
+                    customStatus = "تم استيراد التحديات. راجعها قبل الحفظ."
+                }
+            }.onFailure { customStatus = "تعذر استيراد الملف. اختار ملف TXT بصيغة UTF-8." }
+        }
+    }
+    val exportChallenges = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openOutputStream(uri, "wt")?.bufferedWriter(Charsets.UTF_8)?.use {
+                    it.write(customText)
+                } ?: error("Cannot write text file")
+            }.onSuccess { customStatus = "تم تصدير التحديات للملف اللي اخترته" }
+                .onFailure { customStatus = "تعذر تصدير التحديات" }
+        }
+    }
 
     Page(
         if (group) "اللّمة ليها حكاية" else "بينك وبين اللي معاك",
@@ -140,13 +172,23 @@ internal fun ExperienceScreen(group: Boolean) {
                 }
                 if (intensity == Intensity.CUSTOM) {
                     OutlinedTextField(
-                        value = customText, onValueChange = { customText = it.take(12_000); resetStartConsents() },
+                        value = customText, onValueChange = { customText = it.take(30_000); resetStartConsents() },
                         modifier = Modifier.fillMaxWidth(), minLines = 4, maxLines = 8,
                         label = { Text("كل تحدي في سطر") }
                     )
-                    Text("${customEntries.size} تحدي — من 6 لـ 200 حرف لكل واحد",
+                    Text("${customEntries.size} تحدي — من 6 لـ 500 حرف لكل واحد",
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (!customValid) Text("في تحديات متكررة أو أطول من المسموح", color = MaterialTheme.colorScheme.error)
+                    Text("كل سطر تحدي مستقل. لو عدد تحدياتك أقل من الجولات، الباقي بيتكمل من البنك الجاهز.")
+                    OutlinedButton(
+                        onClick = { importChallenges.launch(arrayOf("text/plain", "text/*")) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("استورد تحدياتي من ملف TXT") }
+                    OutlinedButton(
+                        enabled = customEntries.isNotEmpty(),
+                        onClick = { exportChallenges.launch("R2H-Play-Couple-Challenges.txt") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("صدّر تحدياتي لملف TXT") }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(enabled = customValid, onClick = {
                             runCatching { vault.writePrivate(storageName, customText) }
