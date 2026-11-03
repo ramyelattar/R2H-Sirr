@@ -150,6 +150,10 @@ internal fun CoupleCompetitionPanel(game: LocalGame, persist: (LocalGame) -> Boo
         }
         TieStage.DECIDED -> Unit
     }
+    OutlinedButton(
+        onClick = { save(game.leave()) },
+        modifier = Modifier.fillMaxWidth()
+    ) { Text("إنهاء الجلسة بالتعادل — من غير فائز أو مكافأة") }
     if (saveError) {
         Text("تعذر حفظ نتيجة كسر التعادل بأمان. حاول تاني.", color = MaterialTheme.colorScheme.error)
     }
