@@ -278,6 +278,9 @@ internal fun ExperienceScreen(group: Boolean) {
                 var isRevealed by remember(current.round) { mutableStateOf(false) }
                 // Opt-in is renewed for the current actor after each new reveal.
                 var roundConsent by remember(current.round) { mutableStateOf(false) }
+                var partnerConsent by remember(current.round) { mutableStateOf(false) }
+                var skipAgreedA by remember(current.round) { mutableStateOf(false) }
+                var skipAgreedB by remember(current.round) { mutableStateOf(false) }
                 LaunchedEffect(current.round) { effects.cue(GameCue.ROUND) }
                 SirrSection("${current.round + 1}", "جولة جديدة · السر مستنيكم",
                     if (current.competition != null)
@@ -354,10 +357,20 @@ internal fun ExperienceScreen(group: Boolean) {
                         checked = roundConsent,
                         onChange = { roundConsent = it }
                     )
+                    if (current.competition != null) {
+                        val other = 1 - turn.actorIndex
+                        SirrConsent(
+                            name = "${current.playerNames[other]} — موافق على المشاركة في التحدي",
+                            checked = partnerConsent,
+                            onChange = { partnerConsent = it }
+                        )
+                    }
+                    val bothConsent = roundConsent &&
+                        (current.competition == null || partnerConsent)
                     SirrAction(
                         text = "التحدي اتعمل  ✦",
-                        enabled = roundConsent,
-                        explanation = if (roundConsent) null else "محتاج موافقة صاحب الدور بعد ما شاف التحدي",
+                        enabled = bothConsent,
+                        explanation = if (bothConsent) null else "محتاج موافقة الطرفين قبل تسجيل التنفيذ",
                         onClick = { finishRound(CoupleOutcome.COMPLETED) }
                     )
                 }
@@ -366,7 +379,13 @@ internal fun ExperienceScreen(group: Boolean) {
                         onClick = { finishRound(CoupleOutcome.NOT_COMPLETED) },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("التحدي ما اتنفذش — خصم 10 نقاط") }
+                    Text("اختيار صفر نقطة لازم يكون باتفاق الطرفين:")
+                    SirrConsent(current.playerNames[0] + " موافق على التخطي بالاتفاق",
+                        skipAgreedA, { skipAgreedA = it })
+                    SirrConsent(current.playerNames[1] + " موافق على التخطي بالاتفاق",
+                        skipAgreedB, { skipAgreedB = it })
                     OutlinedButton(
+                        enabled = skipAgreedA && skipAgreedB,
                         onClick = { finishRound(CoupleOutcome.AGREED_SKIP) },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("اتفقنا ما ننفّذوش — 0 نقطة") }
