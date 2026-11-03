@@ -21,6 +21,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import com.r2h.sirr.core.*
 
+/** A single-level session never includes a harder level implicitly. */
+private fun coupleRoundCapacity(level: Intensity, variety: ChallengeVariety, group: Boolean): Int {
+    if (group || level == Intensity.CUSTOM) return 18
+    val current = CoupleV10Policy.eligibleCount(level)
+    if (variety == ChallengeVariety.ONE_LEVEL || level == Intensity.SOFT) return current
+    val ordered = listOf(Intensity.SOFT, Intensity.NORMAL, Intensity.SEXY, Intensity.HOT, Intensity.HARD)
+    return current + CoupleV10Policy.eligibleCount(ordered[ordered.indexOf(level) - 1])
+}
+
 @Composable
 internal fun ExperienceScreen(group: Boolean) {
     var roundCount by remember(group) { mutableIntStateOf(if (group) 10 else 6) }
@@ -38,6 +47,12 @@ internal fun ExperienceScreen(group: Boolean) {
     }
     val consent = remember { mutableStateListOf(false, false, false, false) }
     fun resetStartConsents() { consent.indices.forEach { consent[it] = false } }
+    fun alignRoundCount(newLevel: Intensity = intensity, newVariety: ChallengeVariety = variety) {
+        val capacity = coupleRoundCapacity(newLevel, newVariety, group)
+        if (roundCount > capacity) {
+            roundCount = listOf(18, 12, 10, 6).firstOrNull { it <= capacity } ?: 6
+        }
+    }
     var reply by remember { mutableStateOf("") }
     var advanced by remember { mutableStateOf(false) }
     var mediaOpen by remember { mutableStateOf(false) }
@@ -134,7 +149,7 @@ internal fun ExperienceScreen(group: Boolean) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     pair.forEach { level ->
                         SirrOption(title = level.arabic, selected = intensity == level,
-                            onClick = { intensity = level; resetStartConsents() }, modifier = Modifier.weight(1f))
+                            onClick = { intensity = level; alignRoundCount(newLevel = level); resetStartConsents() }, modifier = Modifier.weight(1f))
                     }
                     if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
@@ -154,8 +169,18 @@ internal fun ExperienceScreen(group: Boolean) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
+            if (!group && intensity != Intensity.CUSTOM) {
+                val eligible = CoupleV10Policy.eligibleCount(intensity)
+                val total = CoupleV10Policy.total(intensity)
+                Text("المتاح للعب في المستوى ده: $eligible من أصل $total تحدي معتمد. التحديات المعلّمة بمخاطر محفوظة لكن مش بتظهر تلقائيًا.")
+                if (eligible < 18 && variety == ChallengeVariety.ONE_LEVEL) {
+                    Text("لجولات أكتر ممكن تختار «مفاجآت من مودين» في الاختيارات الإضافية، من غير إدخال مستوى أعلى.")
+                }
+            }
             SirrSection("02", "اختاروا عدد الجولات", "الاختيار ده ينفع يتكرر في ليلة تانية")
-            listOf(6, 10, 12, 18).chunked(2).forEach { pair ->
+            listOf(6, 10, 12, 18)
+                .filter { it <= coupleRoundCapacity(intensity, variety, group) }
+                .chunked(2).forEach { pair ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     pair.forEach { count ->
                         SirrOption(title = "$count جولات", selected = roundCount == count,
@@ -184,7 +209,11 @@ internal fun ExperienceScreen(group: Boolean) {
                 HorizontalDivider()
                 Text("خلّي المفاجآت أكتر", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                 ChallengeVariety.entries.forEach { option ->
-                    FilterChip(selected = variety == option, onClick = { variety = option; resetStartConsents() },
+                    FilterChip(selected = variety == option, onClick = {
+                        variety = option
+                        alignRoundCount(newVariety = option)
+                        resetStartConsents()
+                    },
                         label = { Text(option.arabic) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -283,11 +312,13 @@ internal fun ExperienceScreen(group: Boolean) {
             val invalidReward = !group && rewardText.trim().isEmpty()
             val invalidTieText = !group && tieChallengeText.isNotBlank() &&
                 tieChallengeText.trim().length < 6
+            val invalidRoundCount = roundCount > coupleRoundCapacity(intensity, variety, group)
             val startHint = when {
                 invalidNames -> "اكتبوا اسم لكل لاعب من الاختيارات الإضافية"
                 invalidCustom -> "كمّل التحديات المخصوصة الأول"
                 invalidReward -> "اتفقوا واكتبوا مكافأة الفائز قبل ما تبدأوا"
                 invalidTieText -> "اكتب تحدي كسر التعادل بوضوح أو سيبه فاضي"
+                invalidRoundCount -> "عدد الجولات أكبر من التحديات المتاحة في المستوى ده"
                 waiting.isNotEmpty() -> "مستنيين موافقة ${waiting.size} من اللاعبين"
                 else -> "جاهزين؟ السر الأول مستنيكم."
             }
@@ -323,7 +354,8 @@ internal fun ExperienceScreen(group: Boolean) {
                         }.onFailure { formError = "تعذر حفظ الجولة بأمان؛ لم تبدأ اللعبة. تأكد إن مساحة التخزين كافية." }
                     }.onFailure { formError = "حصلت مشكلة في تجهيز الجولة. جرّب اختيار مود تاني." }
                 },
-                enabled = !invalidNames && !invalidCustom && !invalidReward && !invalidTieText && waiting.isEmpty(),
+                enabled = !invalidNames && !invalidCustom && !invalidReward && !invalidTieText &&
+                    !invalidRoundCount && waiting.isEmpty(),
                 modifier = Modifier.fillMaxWidth()
             )
             if (formError.isNotEmpty()) Text(formError, color = MaterialTheme.colorScheme.error)
@@ -378,7 +410,7 @@ internal fun ExperienceScreen(group: Boolean) {
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 if (current.competition != null) {
                     Text(
-                        "${turn.prompt.kind.arabic} · ${turn.prompt.durationSeconds / 60} دقيقة",
+                        "${turn.prompt.kind.arabic} · ${turn.prompt.durationSeconds / 60} دقيقة و${turn.prompt.durationSeconds % 60} ثانية",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
