@@ -31,7 +31,10 @@ internal fun ExperienceScreen(group: Boolean) {
     var durationMinutes by remember { mutableIntStateOf(30) }
     var rewardText by remember { mutableStateOf("") }
     var clockNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    val names = remember { mutableStateListOf("إنت", "اللي معاك", "صاحبكم ٣", "صاحبكم ٤") }
+    val names = remember(group) {
+        mutableStateListOf(if (group) "إنت" else "الزوج",
+            if (group) "اللي معاك" else "الزوجة", "صاحبكم ٣", "صاحبكم ٤")
+    }
     val consent = remember { mutableStateListOf(false, false, false, false) }
     fun resetStartConsents() { consent.indices.forEach { consent[it] = false } }
     var reply by remember { mutableStateOf("") }
@@ -101,16 +104,16 @@ internal fun ExperienceScreen(group: Boolean) {
     }
 
     Page(
-        if (group) "اللّمة ليها حكاية" else "بينك وبين اللي معاك",
-        if (group) "اختاروا المود، واللعبة هتبدأ." else "شوية أسئلة ومفاجآت… براحتكم ومن غير ضغط."
+        if (group) "اللّمة ليها حكاية" else "تحديات الزوجين",
+        if (group) "اختاروا المود، واللعبة هتبدأ." else "جولات خاصة للزوجين: قرب، اختيار، مفاجآت ومنافسة بنقاط."
     ) {
         if (game == null) {
             SirrIntro(
-                overline = if (group) "من اتنين لأربعة" else "حكاية لشخصين",
-                title = if (group) "كل واحد ليه دوره." else "خلي الليلة مختلفة.",
+                overline = if (group) "من اتنين لأربعة" else "للزوج والزوجة",
+                title = if (group) "كل واحد ليه دوره." else "ليلتكم فيها تحدي وفائز.",
                 description = if (group)
                     "اختاروا المود وعدد الجولات. اللعبة هتوزّع الأدوار عليكم واحدة واحدة."
-                else "مود واحد، جولات قصيرة، وتحدي يتكشف لما تبقوا جاهزين.",
+                else "اختاروا مستوى الجرأة والمكافأة، وبعدين الجولات هتتوزع بينكم بالتبادل.",
                 accent = if (group) Color(0xFF605080) else Color(0xFFA04A74),
                 motif = if (group) "party" else "couple"
             )
@@ -234,6 +237,7 @@ internal fun ExperienceScreen(group: Boolean) {
                     }
                 }
                 Text("الجولة المكتملة +10، عدم التنفيذ -10، والاتفاق على عدم التنفيذ 0.")
+                Text("الجولات القصيرة مش شرط تكمّل مدة الجلسة؛ والمدة الإجمالية تنبيه مش نهاية إجبارية.")
                 Text("الكل يقدر يرفض أو يوقف أي نشاط. المكافأة لا تلزم أي طرف بفعل غير موافق عليه.")
             }
             HorizontalDivider(color = Color(0xFF5C4153))
