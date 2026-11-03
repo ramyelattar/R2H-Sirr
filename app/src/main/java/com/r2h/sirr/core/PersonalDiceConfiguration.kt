@@ -31,13 +31,14 @@ internal data class PersonalDiceConfiguration(
     fun validateStructure() {
         require(cubes.size == 2 && cubes.all { it.size == 6 })
         require(durationSeconds in listOf(2, 3, 5, 7, 10, 13, 20))
-        require(cubes.all { it.sumOf(PersonalDiceFace::weight) == 100 })
+        // Draft weights may temporarily have an incomplete total while being edited.
     }
 
     /** Positive-weight faces must be authored before the dice can roll. */
     fun validatePlayable() {
         validateStructure()
-        require(cubes.all { cube -> cube.any { it.weight > 0 } &&
+        require(cubes.all { cube -> cube.sumOf(PersonalDiceFace::weight) == 100 &&
+            cube.any { it.weight > 0 } &&
             cube.all { it.weight == 0 || it.configured }
         })
     }
