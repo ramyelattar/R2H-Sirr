@@ -1,0 +1,624 @@
+{
+  "content_status": "DRAFT_OWNER_REVIEW_PENDING",
+  "baseline_ref": "feat/quiz-v4-source-closeout-20261103",
+  "original_whisper_blob_sha": "d4e120b144aae36a3603f24992fc1be0b307d842",
+  "original_scratch_blob_sha": "ad096b0bbd2454bb7b9cc9ac9c623b4272e1e3ce",
+  "canonical_file": "content/whispers_scratch_stories_v1.json",
+  "structure": {
+    "whisper_stories": 20,
+    "scratch_stories": 20,
+    "stages_per_story": 3,
+    "total_lines": 120,
+    "stories_by_tier": {
+      "SOFT": 6,
+      "FLIRT": 7,
+      "ADULT": 7
+    }
+  },
+  "audience": "Adults 18+ for adult suggestions only; all text non-graphic, consent-aware.",
+  "whisper_changes": [
+    {
+      "id": "w01",
+      "tier": "SOFT",
+      "previous_lines": [
+        "في كلمة على لساني من أول ما شفتك.",
+        "مش هقولها غير لما تكون مستعد تسمعها.",
+        "جاهز تسمعها ولا نسيبها سر شوية؟"
+      ],
+      "proposed_lines": [
+        "في رسالة كان نفسي أكتبها من وقت طويل.",
+        "كل ما نقعد سوا بحس إني قادر أكون على طبيعتي.",
+        "السر: وجودك مريحني أكتر مما عرفت أقولك قبل كده."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w02",
+      "tier": "SOFT",
+      "previous_lines": [
+        "ممكن رسالة واحدة تغير شكل سهرة كاملة.",
+        "رسالتي ليك بتبدأ باعتراف صغير.",
+        "عايز تسمع الاعتراف ولا تخمنه الأول؟"
+      ],
+      "proposed_lines": [
+        "افتكرت أول مرة اتكلمنا فيها.",
+        "وقتها في تفصيلة صغيرة فضلت معايا لحد النهارده.",
+        "السر: أول حاجة شدتني ليك كانت طريقتك وإنت بتضحك."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w03",
+      "tier": "SOFT",
+      "previous_lines": [
+        "ضحكتك آخر حاجة كنت متوقع إنها تلخبطني كده.",
+        "لقيت نفسي بفتكرها وأنا راجع البيت.",
+        "إيه أكتر لحظة بينا بتخليك تبتسم لوحدك؟"
+      ],
+      "proposed_lines": [
+        "في يوم عادي اتغير بسبب كلمة منك.",
+        "يمكن إنت نسيت الكلمة، بس أنا فاكر إحساسي بعدها.",
+        "السر: جملة «أنا معاك» يومها فرقت معايا بجد."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w04",
+      "tier": "SOFT",
+      "previous_lines": [
+        "في نظرة منك مش عارف أنساها.",
+        "يمكن إنت مش واخد بالك من تأثيرها عليا.",
+        "تفتكر كانت في أنهي يوم؟"
+      ],
+      "proposed_lines": [
+        "لو عندي ساعة واحدة من غير أي دوشة.",
+        "مش عايز فيها خطة كبيرة ولا خروج مكلف.",
+        "نفسي أقضيها معاك في قعدة هادية ونتكلم من غير موبايلات."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w05",
+      "tier": "SOFT",
+      "previous_lines": [
+        "لو عندي دقيقة أقولك فيها كل اللي جوايا.",
+        "هختار كلمة واحدة وأسيب الباقي لعيونك.",
+        "تحب الكلمة تكون صريحة ولا غامضة؟"
+      ],
+      "proposed_lines": [
+        "عندي سؤال بيبدأ بحكاية قديمة.",
+        "مش علشان أفتح اللي فات، لكن علشان أفتكر حاجة حلوة.",
+        "تفتكر أكتر موقف ضحكنا فيه لحد ما دموعنا نزلت؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w06",
+      "tier": "SOFT",
+      "previous_lines": [
+        "النهارده عندي سؤال مش عارف أبدأه إزاي.",
+        "كل ما بفكر فيه بضحك من الإحراج.",
+        "أقوله دلوقتي ولا تستناني أتشجع؟"
+      ],
+      "proposed_lines": [
+        "كل علاقة ليها كلمة مخصوصة.",
+        "كلمة لما تتقال بنفتكر حاجة إحنا بس فاهمينها.",
+        "اختار كلمة سر بينا النهارده، وخلي ليها حكاية نضحك عليها."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w07",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "في حاجة بينا عمرها ما كانت محتاجة شرح.",
+        "لما بتحصل، بعرف إنك فاهمني من غير كلام.",
+        "تقدر تقول هي إيه من وجهة نظرك؟"
+      ],
+      "proposed_lines": [
+        "في نظرة منك ساعات بتلغبط ترتيب الكلام.",
+        "بحاول أكمل عادي، لكن باخد بالي من كل تفصيلة.",
+        "اعترافي: بحب اللحظة اللي عيوننا بتتقابل فيها فجأة."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w08",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "نفسي أختارلك أغنية محدش غيرنا يفهم معناها.",
+        "هخبي عنوانها لحد ما تخمن نوعها.",
+        "رومانسية هادية ولا فيها شقاوة؟"
+      ],
+      "proposed_lines": [
+        "عايز أعترف بحاجة عن صوتك.",
+        "لما بتكلمني بهدوء باحس إن المسافة بينا أقل.",
+        "السر: ساعات بفتكر طريقة نطقك لاسمي حتى وإنت بعيد."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w09",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "أوقات أحلى اعتراف بيبدأ بالهزار.",
+        "لكن اللي نفسي أقوله النهارده جد شوية.",
+        "تحب أبدأ بإيه: ذكرى ولا أمنية؟"
+      ],
+      "proposed_lines": [
+        "في رسالة غزل كتبتها ومسحتها.",
+        "كانت مباشرة أكتر من طريقتي المعتادة.",
+        "كنت عايز أقولك: وحشني قربك، وإنت في نفس المود؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w10",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "أنا بحفظ تفاصيل صغيرة محدش بياخد باله منها.",
+        "في تفصيلة ليك دايمًا بتخليني أبتسم.",
+        "تفتكر أنا باخد بالي من إيه؟"
+      ],
+      "proposed_lines": [
+        "عندي أمنية صغيرة للسهرة دي.",
+        "مش مرتبطة بمكان أو حاجة لازم نعملها.",
+        "نفسي نقول لبعض إيه أكتر تفصيلة فينا بتخلّي الإعجاب يزيد."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w11",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "عندي حكاية بدأت برسالة واتأخرت نهايتها.",
+        "كنت مستني الوقت الصح علشان أقول باقي الكلام.",
+        "تحب النهاية تبقى مفاجأة ولا أقولها بصراحة؟"
+      ],
+      "proposed_lines": [
+        "لو هختار بداية لليلة خاصة بينا.",
+        "هبدأ بحاجة بتخلينا مرتاحين قبل أي كلام تاني.",
+        "ممكن نبدأ بغزل صريح ونشوف إذا إحنا الاتنين حابين نكمل؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w12",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "لو اتقابلنا لأول مرة النهارده.",
+        "كنت هحاول ألفت نظرك بطريقة مختلفة.",
+        "خمن الطريقة، وبعدها أقولك كنت هعمل إيه."
+      ],
+      "proposed_lines": [
+        "في اسم دلع بييجي في بالي لما أشتاقلك.",
+        "مش عارف هتضحك عليه ولا هتحبه.",
+        "نفسي أقولك الاسم، بس اختار إنت الأول: غامض ولا جريء؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w13",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "مش كل سر لازم يكون تقيل على القلب.",
+        "في سر خفيف كده هيخليك تضحك.",
+        "تختار تسمعه دلوقتي ولا في آخر الجولة؟"
+      ],
+      "proposed_lines": [
+        "في سؤال مكسوف أسأله وش لوش.",
+        "السبب مش إني خايف منك، بس نفسي أسمع إجابة صريحة.",
+        "إيه نوع الغزل اللي بيخليك تحس إنك مرغوب ومقدَّر؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w14",
+      "tier": "ADULT",
+      "previous_lines": [
+        "في لحظة حسيت إن الوقت وقف وأنا بكلمك.",
+        "مكنتش مستعد أقولك ده ساعتها.",
+        "إنت كمان حصل معاك إحساس شبه ده؟"
+      ],
+      "proposed_lines": [
+        "عايز أفتح موضوع شخصي بينا.",
+        "عن الرغبة الجنسية والحاجات اللي بنكسف نتكلم عنها.",
+        "السر: نفسي نعرف تفضيلات بعض الجنسية بصراحة ومن غير حكم."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w15",
+      "tier": "ADULT",
+      "previous_lines": [
+        "في جملة من فيلم كل ما أسمعها بافتكرك.",
+        "الغريب إنها مش جملة غزل أصلًا.",
+        "تحب أقولها ولا نخليها لغز؟"
+      ],
+      "proposed_lines": [
+        "في خيال حميم حابب أحكيهولك.",
+        "مش طلب ولا وعد؛ مجرد فكرة نفسي أشاركها لو تحب تسمع.",
+        "ينفع نحكي لبعض عن خيال جنسي من غير أي التزام بتنفيذه؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w16",
+      "tier": "ADULT",
+      "previous_lines": [
+        "أنا نفسي في سهرة من غير تليفونات ولا استعجال.",
+        "نتكلم فيها عن حاجات عمرنا ما فتحناها.",
+        "اختار أول موضوع، وأنا هسمعك للآخر."
+      ],
+      "proposed_lines": [
+        "أوقات بحس برغبة في القرب الجسدي منك.",
+        "وبفضّل أقولها بدل ما أفترض إنك حاسس زيي.",
+        "السر: أنا مشتاق لقربك الحميم، بس يهمني أعرف إنت مرتاح دلوقتي؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w17",
+      "tier": "ADULT",
+      "previous_lines": [
+        "في حاجة نفسك تعرفها عني ومكسوف تسأل؟",
+        "النهارده ممكن تسأل سؤال واحد براحتك.",
+        "ولو مش مناسب، نتخطاه من غير تبرير."
+      ],
+      "proposed_lines": [
+        "في سؤال عن حياتنا الجنسية مأجله.",
+        "كل ما ييجي وقته بحس إن الكلام محتاج هدوء.",
+        "إيه الحاجة اللي بتحبها في علاقتنا الحميمة ونفسك نعمل مساحة أكبر ليها؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w18",
+      "tier": "ADULT",
+      "previous_lines": [
+        "في ذكرى بتخليني أحس إننا اتغيرنا للأحسن.",
+        "كل مرة بافتكرها بلاحظ تفصيلة جديدة.",
+        "تحب نحكيها كل واحد بطريقته؟"
+      ],
+      "proposed_lines": [
+        "نفسي نتكلم عن التجديد بينا.",
+        "مش قصدي نستعجل أو نضغط على بعض.",
+        "في فكرة حميمة جديدة نفسك تناقشها معايا ونختار سوا اللي يناسبنا؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w19",
+      "tier": "ADULT",
+      "previous_lines": [
+        "أنا عندي اعتراف بسيط مش محتاج شجاعة كبيرة.",
+        "لكن محتاج لحظة هادية علشان يتقال صح.",
+        "دلوقتي وقت مناسب ولا نأجله؟"
+      ],
+      "proposed_lines": [
+        "عندي اعتراف عن لحظات القرب.",
+        "أكتر حاجة بتفرق معايا مش المفاجأة نفسها.",
+        "السر: صراحتك عن راحتك ورغبتك هي أكتر حاجة بتخليني أرتاح."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "w20",
+      "tier": "ADULT",
+      "previous_lines": [
+        "دي آخر همسة، بس مش آخر حكاية بينا.",
+        "نفسي نفتكر الليلة دي بابتسامة مش بإحراج.",
+        "نختم بأمنية حلوة ولا بكلمة من القلب؟"
+      ],
+      "proposed_lines": [
+        "في جملة حميمية حابب تسمعها مني.",
+        "هقولها بوضوح من غير تلميح يخليك تحتار.",
+        "أنا بحب أتبادل معاك الكلام عن رغبتنا الجنسية، ولو مش مناسب النهارده نأجله."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    }
+  ],
+  "scratch_changes": [
+    {
+      "id": "s01",
+      "tier": "SOFT",
+      "previous_lines": [
+        "في سر صغير جوايا بيفكرني بيك كل ما اليوم يهدى.",
+        "السر إني بستنى أول فرصة نتكلم فيها لوحدنا.",
+        "اختار: أسألك سؤال مش متوقع ولا أقولك اعتراف من عندي؟"
+      ],
+      "proposed_lines": [
+        "الغطا ده مخبّي حاجة من أول يوم عرفتك.",
+        "كنت ملاحظ تفصيلة صغيرة ومش عارف أقولك.",
+        "السر: أول حاجة عجبتني فيك كانت ضحكتك العفوية."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s02",
+      "tier": "SOFT",
+      "previous_lines": [
+        "في حاجة في ضحكتك بتخليني أنسى كنت هقول إيه.",
+        "كل مرة بتضحك فيها بحس إن القعدة بقت أخف.",
+        "تفتكر أول مرة ضحكنا سوا كانت إمتى؟"
+      ],
+      "proposed_lines": [
+        "النهارده لقيت ذكرى قديمة رجعت فجأة.",
+        "تفصيلة منها بتخليني أبتسم من غير ما حد يفهم السبب.",
+        "السر: فاكر يوم ضحكنا على حاجة تافهة وبقى اليوم ده من أحلى ذكرياتي."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s03",
+      "tier": "SOFT",
+      "previous_lines": [
+        "أوقات النظرة بتقول اللي الكلام مش بيعرف يقوله.",
+        "أنا فاكر نظرة منك فضلت في بالي فترة طويلة.",
+        "اسألني كانت إمتى، ولو خمنت صح هقولك التفاصيل."
+      ],
+      "proposed_lines": [
+        "في كلام شكر اتأخر مني.",
+        "ساعات المواقف الصغيرة بتفضل في القلب أكتر من الكلام.",
+        "السر: وقفتك جنبي وقت ما كنت مضايق كانت أهم مما تتخيل."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s04",
+      "tier": "SOFT",
+      "previous_lines": [
+        "في رسالة قديمة بدأت أكتبها ليك ومكملتهاش.",
+        "وقتها افتكرت إن الكلام ممكن يبان جريء زيادة.",
+        "تختار أقولك أول سطر ولا أخليها مفاجأة؟"
+      ],
+      "proposed_lines": [
+        "الكارت ده فيه اختيار يخصنا.",
+        "مش سباق ولا سؤال صعب، بس وقت من غير مشتتات.",
+        "المفاجأة: اختار الليلة نص ساعة لينا بس، لا موبايلات ولا مقاطعات."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s05",
+      "tier": "SOFT",
+      "previous_lines": [
+        "أنا بحب اللحظات اللي بنكون فيها على طبيعتنا.",
+        "أكتر حاجة بتشدني لما بتتكلم بحماس عن حاجة بتحبها.",
+        "قولي عن حاجة نفسك نجربها سوا من غير ترتيب."
+      ],
+      "proposed_lines": [
+        "عندي لعبة تخمين بسيطة.",
+        "السر مرتبط بحاجة كل واحد فينا لاحظها في التاني.",
+        "المفاجأة: قول أكتر صفة بتعجبك فيّ، وأنا هقولك إيه اللي بيعجبني فيك."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s06",
+      "tier": "SOFT",
+      "previous_lines": [
+        "لو سهرتنا فيلم، هيبقى له مشهد محدش غيرنا فاهمه.",
+        "أنا عندي عنوان للمشهد ده بس مش هقوله بسهولة.",
+        "قول عنوانك الأول، وبعدها هنشوف مين فينا أشطر."
+      ],
+      "proposed_lines": [
+        "في أمنية ممكن تتحقق من غير ترتيب.",
+        "مش محتاجة سفر ولا تكلفة ولا تجهيز.",
+        "المفاجأة: نختار مكان قريب نروحه سوا ونحكي فيه عن ذكرى حلوة."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s07",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "في سؤال نفسي أسألهولك من زمان.",
+        "كل مرة بلاقي فرصة بتراجع في آخر ثانية.",
+        "جاهز لسؤال صريح ولا نختار سؤال أخف؟"
+      ],
+      "proposed_lines": [
+        "تحت الغطا اعتراف كنت مخبيه.",
+        "كل مرة تتقابل عيوننا فيه حاجة بتشدني.",
+        "السر: ساعات نظرتك لوحدها بتخليني أنسى أنا كنت هقول إيه."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s08",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "ممكن أبقى ساكت وبفكر في كلام كتير نفسي أقوله.",
+        "النهارده قررت إن سؤال واحد كفاية يبدأ الحكاية.",
+        "إيه أكتر حاجة بتحس إنها بتقربنا من بعض؟"
+      ],
+      "proposed_lines": [
+        "الكارت ده فيه رسالة غزل مش هتتبعت.",
+        "كنت محتاج أقولها وش لوش بدل ما أكتبها.",
+        "السر: وحشني صوتك وإنت بتقولي كلام مخصوص ليا."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s09",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "أحيانًا مفاجأة صغيرة بتغير شكل اليوم كله.",
+        "أنا مخبي فكرة لوقت يكون مناسب لينا إحنا الاتنين.",
+        "تحب المفاجأة تبقى رسالة ولا خروجة؟"
+      ],
+      "proposed_lines": [
+        "في مفاجأة بتبدأ بسؤال.",
+        "السؤال عن الجاذبية مش عن المظهر وبس.",
+        "المفاجأة: قول أكتر حركة أو كلمة مني بتخليك تحس إننا قريبين."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s10",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "في حاجة اتغيرت فيا من ساعة ما عرفتك.",
+        "بقيت باخد بالي من تفاصيل صغيرة كنت بطنشها.",
+        "اسألني عن أول تفصيلة لاحظتها فيك."
+      ],
+      "proposed_lines": [
+        "في جملة رومانسية غير متوقعة.",
+        "كنت خايف أبالغ وأخليك تضحك عليا.",
+        "الاعتراف: أنا بافتكر لحظات القرب بينا أكتر من أي هدية."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s11",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "نفسي نرجع لأول خروجة كأنها بتحصل تاني.",
+        "المرة دي هقول حاجة سكت عنها وقتها.",
+        "لو رجع بيك الزمن، كنت هتغير إيه في اليوم ده؟"
+      ],
+      "proposed_lines": [
+        "الغموض المرة دي في توقيت الرسالة.",
+        "كنت ناوي أقولها في لحظة مناسبة ليك.",
+        "السر: نفسي في سهرة خاصة نتغزل فيها ببعض من غير كسوف لو إحنا الاتنين حابين."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s12",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "كل واحد فينا عنده لحظة شجاعة مش بينساها.",
+        "لحظتي كانت لما قررت أقول رأيي بصراحة.",
+        "احكي لي عن مرة قلت الحقيقة رغم إنك كنت متردد."
+      ],
+      "proposed_lines": [
+        "تحت الكارت اختيار واحد بسيط.",
+        "اختيار لطريقة كلامنا لما نشتاق لبعض.",
+        "المفاجأة: نختار كلمة غزل سرية بينا، ولما تتقال نفهم إننا مشتاقين."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s13",
+      "tier": "FLIRT",
+      "previous_lines": [
+        "في غزل بيضحك، وفي غزل بيفضل في الذاكرة.",
+        "أنا عندي جملة مخصوص ليك بس هسيبك تخمن بدايتها.",
+        "تختار تبدأ بـ«وحشتني» ولا بـ«كان نفسي»؟"
+      ],
+      "proposed_lines": [
+        "في شيء بخاف أقوله مباشر.",
+        "بس النهارده الكلام أسهل وإحنا بنضحك.",
+        "السر: بحب لما تقول إنك مشتاق لقربي بدل ما تخليني أخمّن."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s14",
+      "tier": "ADULT",
+      "previous_lines": [
+        "في مكان بسيط نفسي نروحه من غير خطة.",
+        "مش مهم المكان قد ما يهم إننا نضحك ونتكلم.",
+        "اختار معايا: قهوة هادية ولا تمشية بالليل؟"
+      ],
+      "proposed_lines": [
+        "الكارت ده مخبّي سؤال خاص بالبالغين.",
+        "مش اختبار جرأة ولا مطلوب تنفذ أي حاجة.",
+        "السؤال السري: إيه أكتر حاجة بتزيد رغبتك الجنسية وبتحب نتكلم عنها؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s15",
+      "tier": "ADULT",
+      "previous_lines": [
+        "أكتر حاجة غامضة مش لازم تبقى سر كبير.",
+        "ساعات كلمة عادية بتبقى لها معنى خاص بين اتنين.",
+        "نخترع كلمة تخصنا ونشوف هنستخدمها إمتى؟"
+      ],
+      "proposed_lines": [
+        "في خيال جنسي محدش ملزم يسمعه.",
+        "هقولك عنه بس لو إنت حابب تفتح الموضوع.",
+        "السر: لو عندك خيال جنسي حابب تناقشه، نقدر نحكيه لبعض من غير أي ضغط."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s16",
+      "tier": "ADULT",
+      "previous_lines": [
+        "أنا فاكر مجاملة قلتها لي يمكن إنت نسيتها.",
+        "كانت جاية في وقت محتاج أسمعها فيه فعلًا.",
+        "تحب أقولك كانت إيه ولا تحاول تفتكر؟"
+      ],
+      "proposed_lines": [
+        "المفاجأة المرة دي عن اختلاف الرغبة.",
+        "ساعات واحد فينا بيكون في مود والتاني لأ.",
+        "السؤال السري: تحب نتعامل إزاي مع اختلاف رغبتنا الجنسية من غير لوم؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s17",
+      "tier": "ADULT",
+      "previous_lines": [
+        "في حكاية صغيرة مش مرتبطة بمكان ولا بتاريخ.",
+        "الحكاية كلها بدأت بابتسامة مفاجئة منك.",
+        "لو قلتلك أول كلمة منها، هتعرف بقيتها؟"
+      ],
+      "proposed_lines": [
+        "عندي اعتراف عن علاقتنا الحميمة.",
+        "مش عن أداء ولا مقارنة بحد تاني.",
+        "الاعتراف: أكتر حاجة بترتاحني هي إننا نقول بوضوح اللي بنحبه واللي مش بنحبه."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s18",
+      "tier": "ADULT",
+      "previous_lines": [
+        "الليلة فيها مساحة لكلام مختلف شوية.",
+        "مش لازم كل سؤال يتجاوب، بس ممكن يفتح حكاية.",
+        "تختار سؤال جريء ولا اعتراف بسيط؟"
+      ],
+      "proposed_lines": [
+        "الغطا ده مخبّي رغبة مش طلب.",
+        "كل رغبة ينفع تتقال، ومش لازم تتحول لفعل.",
+        "السؤال السري: في تجربة حميمة جديدة نفسك تتكلم عنها وتسمع رأيي فيها؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s19",
+      "tier": "ADULT",
+      "previous_lines": [
+        "أنا بحب إننا نعرف نضحك حتى وإحنا بنتكلم بجد.",
+        "في موقف واحد كل ما بفتكره ببتسم من غير سبب.",
+        "خمن الموقف، وليك ثلاث محاولات بس."
+      ],
+      "proposed_lines": [
+        "في سؤال خاص بالثقة وقت القرب.",
+        "الرد عليه أهم من أي درجة جرأة.",
+        "السؤال السري: إيه اللي يخليك تحس إنك آمن ومرتاح أثناء العلاقة الجنسية؟"
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    },
+    {
+      "id": "s20",
+      "tier": "ADULT",
+      "previous_lines": [
+        "آخر سر في الكارت ده مرتبط بحاجه هتفضل بيننا.",
+        "هو وعد صغير إننا نقول اللي جوانا من غير خوف.",
+        "تحب نختم بجملة تقدير ولا بأمنية للي جاي؟"
+      ],
+      "proposed_lines": [
+        "آخر كارت فيه اختيار حميم.",
+        "المهم إن الاختيار يكون من الاتنين وبراحتهم.",
+        "المفاجأة: كل واحد يقول تفضيلًا حميمًا يحبه، وحدًّا ما يحبش يتعداه."
+      ],
+      "note": "New coherent three-part story replaces earlier generic group; original remains recoverable in parent Git commit."
+    }
+  ],
+  "note": "All 120 old lines remain in Git history and explicitly in this review file. None of these edits are owner-approved yet. Build and runtime testing have not been performed."
+}
