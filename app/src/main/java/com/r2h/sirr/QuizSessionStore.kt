@@ -13,7 +13,7 @@ import org.json.JSONObject
  */
 internal object QuizSessionStore {
     private const val KEY = "quiz-local-session-v1"
-    private const val VERSION = 1
+    private const val VERSION = 2
 
     fun save(vault: LocalVault, session: QuizSession) {
         val selected = JSONArray()
@@ -28,12 +28,14 @@ internal object QuizSessionStore {
             .put("packId", session.packId)
             .put("packName", session.packName)
             .put("paired", session.paired)
+            .put("guessPartner", session.guessPartner)
             .put("stage", session.stage.name)
             .put("position", session.position)
             .put("revealPosition", session.revealPosition)
             .put("questions", selected)
             .put("answersA", JSONArray(session.answersA))
             .put("answersB", JSONArray(session.answersB))
+            .put("predictionsA", JSONArray(session.predictionsA))
         vault.writePrivate(KEY, payload.toString())
     }
 
@@ -41,7 +43,8 @@ internal object QuizSessionStore {
         val raw = vault.readPrivate(KEY) ?: return null
         require(raw.length <= 100_000)
         val json = JSONObject(raw)
-        require(json.getInt("version") == VERSION)
+        val version = json.getInt("version")
+        require(version in 1..VERSION)
         val selected = json.getJSONArray("questions")
         require(selected.length() in listOf(8, 12, 20, 25))
         val questions = (0 until selected.length()).map { i ->
@@ -64,7 +67,9 @@ internal object QuizSessionStore {
             position = json.getInt("position"),
             revealPosition = json.getInt("revealPosition"),
             answersA = answers("answersA"),
-            answersB = answers("answersB")
+            answersB = answers("answersB"),
+            guessPartner = if (version >= 2) json.getBoolean("guessPartner") else false,
+            predictionsA = if (version >= 2) answers("predictionsA") else emptyList()
         )
     }.getOrNull()
 
