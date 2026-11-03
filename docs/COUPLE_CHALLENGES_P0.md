@@ -17,7 +17,7 @@ This change covers **offline local two-player couple challenge sessions**. It do
 - **Exported TXT is plaintext outside the app** and must be handled as sensitive by the owner.
 - When the user's private pack has enough activities for a session, the game chooses only from those custom activities. A smaller pack is supplemented with built-in content.
 - Fresh prompts are prioritized over recently seen prompts; within a session prompt text does not repeat. New local couple selection balances activity kinds rather than repeating only one category.
-- Built-in catalog is **not approved as erotic/explicit final copy**. It deliberately includes only a draft adapted from the user's challenge-001 direction and additional non-graphic draft activities. Owner review or user-authored private content is required to reach the desired editorial identity.
+- The local built-in catalog now contains the owner's v2 explicit challenge source with language cleanup. This is **not yet owner-approved final wording**: 60 entries have changes, including 16 that warrant deliberate review because wording or intent was clarified.
 
 ## Competition rules (approved product intent)
 
@@ -25,7 +25,7 @@ This change covers **offline local two-player couple challenge sessions**. It do
 - The two local player roles alternate each round.
 - The participant responsible for the challenge receives +10 for a completed activity; -10 for activity not completed; 0 for noncompletion explicitly agreed by both.
 - Either partner can decline, end, or interrupt any interaction. Scores represent only the game's voluntary bookkeeping and must not enforce a sexual act or a reward.
-- Challenge countdowns have per-activity durations; the first HOT challenge (the user's challenge 001) uses 300 seconds.
+- Challenge countdowns have per-activity durations taken from the owner-provided v2 JSON (30–300 seconds after 12 timing corrections). The former draft challenge-001 is not silently mixed into the new 100-item v2 bank.
 - Completing a timed activity is only eligible for +10 after the countdown has elapsed; time spent paused does not count.
 - The round timer is persisted in encrypted session v3, supports pause/resume, and keeps elapsed time across process restoration. The overall session timer is an advisory threshold: when reached, users may continue or settle scored rounds without automatic negative scoring.
 - The scoreboard and end-of-session summary show scores and results per player; the winner sees the previously agreed reward.
