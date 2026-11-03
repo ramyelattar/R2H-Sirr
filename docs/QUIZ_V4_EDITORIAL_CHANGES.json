@@ -965,5 +965,13 @@
       "startsLo": 65,
       "startsWhat": 37
     }
+  },
+  "historical_record": true,
+  "final_canonical_approval": {
+    "status": "OWNER_APPROVED_AS_IS",
+    "approved_on": "2026-11-03",
+    "approved_file": "content/quizzes_ar_v4.json",
+    "approved_blob_sha": "fd35caee10e9159fd27f7bc85c28f5bfcaa7cd78",
+    "note": "The older 43-item editorial record is a historical revision, not a separate currently pending content approval. The owner later approved the final 175-item adult bank."
   }
 }
