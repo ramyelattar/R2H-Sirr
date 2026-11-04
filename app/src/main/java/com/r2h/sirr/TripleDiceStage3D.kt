@@ -345,16 +345,20 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
                 float bounce = max(dot(normal, fill), 0.0);
                 float rose = step(0.5, uMaterial) * (1.0 - step(1.5, uMaterial));
                 float champagne = step(1.5, uMaterial);
-                float hardness = mix(28.0, 45.0, rose);
-                hardness = mix(hardness, 66.0, champagne);
+                float hardness = mix(20.0, 29.0, rose);
+                hardness = mix(hardness, 38.0, champagne);
                 vec3 halfVector = normalize(key + vec3(0.0, 0.0, 1.0));
                 float spec = pow(max(dot(normal, halfVector), 0.0), hardness);
                 vec3 glint = mix(vec3(0.79, 0.62, 0.86), vec3(1.0, 0.86, 0.91), rose);
                 glint = mix(glint, vec3(0.99, 0.96, 0.87), champagne);
                 vec3 textureColor = texture2D(uTexture, vUv).rgb;
-                vec3 finalColor = textureColor * (0.49 + 0.43 * diffuse + 0.11 * bounce);
-                finalColor += glint * spec * mix(0.13, 0.23, champagne);
-                gl_FragColor = vec4(finalColor, 1.0);
+                // Softer satin response: avoid blowing pale owner texture
+                // details out to pure white while the dice rotate.
+                vec3 finalColor = textureColor * (0.38 + 0.44 * diffuse + 0.12 * bounce);
+                float reflection = mix(0.065, 0.09, rose);
+                reflection = mix(reflection, 0.115, champagne);
+                finalColor += glint * spec * reflection;
+                gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
             }
         """
         private const val SHADOW_VERT = """
