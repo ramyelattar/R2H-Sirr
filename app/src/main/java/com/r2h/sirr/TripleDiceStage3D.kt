@@ -109,13 +109,14 @@ private class TripleDiceStageGlView(context: Context) : GLSurfaceView(context) {
 private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
     private val mesh = floatBuffer(RoundedDiceMesh.generate())
     private val verticesPerFace = RoundedDiceMesh.verticesPerFace()
-    private val shadowQuad = floatBuffer(floatArrayOf(
-        -1f, -1f, -1f, -1f,
-        -1f,  1f, -1f,  1f,
-         1f, -1f,  1f, -1f,
-         1f, -1f,  1f, -1f,
-        -1f,  1f, -1f,  1f,
-         1f,  1f,  1f,  1f
+    // World-space ground quad with upward facing triangle winding.
+    private val floorQuad = floatBuffer(floatArrayOf(
+        -5f, TripleDiceStageGeometry.FLOOR_Y, -4f,
+        -5f, TripleDiceStageGeometry.FLOOR_Y,  3f,
+         5f, TripleDiceStageGeometry.FLOOR_Y, -4f,
+         5f, TripleDiceStageGeometry.FLOOR_Y, -4f,
+        -5f, TripleDiceStageGeometry.FLOOR_Y,  3f,
+         5f, TripleDiceStageGeometry.FLOOR_Y,  3f
     ))
     private val textures = IntArray(18)
     private var nextTiles: List<Bitmap>? = null
@@ -124,7 +125,7 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
     private var faces: List<Int> = listOf(0, 0, 0)
     private var spins: List<Float> = listOf(1f, 1f, 1f)
     private var cubeProgram = 0
-    private var shadowProgram = 0
+    private var floorProgram = 0
     private var posAttr = -1
     private var normalAttr = -1
     private var uvAttr = -1
@@ -132,12 +133,9 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
     private var mvpUniform = -1
     private var materialUniform = -1
     private var samplerUniform = -1
-    private var shadowPosAttr = -1
-    private var shadowUvAttr = -1
-    private var shadowMaterialUniform = -1
-    private var shadowCenterUniform = -1
-    private var shadowSizeUniform = -1
-    private var aspect = 1f
+    private var floorPosAttr = -1
+    private var floorMvpUniform = -1
+    private var floorCentersUniform = -1
     private val projection = FloatArray(16)
     private val view = FloatArray(16)
 
@@ -153,7 +151,7 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
 
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
         cubeProgram = link(CUBE_VERT, CUBE_FRAG)
-        shadowProgram = link(SHADOW_VERT, SHADOW_FRAG)
+        floorProgram = link(FLOOR_VERT, FLOOR_FRAG)
         posAttr = GLES20.glGetAttribLocation(cubeProgram, "aPos")
         normalAttr = GLES20.glGetAttribLocation(cubeProgram, "aNormal")
         uvAttr = GLES20.glGetAttribLocation(cubeProgram, "aUv")
@@ -161,11 +159,9 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
         mvpUniform = GLES20.glGetUniformLocation(cubeProgram, "uMvp")
         materialUniform = GLES20.glGetUniformLocation(cubeProgram, "uMaterial")
         samplerUniform = GLES20.glGetUniformLocation(cubeProgram, "uTexture")
-        shadowPosAttr = GLES20.glGetAttribLocation(shadowProgram, "aPos")
-        shadowUvAttr = GLES20.glGetAttribLocation(shadowProgram, "aUv")
-        shadowMaterialUniform = GLES20.glGetUniformLocation(shadowProgram, "uMaterial")
-        shadowCenterUniform = GLES20.glGetUniformLocation(shadowProgram, "uCenter")
-        shadowSizeUniform = GLES20.glGetUniformLocation(shadowProgram, "uRadii")
+        floorPosAttr = GLES20.glGetAttribLocation(floorProgram, "aPos")
+        floorMvpUniform = GLES20.glGetUniformLocation(floorProgram, "uMvp")
+        floorCentersUniform = GLES20.glGetUniformLocation(floorProgram, "uCenters[0]")
         GLES20.glGenTextures(18, textures, 0)
         uploaded = null
         uploadNeeded = true
@@ -178,17 +174,16 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
         if (width > 0 && height > 0) {
-            aspect = width.toFloat() / height
-            Matrix.perspectiveM(projection, 0, 42f, aspect, 0.1f, 20f)
+            Matrix.perspectiveM(projection, 0, 42f, width.toFloat() / height, 0.1f, 20f)
         }
-        Matrix.setLookAtM(view, 0, 0f, 0f, 3.9f, 0f, 0f, 0f, 0f, 1f, 0f)
+        Matrix.setLookAtM(view, 0, 0f, 1.65f, 4.25f, 0f, -0.44f, 0f, 0f, 1f, 0f)
     }
 
     override fun onDrawFrame(unused: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+        drawFloor()
         if (uploadNeeded) uploadTextures()
         if (uploaded == null) return
-        for (cube in 0..2) drawShadow(cube)
         for (cube in 0..2) drawCube(cube)
     }
 
@@ -210,19 +205,26 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
     private fun drawCube(cube: Int) {
         val (baseX, baseY) = DiceCubeProjection.baseRotation(faces[cube])
         val rest = 1f - spins[cube]
-        val model = FloatArray(16)
-        Matrix.setIdentityM(model, 0)
-        val pose = TripleDiceStageGeometry.pose(cube)
-        Matrix.translateM(model, 0, pose.x, pose.y, pose.z)
-        Matrix.scaleM(model, 0, pose.scale, pose.scale, pose.scale)
-        Matrix.rotateM(model, 0, -28f, 0f, 1f, 0f)
-        Matrix.rotateM(model, 0, 23f, 1f, 0f, 0f)
+        val rotation = FloatArray(16)
+        Matrix.setIdentityM(rotation, 0)
+        Matrix.rotateM(rotation, 0, -28f, 0f, 1f, 0f)
+        Matrix.rotateM(rotation, 0, 23f, 1f, 0f, 0f)
         val spinY = when (cube) { 0 -> 720f; 1 -> 1080f; else -> -1080f }
         val spinX = when (cube) { 0 -> 1080f; 1 -> -1440f; else -> 720f }
-        Matrix.rotateM(model, 0, rest * spinY, 0f, 1f, 0f)
-        Matrix.rotateM(model, 0, rest * spinX, 1f, 0f, 0f)
-        Matrix.rotateM(model, 0, baseY, 0f, 1f, 0f)
-        Matrix.rotateM(model, 0, baseX, 1f, 0f, 0f)
+        Matrix.rotateM(rotation, 0, rest * spinY, 0f, 1f, 0f)
+        Matrix.rotateM(rotation, 0, rest * spinX, 1f, 0f, 0f)
+        Matrix.rotateM(rotation, 0, baseY, 0f, 1f, 0f)
+        Matrix.rotateM(rotation, 0, baseX, 1f, 0f, 0f)
+
+        val pose = TripleDiceStageGeometry.pose(cube)
+        val landingY = TripleDiceStageGeometry.restingCenterY(rotation, pose.scale)
+        val lift = 0.15f * kotlin.math.sin(Math.PI * spins[cube]).toFloat().coerceAtLeast(0f)
+        val translationScale = FloatArray(16)
+        Matrix.setIdentityM(translationScale, 0)
+        Matrix.translateM(translationScale, 0, pose.x, landingY + lift, pose.z)
+        Matrix.scaleM(translationScale, 0, pose.scale, pose.scale, pose.scale)
+        val model = FloatArray(16)
+        Matrix.multiplyMM(model, 0, translationScale, 0, rotation, 0)
         val vm = FloatArray(16)
         val mvp = FloatArray(16)
         Matrix.multiplyMM(vm, 0, view, 0, model, 0)
@@ -254,26 +256,31 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
         GLES20.glDisableVertexAttribArray(uvAttr)
     }
 
-    private fun drawShadow(cube: Int) {
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        GLES20.glDisable(GLES20.GL_CULL_FACE)
-        GLES20.glEnable(GLES20.GL_BLEND)
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-        GLES20.glUseProgram(shadowProgram)
-        GLES20.glUniform1f(shadowMaterialUniform, cube.toFloat())
-        val pose = TripleDiceStageGeometry.pose(cube)
-        GLES20.glUniform2f(shadowCenterUniform, pose.x * 0.728f / aspect, pose.shadowY)
-        GLES20.glUniform2f(shadowSizeUniform, 0.47f / aspect, 0.13f)
-        shadowQuad.position(0)
-        GLES20.glEnableVertexAttribArray(shadowPosAttr)
-        GLES20.glVertexAttribPointer(shadowPosAttr, 2, GLES20.GL_FLOAT, false, 16, shadowQuad)
-        shadowQuad.position(2)
-        GLES20.glEnableVertexAttribArray(shadowUvAttr)
-        GLES20.glVertexAttribPointer(shadowUvAttr, 2, GLES20.GL_FLOAT, false, 16, shadowQuad)
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6)
-        GLES20.glDisableVertexAttribArray(shadowPosAttr)
-        GLES20.glDisableVertexAttribArray(shadowUvAttr)
+    private fun drawFloor() {
+        // Draw first so the real depth-tested cubes sit on a shared surface.
+        // Contact darkening is computed in world coordinates, not screen UV.
+        val viewProjection = FloatArray(16)
+        Matrix.multiplyMM(viewProjection, 0, projection, 0, view, 0)
+        val contacts = FloatArray(9)
+        for (cube in 0..2) {
+            val p = TripleDiceStageGeometry.pose(cube)
+            contacts[cube * 3] = p.x
+            contacts[cube * 3 + 1] = p.z
+            // As the cube tumbles, the soft contact shadow relaxes slightly.
+            contacts[cube * 3 + 2] =
+                (kotlin.math.sin(Math.PI * spins[cube]).toFloat().coerceAtLeast(0f))
+        }
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glDisable(GLES20.GL_BLEND)
+        GLES20.glDisable(GLES20.GL_CULL_FACE)
+        GLES20.glUseProgram(floorProgram)
+        GLES20.glUniformMatrix4fv(floorMvpUniform, 1, false, viewProjection, 0)
+        GLES20.glUniform3fv(floorCentersUniform, 3, contacts, 0)
+        floorQuad.position(0)
+        GLES20.glEnableVertexAttribArray(floorPosAttr)
+        GLES20.glVertexAttribPointer(floorPosAttr, 3, GLES20.GL_FLOAT, false, 12, floorQuad)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6)
+        GLES20.glDisableVertexAttribArray(floorPosAttr)
     }
 
     private fun compile(type: Int, source: String): Int {
