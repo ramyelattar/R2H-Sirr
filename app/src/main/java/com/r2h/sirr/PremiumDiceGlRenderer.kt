@@ -9,7 +9,7 @@ import android.opengl.Matrix
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewTreeLifecycleOwner
+import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.r2h.sirr.core.DiceCubeProjection
 import com.r2h.sirr.core.RoundedDiceMesh
 import java.nio.ByteBuffer
@@ -53,7 +53,7 @@ internal class PremiumDiceGlView(context: Context) : GLSurfaceView(context) {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        lifecycleOwner = ViewTreeLifecycleOwner.get(this)
+        lifecycleOwner = findViewTreeLifecycleOwner()
         lifecycleOwner?.lifecycle?.addObserver(lifecycleObserver)
         if (lifecycleOwner?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) == true) {
             onResume()
