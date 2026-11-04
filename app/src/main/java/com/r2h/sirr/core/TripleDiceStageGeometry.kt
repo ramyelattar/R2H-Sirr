@@ -22,9 +22,9 @@ internal object TripleDiceStageGeometry {
     // The forward cube is larger/closer; both rear cubes share a depth.
     // Do not change texture order when moving objects around on the stage.
     private val poses = listOf(
-        TripleCubePose(-0.81f, -0.62f, 0.89f),
-        TripleCubePose( 0.81f, -0.62f, 0.89f),
-        TripleCubePose( 0.00f,  0.70f, 1.06f)
+        TripleCubePose(-0.92f, -0.74f, 0.89f),
+        TripleCubePose( 0.92f, -0.74f, 0.89f),
+        TripleCubePose( 0.00f,  0.86f, 1.06f)
     )
 
     fun pose(cube: Int): TripleCubePose {
@@ -45,13 +45,14 @@ internal object TripleDiceStageGeometry {
     fun restingCenterY(rotated: FloatArray, scale: Float): Float =
         FLOOR_Y + verticalHalfExtent(rotated, scale)
 
-    /** Footprints may not intersect even before any spin starts. */
+    /** Conservative bounding-sphere separation even during full 3-axis rotation. */
     fun footprintGap(a: Int, b: Int): Float {
         require(a != b)
         val p = pose(a)
         val q = pose(b)
+        // Each cube fits within a sphere of radius scale*sqrt(3)/2.
         return hypot(p.x - q.x, p.z - q.z) -
-            (p.scale + q.scale) * 0.5f
+            (p.scale + q.scale) * 0.8660254f
     }
 
     /** Exactly 18 cube-major face textures, unchanged from P0.2. */
