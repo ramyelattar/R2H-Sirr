@@ -1,13 +1,13 @@
 # R2H-Play — Dice P0.5: grounded 3D scene and roughness-aware materials
 
-**STATUS:** Source implementation; Android build, runtime GLES2 shader compilation, CPU/GPU frame timing, JUnit tests and phone visuals **NOT VERIFIED**. The exact checked-in pure Kotlin geometry file (Git blob `ba25993685c0f569eb63ce717f0b58a6be635720`) was separately compiled with `kotlinc`; a small standalone sanity program passed floor contact, three footprint gaps and 18 texture indices. This is **not** the Android build or JUnit suite.
+**STATUS:** Source implementation; Android build, runtime GLES2 shader compilation, CPU/GPU frame timing, JUnit tests and phone visuals **NOT VERIFIED**. The exact checked-in pure Kotlin geometry file (Git blob `8c8d043dbf305068708a57322d18136f6a44a1a9`) was separately compiled with `kotlinc`; a small standalone sanity program passed floor contact, three footprint gaps and 18 texture indices. This is **not** the Android build or JUnit suite.
 
 ## Motivation
 Owner's P0.4 photos show 3 cubes still appearing suspended inside a black rectangle with insufficient contact cues, a relatively flat roll CTA, and materials resembling plastic. More gradient/glow tuning will not solve the scene geometry.
 
 ## Implemented
 1. **One world-space floor** inside the existing shared GLES2 scene, drawn using the same view/projection as all 3 cubes. Unlike the former screen-aligned fake glow, the contact darkening is computed from actual cube x/z positions in the floor fragment shader.
-2. **Shared ground contact:** `TripleDiceStageGeometry.FLOOR_Y=-1.05f`. Two rear cubes are positioned at x±0.81, z=-0.62; the front hero cube is larger and placed at x=0, z=0.70. All objects have independent sizes and rest on the same floor.
+2. **Shared ground contact:** `TripleDiceStageGeometry.FLOOR_Y=-1.05f`. Two rear cubes are positioned at x±0.92, z=-0.74; the front hero cube is larger and placed at x=0, z=0.86. Spacing now exceeds the bounding-sphere sum for any cube rotation. All objects have independent sizes and rest on the same floor.
 3. **Rotation-aware support:** `restingCenterY(rotation, scale)` finds the worst vertical corner extent of a rotated cube by summing the absolute 3×3 rotation Y components. A small in-flight rise (0.15f * sin(pi * progress)) is added during roll. This prevents mesh corners penetrating the floor while preserving deterministic landing faces.
 4. **Camera adjusted** to (0, 1.65, 4.25) looking toward (0, -0.44, 0), allowing rear cubes and front cube to appear separated by true 3D perspective rather than arbitrary screen Y offsets.
 5. **Material lighting:** GLES2-compatible lightweight GGX normal-distribution + Schlick geometry/Fresnel approximation, cube-specific roughness and low metallic factors. Textures still contain only user-authored content; this is **not full PBR, IBL, reflections, or hardware ray tracing**.
