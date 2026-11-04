@@ -154,7 +154,9 @@ private fun SirrApp() {
             }
         ) {
             Box(Modifier.fillMaxSize().background(Night)) {
-                SirrAmbientBackground(scene, musicPrefs.cinematic)
+                // Pause the shared wallpaper decoder while owner media plays.
+                // A still frame remains behind every page in that case.
+                SirrAmbientBackground(scene, musicPrefs.cinematic && !userMediaPlaying)
                 if (showSplash) {
                     SirrCinematicSplash(
                         allowMotion = musicPrefs.cinematic,
