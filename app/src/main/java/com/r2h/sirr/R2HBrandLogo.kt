@@ -24,10 +24,17 @@ import androidx.compose.ui.res.painterResource
  * build MUST verify that the drawable exists in its assembled APK.
  */
 @Composable
-internal fun R2HBrandLogo(modifier: Modifier = Modifier) {
+internal fun R2HBrandLogo(
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
+) {
     val context = LocalContext.current
-    val logoId = remember(context) {
-        context.resources.getIdentifier(
+    val logoId = remember(context, compact) {
+        val preferred = if (compact) "r2h_play_cosmic_header" else "r2h_play_cosmic_logo"
+        val specific = context.resources.getIdentifier(
+            preferred, "drawable", context.packageName
+        )
+        if (specific != 0) specific else context.resources.getIdentifier(
             "r2h_play_cosmic_logo", "drawable", context.packageName
         )
     }
