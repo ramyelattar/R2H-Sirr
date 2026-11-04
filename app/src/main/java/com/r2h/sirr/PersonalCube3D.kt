@@ -127,7 +127,10 @@ private fun createFaceTile(text: String, photo: Bitmap?, metallic: Boolean): Bit
         val left = (photo.width - cropSide) / 2
         val top = (photo.height - cropSide) / 2
         canvas.save()
-        canvas.clipRoundRect(target, 35f, 35f)
+        val clip = Path().apply {
+            addRoundRect(target, 35f, 35f, Path.Direction.CW)
+        }
+        canvas.clipPath(clip)
         canvas.drawBitmap(
             photo,
             Rect(left, top, left + cropSide, top + cropSide),
