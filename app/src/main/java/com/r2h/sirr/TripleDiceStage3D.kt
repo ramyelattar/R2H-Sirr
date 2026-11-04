@@ -2,6 +2,7 @@ package com.r2h.sirr
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
@@ -150,8 +151,16 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
     }
 
     override fun onSurfaceCreated(unused: GL10?, config: EGLConfig?) {
-        cubeProgram = link(CUBE_VERT, CUBE_FRAG)
-        floorProgram = link(FLOOR_VERT, FLOOR_FRAG)
+        cubeProgram = runCatching { link(CUBE_VERT, CUBE_FRAG) }
+            .getOrElse {
+                Log.w("R2H-Dice", "Microfacet GLES2 shader unsupported; using diffuse fallback", it)
+                link(CUBE_VERT, CUBE_FRAG_FALLBACK)
+            }
+        floorProgram = runCatching { link(FLOOR_VERT, FLOOR_FRAG) }
+            .getOrElse {
+                Log.w("R2H-Dice", "Contact shadow GLES2 shader unsupported; using plain floor", it)
+                link(FLOOR_VERT, FLOOR_FRAG_FALLBACK)
+            }
         posAttr = GLES20.glGetAttribLocation(cubeProgram, "aPos")
         normalAttr = GLES20.glGetAttribLocation(cubeProgram, "aNormal")
         uvAttr = GLES20.glGetAttribLocation(cubeProgram, "aUv")
@@ -392,6 +401,31 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
                 vec3 color = ambient + diffuse + specular * (0.62 * ndl);
                 // Keep authored text/photo values distinguishable on light faces.
                 gl_FragColor = vec4(clamp(color, 0.0, 0.98), 1.0);
+            }
+        """
+
+        private const val CUBE_FRAG_FALLBACK = """
+            precision mediump float;
+            uniform sampler2D uTexture;
+            varying vec3 vNormal;
+            varying vec2 vWorldPos;
+            varying vec2 vUv;
+            void main() {
+                vec3 light = normalize(vec3(-0.55, 0.82, 0.63));
+                float diffuse = max(dot(normalize(vNormal), light), 0.0);
+                vec3 base = texture2D(uTexture, vUv).rgb;
+                gl_FragColor = vec4(base * (0.51 + diffuse * 0.48), 1.0);
+            }
+        """
+
+        private const val FLOOR_FRAG_FALLBACK = """
+            precision mediump float;
+            varying vec2 vPlane;
+            void main() {
+                float depthTint = smoothstep(-3.0, 2.2, vPlane.y);
+                vec3 ground = mix(vec3(0.055, 0.048, 0.064),
+                                  vec3(0.094, 0.073, 0.090), depthTint);
+                gl_FragColor = vec4(ground, 1.0);
             }
         """
 
