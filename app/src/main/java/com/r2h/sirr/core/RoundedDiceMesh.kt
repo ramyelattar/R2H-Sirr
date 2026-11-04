@@ -16,7 +16,7 @@ import kotlin.math.sqrt
 internal object RoundedDiceMesh {
     const val FACE_COUNT = 6
     const val STRIDE_FLOATS = 8
-    const val DEFAULT_GRID = 16
+    const val DEFAULT_GRID = 24
     const val DEFAULT_RADIUS = 0.135f
 
     private data class V(val x: Float, val y: Float, val z: Float) {
