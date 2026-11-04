@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Color as AndroidColor
 import android.graphics.LinearGradient
-import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Rect
@@ -16,23 +15,21 @@ import android.text.StaticLayout
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
 import android.text.TextUtils
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import com.r2h.sirr.core.DiceCubeProjection
+import androidx.compose.ui.viewinterop.AndroidView
 import com.r2h.sirr.core.PersonalDiceFace
 
 /**
- * Entirely native Canvas rendering, NO generated/static content assets.
- * Each cube face is rendered from the user's own text / optional local photo.
- * Six fixed raster tiles (384²) are cached by the exact authored face.
+ * Compose adapter for the on-demand GLES2 rounded-cube renderer.
+ *
+ * Face bitmaps are produced only from the owner's text or encrypted local
+ * photos, cached by their exact identity, then uploaded to the GL thread.
+ * Animation frames update only the cube pose, not the bitmaps or vault.
  */
 @Composable
 internal fun PersonalCube3D(
@@ -46,59 +43,22 @@ internal fun PersonalCube3D(
 ) {
     require(faces.size == 6 && visibleFace in 0..5)
     val faceTiles = faces.map { face ->
-        val original = remember(face.imageId) {
+        val original = remember(vault, face.imageId) {
             vault.readPhotoThumbnail(face.imageId)?.asAndroidBitmap()
         }
-        remember(face.text, face.imageId, metallic) {
+        remember(face.text, face.imageId, metallic, original) {
             createFaceTile(face.text, original, metallic)
         }
     }
-    Canvas(modifier.semantics {
-        contentDescription = "$label — الوجه ${visibleFace + 1}"
-    }) {
-        val remaining = (1f - spinProgress.coerceIn(0f, 1f))
-        val ordered = DiceCubeProjection.faces(
-            selectedIndex = visibleFace,
-            spinX = remaining * 1080f,
-            spinY = remaining * 720f,
-            canvasWidth = size.width,
-            canvasHeight = size.height
-        )
-        drawIntoCanvas { composeCanvas ->
-            val native = composeCanvas.nativeCanvas
-            val bitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-            val edgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                style = Paint.Style.STROKE
-                strokeWidth = 1.65f
-                color = if (metallic) AndroidColor.argb(175, 245, 247, 249)
-                    else AndroidColor.argb(190, 237, 181, 246)
-            }
-            ordered.forEach { projected ->
-                val quad = projected.corners
-                val src = floatArrayOf(0f, 0f, 384f, 0f, 384f, 384f, 0f, 384f)
-                val dst = floatArrayOf(
-                    quad[0].x, quad[0].y,
-                    quad[1].x, quad[1].y,
-                    quad[2].x, quad[2].y,
-                    quad[3].x, quad[3].y
-                )
-                val matrix = Matrix()
-                if (!matrix.setPolyToPoly(src, 0, dst, 0, 4)) return@forEach
-                native.save()
-                native.concat(matrix)
-                bitmapPaint.alpha = (205 + projected.facing * 50f).toInt().coerceIn(0, 255)
-                native.drawBitmap(faceTiles[projected.index], 0f, 0f, bitmapPaint)
-                native.restore()
-                val path = Path().apply {
-                    moveTo(quad[0].x, quad[0].y)
-                    quad.drop(1).forEach { lineTo(it.x, it.y) }
-                    close()
-                }
-                edgePaint.alpha = (95 + projected.facing * 120f).toInt().coerceIn(0,255)
-                native.drawPath(path, edgePaint)
-            }
+    AndroidView(
+        factory = { context -> PremiumDiceGlView(context) },
+        modifier = modifier.semantics {
+            contentDescription = "$label — الوجه ${visibleFace + 1}"
+        },
+        update = { view ->
+            view.submit(visibleFace, spinProgress, metallic, faceTiles)
         }
-    }
+    )
 }
 
 /** Non-graphic cube material and user's own authored face media. */
@@ -119,7 +79,9 @@ private fun createFaceTile(text: String, photo: Bitmap?, metallic: Boolean): Bit
             ), null, Shader.TileMode.CLAMP
         )
     }
-    canvas.drawRoundRect(outer, 49f, 49f, bodyPaint)
+    // An opaque base is essential: roundedness now comes from real 3D
+    // geometry. Transparent bitmap corners would leave holes in the mesh.
+    canvas.drawRect(0f, 0f, dim.toFloat(), dim.toFloat(), bodyPaint)
 
     if (photo != null && !photo.isRecycled && photo.width > 0 && photo.height > 0) {
         val target = RectF(27f, 27f, 357f, 357f)

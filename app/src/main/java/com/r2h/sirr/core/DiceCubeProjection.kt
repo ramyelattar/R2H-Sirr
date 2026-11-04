@@ -30,6 +30,14 @@ internal object DiceCubeProjection {
         Point3(-1f,0f,0f), Point3(0f,1f,0f), Point3(0f,-1f,0f)
     )
 
+    /** Shared canonical face-to-camera angles for GLES2 and the legacy projection tests. */
+    fun baseRotation(selectedIndex: Int): Pair<Float, Float> {
+        require(selectedIndex in 0..5)
+        val x = when (selectedIndex) { 4 -> 90f; 5 -> -90f; else -> 0f }
+        val y = when (selectedIndex) { 1 -> -90f; 2 -> 180f; 3 -> 90f; else -> 0f }
+        return x to y
+    }
+
     private fun rad(degrees: Float): Double = degrees.toDouble() * PI / 180.0
     private fun rotateX(p: Point3, degrees: Float): Point3 {
         val c = cos(rad(degrees)).toFloat()
@@ -56,8 +64,7 @@ internal object DiceCubeProjection {
         require(selectedIndex in 0..5)
         require(canvasWidth > 0f && canvasHeight > 0f)
         require(spinX.isFinite() && spinY.isFinite())
-        val baseX = when (selectedIndex) { 4 -> 90f; 5 -> -90f; else -> 0f }
-        val baseY = when (selectedIndex) { 1 -> -90f; 2 -> 180f; 3 -> 90f; else -> 0f }
+        val (baseX, baseY) = baseRotation(selectedIndex)
         fun transform(p: Point3): Point3 {
             val facing = rotateY(rotateX(p, baseX), baseY)
             val spinning = rotateY(rotateX(facing, spinX), spinY)
