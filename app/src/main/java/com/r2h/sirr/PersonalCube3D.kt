@@ -74,7 +74,7 @@ internal fun PersonalCube3D(
 }
 
 /** Non-graphic cube material and user's own authored face media. */
-private fun createFaceTile(text: String, photo: Bitmap?, material: DiceMaterial): Bitmap {
+internal fun createFaceTile(text: String, photo: Bitmap?, material: DiceMaterial): Bitmap {
     val dim = 384
     val bitmap = Bitmap.createBitmap(dim, dim, Bitmap.Config.ARGB_8888)
     val canvas = AndroidCanvas(bitmap)
