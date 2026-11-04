@@ -339,8 +339,7 @@ internal fun DiceScreenV2() {
                         ) {
                             Text(
                                 "المكعب ${index + 1}",
-                                color = if (index == 0) Color(0xFFC9A0DE)
-                                    else Color(0xFFE2E3E8),
+                                color = Color(DiceMaterial.forCube(index).accent),
                                 style = MaterialTheme.typography.labelLarge
                             )
                             val photo = remember(vault, face.imageId) {
@@ -381,7 +380,7 @@ internal fun DiceScreenV2() {
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6E5B78))
-            ) { Text("Face Studio — تخصيص الأوجه", color = Color(0xFFE2E3E8)) }
+            ) { Text("Face Studio — ١٨ وجه", color = Color(0xFFE2E3E8)) }
 
             HorizontalDivider()
             OutlinedButton(
@@ -404,7 +403,7 @@ internal fun DiceScreenV2() {
         }
     }
     // Editing is a dedicated, focused sheet; never a twelve-row form below
-    // the gameplay stage. Drafts are still saved with PersonalDiceStore.
+    // the gameplay stage. Drafts use the independent triple vault.
     if (showEditor && !unreadable) {
         ModalBottomSheet(
             onDismissRequest = { showEditor = false },
@@ -471,7 +470,8 @@ internal fun DiceScreenV2() {
                     faces = activeCube,
                     visibleFace = editorFace,
                     spinProgress = 1f,
-                    metallic = editorCube == 1,
+                    material = DiceMaterial.forCube(editorCube),
+                    rollStyle = editorCube,
                     vault = vault,
                     label = "معاينة المكعب ${editorCube + 1}",
                     modifier = Modifier.size(176.dp).align(Alignment.CenterHorizontally)
@@ -508,15 +508,13 @@ internal fun DiceScreenV2() {
                     if (active.imageId != null) {
                         TextButton(
                             onClick = {
-                                val oldImage = active.imageId
+                                // Do not delete photo bytes: the two-cube vault
+                                // may still independently reference this image.
                                 val next = config.changeFace(
                                     editorCube, editorFace, active.copy(imageId = null)
                                 )
                                 clearResult()
-                                persist(next) {
-                                    if (next.cubes.flatten().none { it.imageId == oldImage })
-                                        vault.delete(oldImage)
-                                }
+                                persist(next)
                             }
                         ) { Text("حذف الصورة") }
                     }
@@ -590,7 +588,7 @@ internal fun DiceScreenV2() {
                 OutlinedButton(
                     onClick = { confirmClear = true },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("امسح تخصيص المكعبين") }
+                ) { Text("امسح تخصيص المكعبات الثلاثة") }
 
                 if (error.isNotBlank()) {
                     Text(error, color = Color(0xFFFFACAC))
