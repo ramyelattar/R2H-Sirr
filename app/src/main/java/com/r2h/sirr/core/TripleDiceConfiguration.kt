@@ -64,7 +64,7 @@ internal data class TripleDiceConfiguration(
         fun fromPair(pair: PersonalDiceConfiguration): TripleDiceConfiguration {
             pair.validateStructure()
             return TripleDiceConfiguration(
-                cubes = pair.cubes.map { it.toList() } + blank().cubes[2],
+                cubes = pair.cubes.map { it.toList() } + listOf(blank().cubes[2]),
                 durationSeconds = pair.durationSeconds
             )
         }
