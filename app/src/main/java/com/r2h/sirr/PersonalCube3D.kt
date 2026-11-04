@@ -84,19 +84,19 @@ internal fun createFaceTile(text: String, photo: Bitmap?, material: DiceMaterial
             0f, 0f, dim.toFloat(), dim.toFloat(),
             when (material) {
                 DiceMaterial.PLUM -> intArrayOf(
-                    AndroidColor.rgb(147, 105, 157),
-                    AndroidColor.rgb(88, 54, 103),
-                    AndroidColor.rgb(41, 25, 59)
+                    AndroidColor.rgb(129, 93, 146),
+                    AndroidColor.rgb(76, 52, 94),
+                    AndroidColor.rgb(39, 30, 55)
                 )
                 DiceMaterial.ROSE -> intArrayOf(
-                    AndroidColor.rgb(252, 219, 229),
-                    AndroidColor.rgb(215, 160, 183),
-                    AndroidColor.rgb(152, 95, 132)
+                    AndroidColor.rgb(224, 186, 199),
+                    AndroidColor.rgb(189, 144, 167),
+                    AndroidColor.rgb(139, 97, 123)
                 )
                 DiceMaterial.CHAMPAGNE -> intArrayOf(
-                    AndroidColor.rgb(249, 242, 229),
-                    AndroidColor.rgb(208, 194, 176),
-                    AndroidColor.rgb(145, 137, 132)
+                    AndroidColor.rgb(217, 203, 180),
+                    AndroidColor.rgb(183, 167, 145),
+                    AndroidColor.rgb(140, 126, 115)
                 )
             }, null, Shader.TileMode.CLAMP
         )
@@ -130,7 +130,15 @@ internal fun createFaceTile(text: String, photo: Bitmap?, material: DiceMaterial
         }
     }
     if (text.isNotBlank()) {
-        val size = if (text.length < 18) 49f else if (text.length < 40) 40f else 33f
+        val clean = text.trim()
+        val size = when {
+            photo != null && clean.length <= 15 -> 51f
+            photo != null -> 40f
+            clean.length <= 12 -> 69f
+            clean.length <= 24 -> 54f
+            clean.length <= 40 -> 45f
+            else -> 37f
+        }
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             color = if (photo != null) AndroidColor.WHITE
                 else if (material == DiceMaterial.PLUM) AndroidColor.rgb(251,238,252)
@@ -140,7 +148,6 @@ internal fun createFaceTile(text: String, photo: Bitmap?, material: DiceMaterial
             setShadowLayer(1.3f, 0f, 1.4f,
                 if (photo != null) AndroidColor.BLACK else AndroidColor.argb(130,255,255,255))
         }
-        val clean = text.trim()
         val layout = StaticLayout.Builder.obtain(clean, 0, clean.length, paint, 306)
             .setAlignment(Layout.Alignment.ALIGN_CENTER)
             .setTextDirection(TextDirectionHeuristics.FIRSTSTRONG_RTL)
@@ -154,9 +161,11 @@ internal fun createFaceTile(text: String, photo: Bitmap?, material: DiceMaterial
         canvas.restore()
     }
     Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = AndroidColor.argb(if (material == DiceMaterial.CHAMPAGNE) 175 else 135, 255, 255, 255)
+        // A fine seam is enough; the mesh and shader supply the true bevel.
+        // The previous bright 5px white stroke made every cube look plastic.
+        color = AndroidColor.argb(28, 250, 244, 245)
         style = Paint.Style.STROKE
-        strokeWidth = 5f
+        strokeWidth = 2f
     }.also { canvas.drawRoundRect(RectF(10f, 10f, 374f, 374f), 43f, 43f, it) }
     return bitmap
 }
