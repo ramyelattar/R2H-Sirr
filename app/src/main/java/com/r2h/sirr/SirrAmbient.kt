@@ -120,10 +120,8 @@ internal fun SirrCinematicSplash(
                             center = center, style = Stroke(width = 1.3.dp.toPx()))
                     }
                 }
-                Image(
-                    painter = painterResource(R.drawable.r2h_play_foreground),
-                    contentDescription = "R2H-Play",
-                    modifier = Modifier.size(192.dp)
+                R2HBrandLogo(
+                    modifier = Modifier.fillMaxWidth().height(96.dp)
                 )
             }
             androidx.compose.animation.AnimatedVisibility(
@@ -136,9 +134,6 @@ internal fun SirrCinematicSplash(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("R2H-Play",
-                        color = Color(0xFFFFDACA), fontSize = 43.sp,
-                        fontWeight = FontWeight.Bold)
                     Text("مش كل الأسرار بتتقال بصوت عالي.",
                         color = Color(0xFFF6CEDF),
                         style = MaterialTheme.typography.titleMedium,
