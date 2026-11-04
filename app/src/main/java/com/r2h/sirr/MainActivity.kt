@@ -271,21 +271,24 @@ private fun AdultGate(onConfirm: () -> Boolean) {
     var ageVerified by remember { mutableStateOf(false) }
     var consent by remember { mutableStateOf(false) }
     var saveFailed by remember { mutableStateOf(false) }
-    Box(
+    Column(
         Modifier.fillMaxSize().background(
             Brush.verticalGradient(listOf(
                 Color(0xDD300F22), Color(0x960B0711), Color(0x8809070D)))
         ).statusBarsPadding().navigationBarsPadding()
     ) {
+        R2HBrandLogo(
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+                .width(146.dp).height(70.dp)
+        )
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 32.dp),
+            Modifier.weight(1f).verticalScroll(rememberScrollState())
+                .padding(horizontal = 28.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start
         ) {
             Text("الدخول للكبار فقط", color = Gold, style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(16.dp))
-            Text("R2H-Play", color = Gold, fontSize = 45.sp,
-                fontWeight = FontWeight.ExtraBold, lineHeight = 57.sp)
             Text("حكاية جديدة كل مرة", color = Color(0xFFE5AFCB),
                 style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(12.dp))
