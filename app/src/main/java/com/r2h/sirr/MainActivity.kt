@@ -169,8 +169,14 @@ private fun SirrApp() {
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                     // Header typography is baked into the image. Its entire top band is
                     // rendered below the system inset; reserve a proportional safe band.
-                    val safeHeader = (LocalConfiguration.current.screenHeightDp.dp * .128f)
-                        .coerceIn(94.dp, 126.dp)
+                    val safeHeader = if (route == "dice") {
+                        // The game stage needs the usable viewport; the branded
+                        // wallpaper top band is not a Dice interaction target.
+                        12.dp
+                    } else {
+                        (LocalConfiguration.current.screenHeightDp.dp * .128f)
+                            .coerceIn(94.dp, 126.dp)
+                    }
                     Spacer(Modifier.height(safeHeader))
                     Row(
                         Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 3.dp, bottom = 2.dp),
@@ -214,7 +220,7 @@ private fun SirrApp() {
                                          "whispers", "scratch" ->
                                              "الهمسات والأسرار الجارية مش محفوظة علشان الخصوصية. لو خرجت دلوقتي، هتفقد النصوص والمحتوى المؤقت ومش هتقدر تكمل نفس الجولة."
                                          "dice" ->
-                                             "إعدادات المكعبين والوجوه اللي حفظتها بتفضل مشفّرة على الموبايل. أي تعديلات مش محفوظة هتضيع لما تخرج."
+                                             "إعدادات المكعبات الثلاثة والوجوه اللي حفظتها بتفضل مشفّرة على الموبايل. أي تعديلات مش محفوظة هتضيع لما تخرج."
                                          else ->
                                              "جولات التحديات المحلية محفوظة مشفّرة، لكن وسائط المعاينة المؤقتة ممكن تتمسح."
                                      }
