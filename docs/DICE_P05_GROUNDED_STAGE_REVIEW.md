@@ -1,6 +1,6 @@
 # R2H-Play — Dice P0.5: grounded 3D scene and roughness-aware materials
 
-**STATUS:** Source implementation; Android build, shader compilation, CPU/GPU frame timing, unit tests and phone visuals **NOT VERIFIED**.
+**STATUS:** Source implementation; Android build, runtime GLES2 shader compilation, CPU/GPU frame timing, JUnit tests and phone visuals **NOT VERIFIED**. The exact checked-in pure Kotlin geometry file (Git blob `ba25993685c0f569eb63ce717f0b58a6be635720`) was separately compiled with `kotlinc`; a small standalone sanity program passed floor contact, three footprint gaps and 18 texture indices. This is **not** the Android build or JUnit suite.
 
 ## Motivation
 Owner's P0.4 photos show 3 cubes still appearing suspended inside a black rectangle with insufficient contact cues, a relatively flat roll CTA, and materials resembling plastic. More gradient/glow tuning will not solve the scene geometry.
