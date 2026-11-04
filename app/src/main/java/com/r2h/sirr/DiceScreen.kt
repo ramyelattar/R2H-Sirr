@@ -6,6 +6,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
@@ -39,6 +41,8 @@ internal fun DiceScreenV2() {
     var unreadable by remember(vault) { mutableStateOf(restore.unreadable) }
     var showLegacy by remember { mutableStateOf(false) }
     var showEditor by remember { mutableStateOf(false) }
+    var editorCube by remember { mutableIntStateOf(0) }
+    var editorFace by remember { mutableIntStateOf(0) }
     var confirmClear by remember { mutableStateOf(false) }
     var photoTarget by remember { mutableStateOf<Pair<Int,Int>?>(null) }
     var error by remember { mutableStateOf("") }
@@ -242,11 +246,7 @@ internal fun DiceScreenV2() {
                     color = MaterialTheme.colorScheme.tertiary
                 )
             }
-            SirrAction(
-                text = if (rolling) "المكعبات بتلف…" else
-                    if (revealedFaces != null) "ارمي المكعبين تاني" else "ارمي المكعبين",
-                enabled = !rolling && config.playable,
-                explanation = if (!config.playable) "كمّل الأوجه والأوزان من زر التخصيص" else null,
+            Button(
                 onClick = {
                     val pick = runCatching { config.roll() }
                         .onFailure { error = "راجع الأوجه والأوزان الأول" }.getOrNull()
@@ -260,139 +260,92 @@ internal fun DiceScreenV2() {
                         error = ""
                         rollNumber++
                     }
-                }
-            )
+                },
+                enabled = !rolling && config.playable,
+                modifier = Modifier.fillMaxWidth().height(58.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFC9A0DE),
+                    contentColor = Color(0xFF120B19),
+                    disabledContainerColor = Color(0xFF332A3B),
+                    disabledContentColor = Color(0xFFAFA4B6)
+                )
+            ) {
+                Text(
+                    when {
+                        rolling -> "المكعبات بتلف…"
+                        revealedFaces != null -> "ارمِ المكعبين تاني"
+                        else -> "ارمِ المكعبين"
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
             if (revealedFaces != null && !rolling) {
-                SirrSection("01", "الوجهان اللي ظهروا",
-                    "كل وجه نتيجة مستقلة، من غير تركيب جملة تلقائية")
+                Text(
+                    "النتيجة",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color(0xFFF8F5FA)
+                )
                 revealedFaces!!.forEachIndexed { index, face ->
-                    val caption = face.text.ifBlank {
-                        if (face.imageId != null) "وجه بصورة من إضافتك"
-                        else "الوجه غير مخصص"
+                    Surface(
+                        color = Color(0xFF191421),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp, Color(0xFF342C3C)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            Modifier.padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                "المكعب ${index + 1}",
+                                color = if (index == 0) Color(0xFFC9A0DE)
+                                    else Color(0xFFE2E3E8),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            val photo = remember(vault, face.imageId) {
+                                vault.readPhotoThumbnail(face.imageId)
+                            }
+                            if (photo != null) {
+                                androidx.compose.foundation.Image(
+                                    bitmap = photo,
+                                    contentDescription = "الصورة اللي أضفتها للوجه",
+                                    modifier = Modifier.fillMaxWidth()
+                                        .height(168.dp)
+                                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                )
+                            }
+                            if (face.text.isNotBlank()) {
+                                Text(
+                                    face.text,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color(0xFFF8F5FA)
+                                )
+                            } else if (photo != null) {
+                                Text("وجه بصورة من إضافتك", color = Color(0xFFB9B0C2))
+                            }
+                        }
                     }
-                    Text(
-                        "المكعب ${index + 1}: $caption",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.titleMedium
-                    )
                 }
-                Text("ممكن ترمي تاني أو ترفض أي نتيجة. مفيش أي تنفيذ إجباري.",
+                Text(
+                    "تقدر ترفض أي نتيجة أو تعيد الرمية. مفيش تنفيذ إجباري.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    color = Color(0xFFB9B0C2)
+                )
             }
 
             OutlinedButton(
                 enabled = !rolling,
-                onClick = { showEditor = !showEditor },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text(if (showEditor) "اقفل تخصيص الأوجه" else "خصص الأوجه والصور والأوزان") }
+                onClick = { showEditor = true },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6E5B78))
+            ) { Text("Face Studio — تخصيص الأوجه", color = Color(0xFFE2E3E8)) }
 
-            if (showEditor) {
-                SirrSection("02", "الأوجه بتاعتك", "المكعبان مستقلان. تقدر تحفظ إعدادات ناقصة وتكملها بعدين.")
-                Text(
-                    "لكل مكعب 6 أوجه. اكتب النص أو ضيف صورة من جهازك. لا توجد عبارات جاهزة.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                config.cubes.forEachIndexed { cube, faces ->
-                    val weightSum = faces.sumOf { it.weight }
-                    Text(
-                        "المكعب ${cube + 1} — مجموع الأوزان: $weightSum٪",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = if (weightSum == 100) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.error
-                    )
-                    faces.forEachIndexed { index, face ->
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = face.text,
-                                enabled = !rolling,
-                                onValueChange = { value ->
-                                    editFace(cube, index) { it.copy(text = value.take(72)) }
-                                },
-                                label = { Text("وجه ${index + 1}") },
-                                modifier = Modifier.weight(3f),
-                                maxLines = 2
-                            )
-                            OutlinedTextField(
-                                value = face.weight.toString(),
-                                enabled = !rolling,
-                                onValueChange = { value ->
-                                    val number = value.toIntOrNull()?.coerceIn(0,100) ?: 0
-                                    editFace(cube,index) { it.copy(weight = number) }
-                                },
-                                label = { Text("الوزن ٪") },
-                                modifier = Modifier.weight(1.4f),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                            TextButton(
-                                enabled = !rolling,
-                                onClick = {
-                                    visibleIndices = visibleIndices.toMutableList().also {
-                                        it[cube] = index
-                                    }
-                                    clearResult()
-                                }
-                            ) { Text("عاين الوجه") }
-                            OutlinedButton(
-                                enabled = !rolling,
-                                onClick = {
-                                    photoTarget = cube to index
-                                    choosePhoto.launch("image/*")
-                                }
-                            ) {
-                                Text(if (face.imageId == null) "ضيف صورة" else "غيّر الصورة")
-                            }
-                            if (face.imageId != null) TextButton(
-                                enabled = !rolling,
-                                onClick = {
-                                    val oldImage = face.imageId
-                                    val next = config.changeFace(cube,index,face.copy(imageId = null))
-                                    clearResult()
-                                    persist(next) {
-                                        if (next.cubes.flatten().none { it.imageId == oldImage })
-                                            vault.delete(oldImage)
-                                    }
-                                }
-                            ) { Text("امسح الصورة") }
-                        }
-                    }
-                }
-                Text("مدة حركة المكعبين",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold)
-                Row(Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(2,3,5,7,10,13,20).forEach { seconds ->
-                        FilterChip(
-                            selected = config.durationSeconds == seconds,
-                            enabled = !rolling,
-                            onClick = {
-                                config = config.copy(durationSeconds = seconds)
-                                clearResult()
-                            },
-                            label = { Text("$seconds ث") }
-                        )
-                    }
-                }
-                EffectPreferencesPanel(effects)
-                Button(
-                    onClick = { persist(config) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !rolling
-                ) { Text("احفظ تخصيص المكعبين مشفّرًا") }
-                OutlinedButton(
-                    onClick = { confirmClear = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !rolling
-                ) { Text("امسح التخصيص وابدأ من جديد") }
-            }
             HorizontalDivider()
             OutlinedButton(
                 onClick = { showLegacy = true },
@@ -413,4 +366,197 @@ internal fun DiceScreenV2() {
             )
         }
     }
+    // Editing is a dedicated, focused sheet; never a twelve-row form below
+    // the gameplay stage. Drafts are still saved with PersonalDiceStore.
+    if (showEditor && !unreadable) {
+        ModalBottomSheet(
+            onDismissRequest = { showEditor = false },
+            containerColor = Color(0xFF120F1A),
+            contentColor = Color(0xFFF8F5FA),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                topStart = 28.dp, topEnd = 28.dp
+            )
+        ) {
+            Column(
+                Modifier.fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 18.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text("FACE STUDIO", color = Color(0xFFC9A0DE),
+                    style = MaterialTheme.typography.labelLarge)
+                Text("خصص أوجه المكعبين",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold)
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    repeat(2) { cube ->
+                        FilterChip(
+                            modifier = Modifier.weight(1f),
+                            selected = editorCube == cube,
+                            onClick = { editorCube = cube },
+                            label = {
+                                Text(if (cube == 0) "المكعب الليلكي" else "المكعب الفضي")
+                            }
+                        )
+                    }
+                }
+
+                val activeCube = config.cubes[editorCube]
+                repeat(2) { row ->
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        repeat(3) { column ->
+                            val index = row * 3 + column
+                            val face = activeCube[index]
+                            FilterChip(
+                                modifier = Modifier.weight(1f),
+                                selected = editorFace == index,
+                                onClick = { editorFace = index },
+                                label = {
+                                    Text(
+                                        "وجه ${index + 1}" +
+                                            if (face.configured) " ✓" else ""
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+
+                PersonalCube3D(
+                    faces = activeCube,
+                    visibleFace = editorFace,
+                    spinProgress = 1f,
+                    metallic = editorCube == 1,
+                    vault = vault,
+                    label = "معاينة المكعب ${editorCube + 1}",
+                    modifier = Modifier.size(176.dp).align(Alignment.CenterHorizontally)
+                )
+
+                val active = activeCube[editorFace]
+                OutlinedTextField(
+                    value = active.text,
+                    onValueChange = { value ->
+                        editFace(editorCube, editorFace) {
+                            it.copy(text = value.take(72))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("النص اللي هتكتبه للوجه") },
+                    minLines = 2,
+                    maxLines = 3,
+                    supportingText = { Text("${active.text.length} / 72") }
+                )
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            photoTarget = editorCube to editorFace
+                            choosePhoto.launch("image/*")
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(if (active.imageId == null) "إضافة صورة" else "تغيير الصورة")
+                    }
+                    if (active.imageId != null) {
+                        TextButton(
+                            onClick = {
+                                val oldImage = active.imageId
+                                val next = config.changeFace(
+                                    editorCube, editorFace, active.copy(imageId = null)
+                                )
+                                clearResult()
+                                persist(next) {
+                                    if (next.cubes.flatten().none { it.imageId == oldImage })
+                                        vault.delete(oldImage)
+                                }
+                            }
+                        ) { Text("حذف الصورة") }
+                    }
+                }
+
+                val sum = activeCube.sumOf { it.weight }
+                Text(
+                    "وزن الوجه: ${active.weight}% — مجموع المكعب: ${sum}%",
+                    color = if (sum == 100) Color(0xFFC9A0DE) else Color(0xFFFFACAC),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Slider(
+                    value = active.weight.toFloat(),
+                    onValueChange = { value ->
+                        editFace(editorCube, editorFace) {
+                            it.copy(weight = value.toInt().coerceIn(0, 100))
+                        }
+                    },
+                    valueRange = 0f..100f,
+                    steps = 99,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                TextButton(
+                    onClick = {
+                        config = config.copy(cubes = config.cubes.mapIndexed { cube, faces ->
+                            if (cube != editorCube) faces
+                            else faces.mapIndexed { index, face ->
+                                face.copy(weight = com.r2h.sirr.core.GameLogic.evenWeights[index])
+                            }
+                        })
+                        clearResult()
+                    }
+                ) { Text("توزيع الأوزان بالتساوي للمكعب ده") }
+
+                Text("مدة الحركة", style = MaterialTheme.typography.titleSmall)
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(2, 3, 5, 7, 10, 13, 20).forEach { seconds ->
+                        FilterChip(
+                            selected = config.durationSeconds == seconds,
+                            onClick = {
+                                config = config.copy(durationSeconds = seconds)
+                                clearResult()
+                            },
+                            label = { Text("$seconds ث") }
+                        )
+                    }
+                }
+                EffectPreferencesPanel(effects)
+
+                if (config != saved) {
+                    Text(
+                        "التغييرات لسه غير محفوظة. تقدر تحفظ مسودة حتى لو الأوجه مش مكتملة.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFE2E3E8)
+                    )
+                }
+                Button(
+                    onClick = {
+                        persist(config) { showEditor = false }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFC9A0DE),
+                        contentColor = Color(0xFF120B19)
+                    )
+                ) { Text("احفظ التخصيص المشفر") }
+                OutlinedButton(
+                    onClick = { confirmClear = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("امسح تخصيص المكعبين") }
+
+                if (error.isNotBlank()) {
+                    Text(error, color = Color(0xFFFFACAC))
+                }
+                Spacer(Modifier.height(28.dp))
+            }
+        }
+    }
+
 }
