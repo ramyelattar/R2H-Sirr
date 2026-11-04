@@ -186,7 +186,8 @@ private fun SirrApp() {
                         }
                         R2HBrandLogo(
                             modifier = Modifier.align(Alignment.Center)
-                                .width(146.dp).height(58.dp)
+                                .width(164.dp).height(58.dp),
+                            compact = true
                         )
                         TextButton(
                             onClick = {
@@ -279,7 +280,8 @@ private fun AdultGate(onConfirm: () -> Boolean) {
     ) {
         R2HBrandLogo(
             modifier = Modifier.align(Alignment.CenterHorizontally)
-                .width(146.dp).height(70.dp)
+                .width(172.dp).height(70.dp),
+            compact = true
         )
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState())
