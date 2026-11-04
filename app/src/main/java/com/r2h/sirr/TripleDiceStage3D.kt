@@ -20,6 +20,7 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.r2h.sirr.core.DiceCubeProjection
 import com.r2h.sirr.core.PersonalDiceFace
 import com.r2h.sirr.core.RoundedDiceMesh
+import com.r2h.sirr.core.TripleDiceStageGeometry
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -211,12 +212,9 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
         val rest = 1f - spins[cube]
         val model = FloatArray(16)
         Matrix.setIdentityM(model, 0)
-        val x = when (cube) { 0 -> -0.81f; 1 -> 0.81f; else -> 0f }
-        val y = if (cube == 2) -0.67f else 0.48f
-        val z = if (cube == 2) 0.33f else -0.23f
-        val scale = if (cube == 2) 1.07f else 0.90f
-        Matrix.translateM(model, 0, x, y, z)
-        Matrix.scaleM(model, 0, scale, scale, scale)
+        val pose = TripleDiceStageGeometry.pose(cube)
+        Matrix.translateM(model, 0, pose.x, pose.y, pose.z)
+        Matrix.scaleM(model, 0, pose.scale, pose.scale, pose.scale)
         Matrix.rotateM(model, 0, -28f, 0f, 1f, 0f)
         Matrix.rotateM(model, 0, 23f, 1f, 0f, 0f)
         val spinY = when (cube) { 0 -> 720f; 1 -> 1080f; else -> -1080f }
@@ -248,7 +246,7 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
         GLES20.glVertexAttribPointer(uvAttr, 2, GLES20.GL_FLOAT, false, 32, mesh)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         for (face in 0 until 6) {
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[cube * 6 + face])
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[TripleDiceStageGeometry.textureIndex(cube, face)])
             GLES20.glDrawArrays(GLES20.GL_TRIANGLES, face * verticesPerFace, verticesPerFace)
         }
         GLES20.glDisableVertexAttribArray(posAttr)
@@ -263,9 +261,8 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         GLES20.glUseProgram(shadowProgram)
         GLES20.glUniform1f(shadowMaterialUniform, cube.toFloat())
-        val cx = when (cube) { 0 -> -0.59f / aspect; 1 -> 0.59f / aspect; else -> 0f }
-        val cy = if (cube == 2) -0.83f else 0.02f
-        GLES20.glUniform2f(shadowCenterUniform, cx, cy)
+        val pose = TripleDiceStageGeometry.pose(cube)
+        GLES20.glUniform2f(shadowCenterUniform, pose.x * 0.728f / aspect, pose.shadowY)
         GLES20.glUniform2f(shadowSizeUniform, 0.47f / aspect, 0.13f)
         shadowQuad.position(0)
         GLES20.glEnableVertexAttribArray(shadowPosAttr)
