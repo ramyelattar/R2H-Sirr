@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontFamily
@@ -171,10 +172,17 @@ private fun SirrApp() {
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                     // The brand is centered independently of the back/music
                     // controls. Do not create a header inside every game page.
-                    Box(
-                        Modifier.fillMaxWidth().height(70.dp)
+                    BoxWithConstraints(
+                        Modifier.fillMaxWidth().height(86.dp)
                             .padding(horizontal = 10.dp)
                     ) {
+                        // Make the centered logo noticeably larger while reserving
+                        // symmetric space for both navigation/music controls.
+                        // At larger font scales the logo yields space first.
+                        val sideClearance = (68f *
+                            LocalDensity.current.fontScale.coerceAtLeast(1f)).dp
+                        val logoWidth = (maxWidth - sideClearance * 2)
+                            .coerceAtLeast(0.dp).coerceAtMost(208.dp)
                         if (route != "home") {
                             TextButton(
                                 onClick = { navigateHome() },
@@ -186,7 +194,7 @@ private fun SirrApp() {
                         }
                         R2HBrandLogo(
                             modifier = Modifier.align(Alignment.Center)
-                                .width(164.dp).height(58.dp),
+                                .width(logoWidth).height(76.dp),
                             compact = true
                         )
                         TextButton(
@@ -280,7 +288,7 @@ private fun AdultGate(onConfirm: () -> Boolean) {
     ) {
         R2HBrandLogo(
             modifier = Modifier.align(Alignment.CenterHorizontally)
-                .width(172.dp).height(70.dp),
+                .width(220.dp).height(92.dp),
             compact = true
         )
         Column(
