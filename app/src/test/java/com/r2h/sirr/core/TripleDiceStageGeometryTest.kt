@@ -20,7 +20,8 @@ class TripleDiceStageGeometryTest {
         assertEquals(rearA.z, rearB.z, 0.0001f)
         assertTrue(forward.z > rearA.z)
         assertEquals(0f, forward.x, 0.0001f)
-        assertTrue(forward.scale > rearA.scale)
+        // A closer die already looks bigger; its actual model must be smaller.
+        assertTrue(forward.scale < rearA.scale)
 
         for (cube in 0..2) {
             val pose = TripleDiceStageGeometry.pose(cube)
@@ -31,6 +32,15 @@ class TripleDiceStageGeometryTest {
                 0.0001f
             )
         }
+    }
+
+    @Test fun frontCubeNoLongerDominatesProjection() {
+        val rear = TripleDiceStageGeometry.apparentScaleProxy(0)
+        val front = TripleDiceStageGeometry.apparentScaleProxy(2)
+        val ratio = front / rear
+        assertTrue("Front still appears smaller than rear", ratio > 1.0f)
+        assertTrue("Front projected size should be balanced", ratio < 1.35f)
+        assertEquals(rear, TripleDiceStageGeometry.apparentScaleProxy(1), 0.0001f)
     }
 
     @Test fun worldSpaceCubeFootprintsDoNotIntersect() {
