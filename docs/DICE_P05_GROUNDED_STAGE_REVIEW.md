@@ -13,6 +13,7 @@ Owner's P0.4 photos show 3 cubes still appearing suspended inside a black rectan
 5. **Material lighting:** GLES2-compatible lightweight GGX normal-distribution + Schlick geometry/Fresnel approximation, cube-specific roughness and low metallic factors. Textures still contain only user-authored content; this is **not full PBR, IBL, reflections, or hardware ray tracing**.
 6. **World-space contact occlusion:** soft analytical darkening around the 3 cube footprints. Not real shadow mapping; it is stylized local shading, with softness responding to the roll's lift.
 7. **Roll button:** subdued deep plum surface, thin gradient border, higher text contrast and restrained elevation.
+8. **GPU compatibility fallbacks:** if the GGX-inspired GLES2 shader fails to compile/link, the renderer falls back to a basic diffuse shader; if analytical floor contact shading fails, a plain world-space floor is used. Shader issues are logged without recording owner data.
 8. Replaced stage unit tests (6 tests declared) for shared plane/rotation contact, footprint separation, texture mapping 0..17 and invalid inputs. Existing mesh/roll and encrypted vault remain unchanged.
 
 ## Hard safeguards
