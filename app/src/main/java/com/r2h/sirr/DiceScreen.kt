@@ -5,6 +5,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
@@ -291,10 +292,10 @@ internal fun DiceScreenV2() {
                 modifier = Modifier.fillMaxWidth().height(58.dp),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFC9A0DE),
-                    contentColor = Color(0xFF120B19),
-                    disabledContainerColor = Color(0xFF332A3B),
-                    disabledContentColor = Color(0xFFAFA4B6)
+                    containerColor = Color(0xFF90647E),
+                    contentColor = Color(0xFFFDF7FB),
+                    disabledContainerColor = Color(0xFF302732),
+                    disabledContentColor = Color(0xFFA99BAA)
                 )
             ) {
                 Text(
@@ -309,58 +310,68 @@ internal fun DiceScreenV2() {
             }
             if (revealedFaces != null && !rolling) {
                 Text(
-                    "النتيجة",
-                    style = MaterialTheme.typography.titleLarge,
+                    "النتائج الثلاثة",
+                    style = MaterialTheme.typography.titleMedium,
                     color = Color(0xFFF8F5FA)
                 )
                 revealedFaces!!.forEachIndexed { index, face ->
+                    val accent = Color(DiceMaterial.forCube(index).accent)
+                    val photo = remember(vault, face.imageId) {
+                        vault.readPhotoThumbnail(face.imageId)
+                    }
                     Surface(
-                        color = Color(0xFF191421),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp),
+                        color = Color(0xFF16111D),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(17.dp),
                         border = androidx.compose.foundation.BorderStroke(
-                            1.dp, Color(0xFF342C3C)
+                            1.dp, Color(0xFF332A38)
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(
-                            Modifier.padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text(
-                                "المكعب ${index + 1}",
-                                color = Color(DiceMaterial.forCube(index).accent),
-                                style = MaterialTheme.typography.labelLarge
+                            Box(
+                                Modifier.width(3.dp).height(51.dp)
+                                    .background(accent, androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
                             )
-                            val photo = remember(vault, face.imageId) {
-                                vault.readPhotoThumbnail(face.imageId)
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Text(
+                                    "المكعب ${index + 1}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = accent
+                                )
+                                if (face.text.isNotBlank()) {
+                                    Text(
+                                        face.text,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFFF8F5FA)
+                                    )
+                                } else if (photo != null) {
+                                    Text(
+                                        "وجه بصورة من إضافتك",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color(0xFFC5BAC9)
+                                    )
+                                }
                             }
                             if (photo != null) {
                                 androidx.compose.foundation.Image(
                                     bitmap = photo,
-                                    contentDescription = "الصورة اللي أضفتها للوجه",
-                                    modifier = Modifier.fillMaxWidth()
-                                        .height(168.dp)
-                                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
+                                    contentDescription = "صورة الوجه اللي أضفتها",
+                                    modifier = Modifier.size(65.dp)
+                                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp)),
                                     contentScale = androidx.compose.ui.layout.ContentScale.Crop
                                 )
-                            }
-                            if (face.text.isNotBlank()) {
-                                Text(
-                                    face.text,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color(0xFFF8F5FA)
-                                )
-                            } else if (photo != null) {
-                                Text("وجه بصورة من إضافتك", color = Color(0xFFB9B0C2))
                             }
                         }
                     }
                 }
-                Text(
-                    "تقدر ترفض أي نتيجة أو تعيد الرمية. مفيش تنفيذ إجباري.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFB9B0C2)
-                )
             }
 
             OutlinedButton(
