@@ -33,138 +33,25 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** Keep one premium wallpaper and a restrained atmosphere across every screen.
- * The wallpaper is an on-device resource, never fetched from the network.
- * If the image hasn't been installed yet, the existing dark fallback remains.
+/**
+ * A single shared background for every route, including splash, age gate,
+ * home, both Dice modes, all game screens, settings and privacy.
+ *
+ * The user-provided video is muted and packaged locally. Honor the app's
+ * cinematic preference AND the system animator scale; when disabled, show the
+ * static poster from the same video instead of running a hidden decoder.
  */
-private fun sceneHue(scene: String): Color = when (scene) {
-    "splash", "gate", "home" -> Color(0xFFFF74BC)
-    "couple", "whispers" -> Color(0xFFFF77BC)
-    "party", "quiz" -> Color(0xFFB990F5)
-    "dice", "scratch" -> Color(0xFFF2AEAD)
-    else -> Color(0xFFD78EC9)
-}
-
 @Composable
 internal fun SirrAmbientBackground(scene: String, allowMotion: Boolean) {
     val context = LocalContext.current
-    val animationsAllowed = remember(context, allowMotion) {
+    val motionAllowed = remember(context, allowMotion) {
         allowMotion && runCatching {
             Settings.Global.getFloat(
                 context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f
             ) > 0f
         }.getOrDefault(true)
     }
-    // One continuous phase for all routes: navigation won't restart the effect.
-    if (animationsAllowed) {
-        val transition = rememberInfiniteTransition(label = "r2h-wallpaper-glow")
-        val phase by transition.animateFloat(
-            initialValue = 0f, targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(36000, easing = LinearEasing)
-            ),
-            label = "r2h-slow-glow"
-        )
-        R2HWallpaperScene(scene, phase)
-    } else {
-        R2HWallpaperScene(scene, .25f)
-    }
-}
-
-@Composable
-private fun R2HWallpaperScene(scene: String, phase: Float) {
-    val context = LocalContext.current
-    // A dynamic lookup lets Android compile before the user's wallpaper is copied in.
-    // Once drawable-nodpi/r2h_neon_wallpaper.webp exists, it is used automatically.
-    val wallpaperId = remember(context) {
-        context.resources.getIdentifier(
-            "r2h_neon_wallpaper", "drawable", context.packageName
-        )
-    }
-    Box(Modifier.fillMaxSize().background(Color(0xFF0C0412))) {
-        // The image itself carries +18 / R2H / Play All The Day in its top band.
-        // Drawing the whole picture below the REAL Android status inset prevents
-        // clock, battery, camera and cutouts from covering any of these letters.
-        Box(Modifier.fillMaxSize().statusBarsPadding()) {
-        if (wallpaperId != 0) {
-            Image(
-                painter = painterResource(wallpaperId),
-                contentDescription = null,
-                contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            Canvas(Modifier.fillMaxSize()) {
-                drawRect(Brush.verticalGradient(listOf(
-                    Color(0xFF210B24), Color(0xFF0B0612), Color(0xFF210A22)
-                )))
-            }
-        }
-        Canvas(Modifier.matchParentSize()) {
-            val width = size.width
-            val height = size.height
-            val unit = size.minDimension
-            val cycle = phase * 2f * PI.toFloat()
-            // Darkens only the reading area, preserving the golden top R2H lettering.
-            drawRect(Brush.verticalGradient(listOf(
-                Color(0xFF09020C).copy(alpha = .04f),
-                Color(0xFF0A0611).copy(alpha = .17f),
-                Color(0xFF090410).copy(alpha = .25f),
-                Color(0xFF06030A).copy(alpha = .32f)
-            )))
-            val accent = sceneHue(scene)
-            // Very low-opacity lighting along the margins, not over controls.
-            for (side in 0..1) {
-                val px = if (side == 0) width * .04f else width * .96f
-                val py = height * (
-                    .46f + .11f * sin(cycle + side * 1.8f)
-                )
-                val center = Offset(px, py)
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            accent.copy(alpha = .11f),
-                            accent.copy(alpha = .035f),
-                            Color.Transparent
-                        ), center = center, radius = unit * .49f
-                    ),
-                    radius = unit * .49f, center = center
-                )
-            }
-            // Ribbon reflections drift around the borders; the painted wordmark
-            // never translates, resizes or pulses.
-            val sway = sin(cycle) * height * .017f
-            val edgeRibbon = Path().apply {
-                moveTo(-width * .04f, height * .34f + sway)
-                cubicTo(width * .035f, height * .41f + sway,
-                    width * .018f, height * .49f - sway,
-                    width * .10f, height * .59f)
-            }
-            drawPath(
-                path = edgeRibbon,
-                brush = Brush.linearGradient(listOf(
-                    Color.Transparent, accent.copy(alpha = .20f),
-                    Color.White.copy(alpha = .14f), Color.Transparent
-                )),
-                style = Stroke(width = 1.6.dp.toPx())
-            )
-            // Sparse twinkling edge stars: no animated scaling of the image or logo.
-            for (i in 0 until 30) {
-                val left = i % 2 == 0
-                val px = width * (if (left)
-                    .015f + (i * 17 % 11) * .008f
-                else .985f - (i * 13 % 11) * .008f)
-                val py = height * (.10f + ((i * 47 + 19) % 83) / 100f)
-                val twinkle = (sin(cycle + i * .77f) + 1f) * .5f
-                drawCircle(
-                    color = Color(0xFFFFDBEC).copy(alpha = .13f + twinkle * .27f),
-                    radius = (if (i % 6 == 0) 1.9f else 1.05f).dp.toPx(),
-                    center = Offset(px, py)
-                )
-            }
-        }
-        }
-    }
+    R2HVideoWallpaper(motionAllowed)
 }
 
 /** This is a Compose entrance, distinct from Android's short operating-system splash. */
