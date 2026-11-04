@@ -172,38 +172,52 @@ internal fun DiceScreenV2() {
                 Text("مسح إعدادات المكعبين غير المقروءة")
             }
         } else {
-            SirrIntro(
-                "مكعبان × 6 أوجه",
-                "كل رمية بتجمع وجه من كل مكعب.",
-                "المكعب البنفسجي والفضي زي الفكرة اللي اخترتها. المحتوى اللي بيظهر عليهم من إضافتك أنت.",
-                accent = Color(0xFFCBA7E4),
-                motif = "dice"
+            Text(
+                "DICE STUDIO",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFFC9A0DE),
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
-            Row(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
-                verticalAlignment = Alignment.Top
+                color = Color(0xFF100D17),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp, Color(0xFF342C3C)
+                )
             ) {
-                repeat(2) { cube ->
-                    Column(
-                        Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        PersonalCube3D(
-                            faces = config.cubes[cube],
-                            visibleFace = visibleIndices[cube],
-                            spinProgress = progress.value,
-                            metallic = cube == 1,
-                            vault = vault,
-                            label = "المكعب ${cube + 1}",
-                            modifier = Modifier.fillMaxWidth().aspectRatio(1f)
-                        )
-                        Text(
-                            "المكعب ${cube + 1}",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        repeat(2) { cube ->
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                PersonalCube3D(
+                                    faces = config.cubes[cube],
+                                    visibleFace = visibleIndices[cube],
+                                    spinProgress = progress.value,
+                                    metallic = cube == 1,
+                                    vault = vault,
+                                    label = "المكعب ${cube + 1}",
+                                    modifier = Modifier.fillMaxWidth().aspectRatio(1f)
+                                )
+                                Text(
+                                    if (cube == 0) "SATIN LILAC" else "PEARL SILVER",
+                                    color = if (cube == 0) Color(0xFFC9A0DE)
+                                    else Color(0xFFE2E3E8),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
                     }
                 }
             }
