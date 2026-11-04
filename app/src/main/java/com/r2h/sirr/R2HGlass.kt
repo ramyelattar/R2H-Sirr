@@ -32,16 +32,18 @@ internal fun Modifier.r2hGlass(
     lift: Dp = 12.dp
 ): Modifier {
     val shape = RoundedCornerShape(corner)
-    val top = if (selected) Color(0xFF4B264B).copy(alpha = .91f)
-              else Color(0xFF36213F).copy(alpha = .85f)
-    val middle = if (selected) Color(0xFF271833).copy(alpha = .92f)
-                 else Color(0xFF1B1429).copy(alpha = .82f)
-    val bottom = Color(0xFF090815).copy(alpha = if (selected) .93f else .88f)
+    // Avoid additive neon over M27's moving pink particles. Increase
+    // text-zone opacity while allowing subtle motion to remain visible.
+    val top = if (selected) Color(0xFF302036).copy(alpha = .96f)
+              else Color(0xFF26192E).copy(alpha = .93f)
+    val middle = if (selected) Color(0xFF1B1426).copy(alpha = .97f)
+                 else Color(0xFF171321).copy(alpha = .94f)
+    val bottom = Color(0xFF090914).copy(alpha = .97f)
     return this
         .shadow(
             elevation = lift, shape = shape, clip = false,
-            ambientColor = accent.copy(alpha = .23f),
-            spotColor = accent.copy(alpha = .40f)
+            ambientColor = accent.copy(alpha = if (selected) .15f else .09f),
+            spotColor = accent.copy(alpha = if (selected) .21f else .14f)
         )
         .clip(shape)
         .background(
@@ -52,9 +54,9 @@ internal fun Modifier.r2hGlass(
         .border(
             width = if (selected) 1.5.dp else 1.dp,
             brush = Brush.linearGradient(listOf(
-                Color.White.copy(alpha = if (selected) .73f else .52f),
-                accent.copy(alpha = .72f),
-                accent.copy(alpha = .23f)
+                Color.White.copy(alpha = if (selected) .39f else .23f),
+                accent.copy(alpha = if (selected) .48f else .30f),
+                accent.copy(alpha = .13f)
             )),
             shape = shape
         )
@@ -62,7 +64,7 @@ internal fun Modifier.r2hGlass(
             drawContent()
             val inset = 17.dp.toPx()
             drawLine(
-                color = Color.White.copy(alpha = if (selected) .30f else .18f),
+                color = Color.White.copy(alpha = if (selected) .19f else .10f),
                 start = Offset(inset, 1.3.dp.toPx()),
                 end = Offset(size.width - inset, 1.3.dp.toPx()),
                 strokeWidth = 1.dp.toPx()
@@ -85,7 +87,7 @@ internal fun R2HNeonAction(
 ) {
     val shape = RoundedCornerShape(if (compact) 15.dp else 19.dp)
     val gradient = if (enabled) {
-        listOf(Color(0xFFF22F9E), Color(0xFFD83AB3), Color(0xFF913CC7))
+        listOf(Color(0xFF884472), Color(0xFF753F7A), Color(0xFF573867))
     } else {
         listOf(Color(0xFF4A324A), Color(0xFF49324B))
     }
@@ -95,15 +97,15 @@ internal fun R2HNeonAction(
         modifier = modifier
             .heightIn(min = if (compact) 45.dp else 55.dp)
             .shadow(
-                elevation = if (enabled) 11.dp else 2.dp,
-                shape = shape, ambientColor = Color(0xFFFC4FC2),
-                spotColor = Color(0xFFFF64CF)
+                elevation = if (enabled) 5.dp else 1.dp,
+                shape = shape, ambientColor = Color(0xFFAC6C9D),
+                spotColor = Color(0xFFAF72AB)
             )
             .clip(shape)
             .background(Brush.horizontalGradient(gradient))
             .border(
                 1.dp,
-                if (enabled) Color(0xFFFFD2F0) else Color(0xFF6F6073),
+                if (enabled) Color(0xFFC49BBE) else Color(0xFF6F6073),
                 shape
             ),
         shape = shape,
