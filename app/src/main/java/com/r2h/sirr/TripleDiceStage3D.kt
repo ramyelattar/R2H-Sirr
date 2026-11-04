@@ -185,7 +185,7 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
         if (width > 0 && height > 0) {
             Matrix.perspectiveM(projection, 0, 42f, width.toFloat() / height, 0.1f, 20f)
         }
-        Matrix.setLookAtM(view, 0, 0f, 1.24f, 4.60f, 0f, -0.40f, 0f, 0f, 1f, 0f)
+        Matrix.setLookAtM(view, 0, 0f, 1.24f, TripleDiceStageGeometry.CAMERA_Z, 0f, -0.40f, 0f, 0f, 1f, 0f)
     }
 
     override fun onDrawFrame(unused: GL10?) {
