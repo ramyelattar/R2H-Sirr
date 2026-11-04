@@ -16,6 +16,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }
+    // MediaPlayer.setDataSource(fd, offset, length) needs an uncompressed
+    // file in the APK to obtain an AssetFileDescriptor via assets.openFd.
+    androidResources {
+        noCompress.add("mp4")
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

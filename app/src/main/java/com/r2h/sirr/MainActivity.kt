@@ -154,7 +154,9 @@ private fun SirrApp() {
             }
         ) {
             Box(Modifier.fillMaxSize().background(Night)) {
-                SirrAmbientBackground(scene, musicPrefs.cinematic)
+                // Pause the shared wallpaper decoder while owner media plays.
+                // A still frame remains behind every page in that case.
+                SirrAmbientBackground(scene, musicPrefs.cinematic && !userMediaPlaying)
                 if (showSplash) {
                     SirrCinematicSplash(
                         allowMotion = musicPrefs.cinematic,
@@ -167,25 +169,21 @@ private fun SirrApp() {
                             .isSuccess
                     })
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-                    // Header typography is baked into the image. Its entire top band is
-                    // rendered below the system inset; reserve a proportional safe band.
-                    val safeHeader = if (route == "dice") {
-                        // The game stage needs the usable viewport; the branded
-                        // wallpaper top band is not a Dice interaction target.
-                        12.dp
-                    } else {
-                        (LocalConfiguration.current.screenHeightDp.dp * .128f)
-                            .coerceIn(94.dp, 126.dp)
-                    }
-                    Spacer(Modifier.height(safeHeader))
+                    // New video has no baked-in wordmark. Do not reserve the old
+                    // 94–126dp wallpaper masthead on ANY route. System status
+                    // and navigation bar insets remain respected above.
+                    Spacer(Modifier.height(12.dp))
                     Row(
                         Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 3.dp, bottom = 2.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (route == "home") {
-                            // Brand wordmark is part of the full-bleed wallpaper.
-                            Spacer(Modifier.width(24.dp))
+                            // The new owner-supplied video has no embedded brand.
+                            Text(
+                                "R2H-Play", color = Gold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         } else {
                             TextButton(onClick = { navigateHome() }) {
                                 Text("رجوع  ←", color = Gold, style = MaterialTheme.typography.bodyMedium)
