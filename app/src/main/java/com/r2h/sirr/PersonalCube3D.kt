@@ -24,6 +24,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.viewinterop.AndroidView
 import com.r2h.sirr.core.PersonalDiceFace
 
+/** Separate visual materials — no game content or preset symbols. */
+internal enum class DiceMaterial(val label: String, val accent: Int) {
+    PLUM("DEEP PLUM", 0xFFBE9FC7.toInt()),
+    ROSE("PEARL ROSE", 0xFFE7B3BE.toInt()),
+    CHAMPAGNE("CHAMPAGNE", 0xFFD9CAB0.toInt());
+
+    companion object {
+        fun forCube(index: Int): DiceMaterial = entries[index]
+    }
+}
+
 /**
  * Compose adapter for the on-demand GLES2 rounded-cube renderer.
  *
@@ -36,7 +47,8 @@ internal fun PersonalCube3D(
     faces: List<PersonalDiceFace>,
     visibleFace: Int,
     spinProgress: Float,
-    metallic: Boolean,
+    material: DiceMaterial,
+    rollStyle: Int = 0,
     vault: LocalVault,
     label: String,
     modifier: Modifier = Modifier
@@ -46,8 +58,8 @@ internal fun PersonalCube3D(
         val original = remember(vault, face.imageId) {
             vault.readPhotoThumbnail(face.imageId)?.asAndroidBitmap()
         }
-        remember(face.text, face.imageId, metallic, original) {
-            createFaceTile(face.text, original, metallic)
+        remember(face.text, face.imageId, material, original) {
+            createFaceTile(face.text, original, material)
         }
     }
     AndroidView(
@@ -56,13 +68,13 @@ internal fun PersonalCube3D(
             contentDescription = "$label — الوجه ${visibleFace + 1}"
         },
         update = { view ->
-            view.submit(visibleFace, spinProgress, metallic, faceTiles)
+            view.submit(visibleFace, spinProgress, material, rollStyle, faceTiles)
         }
     )
 }
 
 /** Non-graphic cube material and user's own authored face media. */
-private fun createFaceTile(text: String, photo: Bitmap?, metallic: Boolean): Bitmap {
+private fun createFaceTile(text: String, photo: Bitmap?, material: DiceMaterial): Bitmap {
     val dim = 384
     val bitmap = Bitmap.createBitmap(dim, dim, Bitmap.Config.ARGB_8888)
     val canvas = AndroidCanvas(bitmap)
@@ -70,13 +82,23 @@ private fun createFaceTile(text: String, photo: Bitmap?, metallic: Boolean): Bit
     val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         shader = LinearGradient(
             0f, 0f, dim.toFloat(), dim.toFloat(),
-            if (metallic) intArrayOf(
-                AndroidColor.rgb(238,240,242), AndroidColor.rgb(182,187,193),
-                AndroidColor.rgb(104,110,121)
-            ) else intArrayOf(
-                AndroidColor.rgb(236,179,242), AndroidColor.rgb(181,110,196),
-                AndroidColor.rgb(110,57,134)
-            ), null, Shader.TileMode.CLAMP
+            when (material) {
+                DiceMaterial.PLUM -> intArrayOf(
+                    AndroidColor.rgb(147, 105, 157),
+                    AndroidColor.rgb(88, 54, 103),
+                    AndroidColor.rgb(41, 25, 59)
+                )
+                DiceMaterial.ROSE -> intArrayOf(
+                    AndroidColor.rgb(252, 219, 229),
+                    AndroidColor.rgb(215, 160, 183),
+                    AndroidColor.rgb(152, 95, 132)
+                )
+                DiceMaterial.CHAMPAGNE -> intArrayOf(
+                    AndroidColor.rgb(249, 242, 229),
+                    AndroidColor.rgb(208, 194, 176),
+                    AndroidColor.rgb(145, 137, 132)
+                )
+            }, null, Shader.TileMode.CLAMP
         )
     }
     // An opaque base is essential: roundedness now comes from real 3D
@@ -111,8 +133,8 @@ private fun createFaceTile(text: String, photo: Bitmap?, metallic: Boolean): Bit
         val size = if (text.length < 18) 49f else if (text.length < 40) 40f else 33f
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             color = if (photo != null) AndroidColor.WHITE
-                else if (metallic) AndroidColor.rgb(48,51,62)
-                else AndroidColor.rgb(63,24,82)
+                else if (material == DiceMaterial.PLUM) AndroidColor.rgb(251,238,252)
+                else AndroidColor.rgb(54,38,52)
             textSize = size
             typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
             setShadowLayer(1.3f, 0f, 1.4f,
@@ -132,7 +154,7 @@ private fun createFaceTile(text: String, photo: Bitmap?, metallic: Boolean): Bit
         canvas.restore()
     }
     Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = AndroidColor.argb(if (metallic) 175 else 160, 255, 255, 255)
+        color = AndroidColor.argb(if (material == DiceMaterial.CHAMPAGNE) 175 else 135, 255, 255, 255)
         style = Paint.Style.STROKE
         strokeWidth = 5f
     }.also { canvas.drawRoundRect(RectF(10f, 10f, 374f, 374f), 43f, 43f, it) }

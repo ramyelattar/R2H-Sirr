@@ -18,40 +18,41 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
-import com.r2h.sirr.core.PersonalDiceConfiguration
+import com.r2h.sirr.core.TripleDiceConfiguration
 import com.r2h.sirr.core.PersonalDiceFace
 
-/**
- * Two dice matching the physical reference concept.
- * ALL 12 faces are deliberately blank until authored by the user.
- * The original three-dice experience lives in LegacyDiceScreen().
- */
+/** Three 3D cubes / 18 user-authored faces, with an independent legacy mode. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DiceScreenV2() {
     val context = LocalContext.current
     val vault = remember(context) { LocalVault(context.applicationContext) }
     val effects = rememberGameEffects()
-    val restore = remember(vault) { PersonalDiceStore.load(vault) }
+    val restore = remember(vault) { TripleDiceStore.load(vault) }
     var config by remember(vault) {
-        mutableStateOf(restore.configuration ?: PersonalDiceConfiguration.blank())
+        mutableStateOf(restore.configuration ?: TripleDiceConfiguration.blank())
     }
     var saved by remember(vault) { mutableStateOf(config) }
     var unreadable by remember(vault) { mutableStateOf(restore.unreadable) }
+    var migratedFromPair by remember(vault) { mutableStateOf(restore.fromOldPair) }
     var showLegacy by remember { mutableStateOf(false) }
     var showEditor by remember { mutableStateOf(false) }
     var editorCube by remember { mutableIntStateOf(0) }
     var editorFace by remember { mutableIntStateOf(0) }
     var confirmClear by remember { mutableStateOf(false) }
+    var confirmCloseEditor by remember { mutableStateOf(false) }
     var photoTarget by remember { mutableStateOf<Pair<Int,Int>?>(null) }
     var error by remember { mutableStateOf("") }
     var notice by remember { mutableStateOf("") }
-    val progress = remember { Animatable(1f) }
+    val progress = remember { List(TripleDiceConfiguration.CUBE_COUNT) { Animatable(1f) } }
     var rollNumber by remember { mutableIntStateOf(0) }
     var rolling by remember { mutableStateOf(false) }
-    var visibleIndices by remember { mutableStateOf(listOf(0,0)) }
+    var visibleIndices by remember { mutableStateOf(List(TripleDiceConfiguration.CUBE_COUNT) { 0 }) }
     var revealedFaces by remember { mutableStateOf<List<PersonalDiceFace>?>(null) }
     var pendingFaces by remember { mutableStateOf<List<PersonalDiceFace>?>(null) }
 
@@ -66,12 +67,13 @@ internal fun DiceScreenV2() {
         config = config.changeFace(cube, index, transform(face))
         clearResult()
     }
-    fun persist(next: PersonalDiceConfiguration, done: () -> Unit = {}) {
-        runCatching { PersonalDiceStore.save(vault, next) }
+    fun persist(next: TripleDiceConfiguration, done: () -> Unit = {}) {
+        runCatching { TripleDiceStore.save(vault, next) }
             .onSuccess {
                 config = next
                 saved = next
-                notice = "تم حفظ الأوجه في التخزين المحلي المشفّر"
+                migratedFromPair = false
+                notice = "اتحفظ تخصيص المكعبات الثلاثة محليًا ومشفّرًا"
                 error = ""
                 done()
             }
@@ -85,19 +87,17 @@ internal fun DiceScreenV2() {
             var importedId: String? = null
             runCatching {
                 val (cube, faceIndex) = target
-                val old = config.cubes[cube][faceIndex].imageId
                 importedId = vault.importPhoto(uri)
                 val next = config.changeFace(cube, faceIndex,
                     config.cubes[cube][faceIndex].copy(imageId = importedId))
-                // Save before deleting the previous photo; rollback a failed import.
-                PersonalDiceStore.save(vault, next)
+                // Pair photos may still be referenced by the independent old vault.
+                // Never delete them as part of updating the new triple.
+                TripleDiceStore.save(vault, next)
                 config = next
                 saved = next
+                migratedFromPair = false
                 clearResult()
-                notice = "تم حفظ الصورة على وجه المكعب"
-                if (old != null && next.cubes.flatten().none { it.imageId == old }) {
-                    vault.delete(old)
-                }
+                notice = "اتحفظت الصورة على وجه المكعب"
             }.onFailure {
                 vault.delete(importedId)
                 error = "تعذر إضافة الصورة وحفظها. لم يتم استبدال الوجه القديم."
@@ -109,16 +109,24 @@ internal fun DiceScreenV2() {
         if (rollNumber == 0) return@LaunchedEffect
         val faces = pendingFaces ?: return@LaunchedEffect
         try {
-            progress.snapTo(0f)
-            if (effects.animate) {
-                progress.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(
-                        durationMillis = config.durationSeconds * 1000,
-                        easing = FastOutSlowInEasing
-                    )
-                )
-            } else progress.snapTo(1f)
+            coroutineScope {
+                progress.forEachIndexed { cube, animation ->
+                    launch {
+                        animation.snapTo(0f)
+                        if (effects.animate) {
+                            delay(cube * 65L)
+                            val scale = 0.88f + cube * 0.06f
+                            animation.animateTo(
+                                targetValue = 1f,
+                                animationSpec = tween(
+                                    durationMillis = (config.durationSeconds * 1000 * scale).toInt(),
+                                    easing = FastOutSlowInEasing
+                                )
+                            )
+                        } else animation.snapTo(1f)
+                    }
+                }
+            }
             revealedFaces = faces
             effects.cue(GameCue.REVEAL)
         } finally {
@@ -130,29 +138,48 @@ internal fun DiceScreenV2() {
         TextButton(
             onClick = { showLegacy = false },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("ارجع للمكعبين الجديدين") }
+        ) { Text("ارجع للمكعبات الثلاثة") }
         LegacyDiceScreen()
         return
+    }
+
+    if (confirmCloseEditor) {
+        AlertDialog(
+            onDismissRequest = { confirmCloseEditor = false },
+            title = { Text("في تغييرات مش محفوظة") },
+            text = { Text("تقدر تكمل التعديل، أو تتجاهل التغييرات اللي لسه ما اتحفظتش.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    config = saved
+                    clearResult()
+                    showEditor = false
+                    confirmCloseEditor = false
+                }) { Text("تجاهل التغييرات") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmCloseEditor = false }) {
+                    Text("كمل التعديل")
+                }
+            }
+        )
     }
 
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
             title = { Text("تمسح الأوجه اللي كتبتها؟") },
-            text = { Text("هيتمسح تخصيص المكعبين والصور الخاصة بيهم فقط. وضع الـ3 نردات القديم مش هيتغير.") },
+            text = { Text("هيتمسح تخصيص المكعبات الثلاثة الجديد فقط. النسخة القديمة للمكعبين ووضع النرد الكلاسيكي هيفضلوا محفوظين.") },
             confirmButton = {
                 TextButton(onClick = {
-                    val previousIds = (config.cubes + saved.cubes).flatten()
-                        .mapNotNull { it.imageId }.toSet()
-                    runCatching { PersonalDiceStore.clear(vault) }
+                    runCatching { TripleDiceStore.resetToBlank(vault) }
                         .onSuccess {
-                            previousIds.forEach(vault::delete)
-                            val blank = PersonalDiceConfiguration.blank()
+                            val blank = TripleDiceConfiguration.blank()
                             config = blank
                             saved = blank
                             unreadable = false
+                            migratedFromPair = false
                             clearResult()
-                            notice = "اتمسحت أوجه المكعبين"
+                            notice = "اتمسح تخصيص الثلاثة الجديد مع الاحتفاظ ببيانات المكعبين القديمة"
                         }
                         .onFailure { error = "تعذر مسح الإعدادات. جرّب تاني." }
                     confirmClear = false
@@ -164,67 +191,98 @@ internal fun DiceScreenV2() {
         )
     }
 
-    Page("مكعباتك", "مكعبان ثلاثيا الأبعاد. كل وجه بتخصصه بنفسك.") {
+    Page("مكعباتك", "٣ مكعبات، ١٨ وجه — كل التفاصيل من اختيارك.") {
         if (unreadable) {
             SirrSection("!", "إعدادات قديمة مش مقروءة",
                 "مش هنكتب فوق بياناتك المحفوظة من غير اختيار واضح.")
             Text(
-                "ممكن تسيب البيانات وتجرّب تفتح التطبيق تاني، أو تمسح إعدادات المكعبين فقط.",
+                "النسخة المحفوظة مش مقروءة. تقدر تبدأ تخصيص الثلاثة من جديد من غير حذف بيانات المكعبين القديمة.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             OutlinedButton(onClick = { confirmClear = true },
                 modifier = Modifier.fillMaxWidth()) {
-                Text("مسح إعدادات المكعبين غير المقروءة")
+                Text("ابدأ تخصيص الثلاثة من جديد")
             }
         } else {
             Text(
-                "DICE STUDIO",
+                "TRIPLE DICE • PRIVATE STUDIO",
                 style = MaterialTheme.typography.labelSmall,
                 color = Color(0xFFC9A0DE),
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
+            // Three real GL surfaces in a non-overlapping triangle. No SurfaceView
+            // overlays: Android can otherwise occlude rear cubes with square buffers.
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF100D17),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp),
+                color = Color(0xFF0B0910),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
                 border = androidx.compose.foundation.BorderStroke(
-                    1.dp, Color(0xFF342C3C)
+                    1.dp, Color(0xFF4A384C)
                 )
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    val sideSize = minOf(maxWidth * 0.39f, 145.dp)
+                    val frontSize = minOf(maxWidth * 0.47f, 166.dp)
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
-                        repeat(2) { cube ->
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                PersonalCube3D(
-                                    faces = config.cubes[cube],
-                                    visibleFace = visibleIndices[cube],
-                                    spinProgress = progress.value,
-                                    metallic = cube == 1,
-                                    vault = vault,
-                                    label = "المكعب ${cube + 1}",
-                                    modifier = Modifier.fillMaxWidth().aspectRatio(1f)
-                                )
-                                Text(
-                                    if (cube == 0) "SATIN LILAC" else "PEARL SILVER",
-                                    color = if (cube == 0) Color(0xFFC9A0DE)
-                                    else Color(0xFFE2E3E8),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            repeat(2) { cube ->
+                                val material = DiceMaterial.forCube(cube)
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    PersonalCube3D(
+                                        faces = config.cubes[cube],
+                                        visibleFace = visibleIndices[cube],
+                                        spinProgress = progress[cube].value,
+                                        material = material,
+                                        rollStyle = cube,
+                                        vault = vault,
+                                        label = "المكعب ${cube + 1}",
+                                        modifier = Modifier.size(sideSize)
+                                    )
+                                    Text(
+                                        material.label,
+                                        color = Color(material.accent),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
                             }
                         }
+                        val hero = DiceMaterial.forCube(2)
+                        PersonalCube3D(
+                            faces = config.cubes[2],
+                            visibleFace = visibleIndices[2],
+                            spinProgress = progress[2].value,
+                            material = hero,
+                            rollStyle = 2,
+                            vault = vault,
+                            label = "المكعب 3",
+                            modifier = Modifier.size(frontSize)
+                        )
+                        Text(
+                            hero.label,
+                            color = Color(hero.accent),
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
+            }
+            if (migratedFromPair) {
+                Text(
+                    "تم استرجاع تخصيص أول مكعبين من النسخة السابقة. الثالث فاضي لحد ما تخصصه، والنسخة الأصلية محفوظة.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFD9CAB0)
+                )
             }
 
             val remaining = config.cubes.sumOf { cube ->
@@ -275,8 +333,8 @@ internal fun DiceScreenV2() {
                 Text(
                     when {
                         rolling -> "المكعبات بتلف…"
-                        revealedFaces != null -> "ارمِ المكعبين تاني"
-                        else -> "ارمِ المكعبين"
+                        revealedFaces != null -> "ارمِ المكعبات تاني"
+                        else -> "ارمِ المكعبات"
                     },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
@@ -303,8 +361,7 @@ internal fun DiceScreenV2() {
                         ) {
                             Text(
                                 "المكعب ${index + 1}",
-                                color = if (index == 0) Color(0xFFC9A0DE)
-                                    else Color(0xFFE2E3E8),
+                                color = Color(DiceMaterial.forCube(index).accent),
                                 style = MaterialTheme.typography.labelLarge
                             )
                             val photo = remember(vault, face.imageId) {
@@ -345,14 +402,14 @@ internal fun DiceScreenV2() {
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6E5B78))
-            ) { Text("Face Studio — تخصيص الأوجه", color = Color(0xFFE2E3E8)) }
+            ) { Text("Face Studio — ١٨ وجه", color = Color(0xFFE2E3E8)) }
 
             HorizontalDivider()
             OutlinedButton(
                 onClick = { showLegacy = true },
                 enabled = !rolling && config == saved,
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("افتح وضع الـ3 نردات القديم") }
+            ) { Text("افتح وضع النرد الكلاسيكي") }
             if (config != saved) Text(
                 "احفظ التعديلات علشان تقدر تبدّل بين الوضعين.",
                 style = MaterialTheme.typography.bodySmall,
@@ -368,10 +425,13 @@ internal fun DiceScreenV2() {
         }
     }
     // Editing is a dedicated, focused sheet; never a twelve-row form below
-    // the gameplay stage. Drafts are still saved with PersonalDiceStore.
+    // the gameplay stage. Drafts use the independent triple vault.
     if (showEditor && !unreadable) {
         ModalBottomSheet(
-            onDismissRequest = { showEditor = false },
+            onDismissRequest = {
+                if (config != saved) confirmCloseEditor = true
+                else showEditor = false
+            },
             containerColor = Color(0xFF120F1A),
             contentColor = Color(0xFFF8F5FA),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(
@@ -386,18 +446,22 @@ internal fun DiceScreenV2() {
             ) {
                 Text("FACE STUDIO", color = Color(0xFFC9A0DE),
                     style = MaterialTheme.typography.labelLarge)
-                Text("خصص أوجه المكعبين",
+                Text("خصص أوجه المكعبات الثلاثة",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold)
 
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    repeat(2) { cube ->
+                    repeat(TripleDiceConfiguration.CUBE_COUNT) { cube ->
                         FilterChip(
                             modifier = Modifier.weight(1f),
                             selected = editorCube == cube,
                             onClick = { editorCube = cube },
                             label = {
-                                Text(if (cube == 0) "المكعب الليلكي" else "المكعب الفضي")
+                                Text(when (cube) {
+                                    0 -> "Plum"
+                                    1 -> "Rose"
+                                    else -> "Champagne"
+                                })
                             }
                         )
                     }
@@ -431,7 +495,8 @@ internal fun DiceScreenV2() {
                     faces = activeCube,
                     visibleFace = editorFace,
                     spinProgress = 1f,
-                    metallic = editorCube == 1,
+                    material = DiceMaterial.forCube(editorCube),
+                    rollStyle = editorCube,
                     vault = vault,
                     label = "معاينة المكعب ${editorCube + 1}",
                     modifier = Modifier.size(176.dp).align(Alignment.CenterHorizontally)
@@ -468,15 +533,13 @@ internal fun DiceScreenV2() {
                     if (active.imageId != null) {
                         TextButton(
                             onClick = {
-                                val oldImage = active.imageId
+                                // Do not delete photo bytes: the two-cube vault
+                                // may still independently reference this image.
                                 val next = config.changeFace(
                                     editorCube, editorFace, active.copy(imageId = null)
                                 )
                                 clearResult()
-                                persist(next) {
-                                    if (next.cubes.flatten().none { it.imageId == oldImage })
-                                        vault.delete(oldImage)
-                                }
+                                persist(next)
                             }
                         ) { Text("حذف الصورة") }
                     }
@@ -550,7 +613,7 @@ internal fun DiceScreenV2() {
                 OutlinedButton(
                     onClick = { confirmClear = true },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("امسح تخصيص المكعبين") }
+                ) { Text("امسح تخصيص المكعبات الثلاثة") }
 
                 if (error.isNotBlank()) {
                     Text(error, color = Color(0xFFFFACAC))
