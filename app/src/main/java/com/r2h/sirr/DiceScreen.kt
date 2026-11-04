@@ -205,12 +205,6 @@ internal fun DiceScreenV2() {
                 Text("ابدأ تخصيص الثلاثة من جديد")
             }
         } else {
-            Text(
-                "TRIPLE DICE • PRIVATE STUDIO",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFFC9A0DE),
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color(0xFF0C0A12),
@@ -220,29 +214,15 @@ internal fun DiceScreenV2() {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     TripleDiceStage3D(
                         cubes = config.cubes,
                         selected = visibleIndices,
                         progress = progress.map { it.value },
                         vault = vault,
-                        modifier = Modifier.fillMaxWidth().height(314.dp)
+                        modifier = Modifier.fillMaxWidth().height(306.dp)
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 7.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(3) { cube ->
-                            val material = DiceMaterial.forCube(cube)
-                            Text(
-                                material.label,
-                                color = Color(material.accent),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-                    }
                 }
             }
             if (migratedFromPair) {
@@ -292,7 +272,7 @@ internal fun DiceScreenV2() {
                 modifier = Modifier.fillMaxWidth().height(58.dp),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF90647E),
+                    containerColor = Color(0xFF704B65),
                     contentColor = Color(0xFFFDF7FB),
                     disabledContainerColor = Color(0xFF302732),
                     disabledContentColor = Color(0xFFA99BAA)
@@ -360,6 +340,11 @@ internal fun DiceScreenV2() {
                                     )
                                 }
                             }
+                            Text(
+                                String.format(java.util.Locale.ROOT, "%02d", index + 1),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFF806F87)
+                            )
                             if (photo != null) {
                                 androidx.compose.foundation.Image(
                                     bitmap = photo,
@@ -396,7 +381,7 @@ internal fun DiceScreenV2() {
             if (notice.isNotBlank()) Text(notice, color = MaterialTheme.colorScheme.primary)
             if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
             Text(
-                "الصور والأوجه اللي تضيفها بتتحفظ محليًا ومشفّرة. لا يوجد رفع تلقائي أو محتوى جاهز.",
+                "الأوجه والصور محفوظة على موبايلك ومشفّرة. مفيش رفع تلقائي على الإنترنت.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
