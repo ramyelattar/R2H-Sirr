@@ -271,9 +271,18 @@ internal fun DiceScreenV2() {
                 enabled = !rolling && config.playable,
                 modifier = Modifier.fillMaxWidth().height(58.dp),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                        listOf(Color(0xFFBE9B9D), Color(0xFF91718C), Color(0xFFD5B6A7))
+                    )
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 2.dp, pressedElevation = 0.dp
+                ),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF704B65),
-                    contentColor = Color(0xFFFDF7FB),
+                    containerColor = Color(0xFF50344C),
+                    contentColor = Color(0xFFFFF6FA),
                     disabledContainerColor = Color(0xFF302732),
                     disabledContentColor = Color(0xFFA99BAA)
                 )

@@ -1,22 +1,30 @@
 package com.r2h.sirr.core
 
-/** Immutable design-stage positions, shared by the renderer and JVM tests. */
+import kotlin.math.abs
+import kotlin.math.hypot
+
+/**
+ * Real-world cube centers and dimensions for a shared ground plane.
+ * Screen-space "shadows" and artificial y-offset stacking were replaced
+ * with three objects resting on the same y plane at final orientation.
+ */
 internal data class TripleCubePose(
     val x: Float,
-    val y: Float,
     val z: Float,
-    val scale: Float,
-    val shadowY: Float
+    val scale: Float
 )
 
 internal object TripleDiceStageGeometry {
     const val CUBE_COUNT = 3
     const val FACES_PER_CUBE = 6
+    const val FLOOR_Y = -1.05f
 
+    // The forward cube is larger/closer; both rear cubes share a depth.
+    // Do not change texture order when moving objects around on the stage.
     private val poses = listOf(
-        TripleCubePose(-0.81f, 0.48f, -0.23f, 0.90f, 0.02f),
-        TripleCubePose( 0.81f, 0.48f, -0.23f, 0.90f, 0.02f),
-        TripleCubePose( 0.00f,-0.67f,  0.33f, 1.07f,-0.83f)
+        TripleCubePose(-0.92f, -0.74f, 0.89f),
+        TripleCubePose( 0.92f, -0.74f, 0.89f),
+        TripleCubePose( 0.00f,  0.86f, 1.06f)
     )
 
     fun pose(cube: Int): TripleCubePose {
@@ -24,7 +32,30 @@ internal object TripleDiceStageGeometry {
         return poses[cube]
     }
 
-    /** 18 textures in exactly the same cube-major order as the UI tiles. */
+    /** This bound includes all eight vertices of a rotated cube. */
+    fun verticalHalfExtent(rotated: FloatArray, scale: Float): Float {
+        require(rotated.size == 16 && scale > 0f && scale.isFinite())
+        val extent = (abs(rotated[1]) + abs(rotated[5]) + abs(rotated[9])) *
+            (0.5f * scale)
+        require(extent.isFinite())
+        return extent
+    }
+
+    /** The 3D object's lowest point never passes below the shared floor. */
+    fun restingCenterY(rotated: FloatArray, scale: Float): Float =
+        FLOOR_Y + verticalHalfExtent(rotated, scale)
+
+    /** Conservative bounding-sphere separation even during full 3-axis rotation. */
+    fun footprintGap(a: Int, b: Int): Float {
+        require(a != b)
+        val p = pose(a)
+        val q = pose(b)
+        // Each cube fits within a sphere of radius scale*sqrt(3)/2.
+        return hypot(p.x - q.x, p.z - q.z) -
+            (p.scale + q.scale) * 0.8660254f
+    }
+
+    /** Exactly 18 cube-major face textures, unchanged from P0.2. */
     fun textureIndex(cube: Int, face: Int): Int {
         require(cube in 0 until CUBE_COUNT)
         require(face in 0 until FACES_PER_CUBE)
