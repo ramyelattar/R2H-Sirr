@@ -45,6 +45,7 @@ internal fun DiceScreenV2() {
     var editorCube by remember { mutableIntStateOf(0) }
     var editorFace by remember { mutableIntStateOf(0) }
     var confirmClear by remember { mutableStateOf(false) }
+    var confirmCloseEditor by remember { mutableStateOf(false) }
     var photoTarget by remember { mutableStateOf<Pair<Int,Int>?>(null) }
     var error by remember { mutableStateOf("") }
     var notice by remember { mutableStateOf("") }
@@ -140,6 +141,27 @@ internal fun DiceScreenV2() {
         ) { Text("ارجع للمكعبات الثلاثة") }
         LegacyDiceScreen()
         return
+    }
+
+    if (confirmCloseEditor) {
+        AlertDialog(
+            onDismissRequest = { confirmCloseEditor = false },
+            title = { Text("في تغييرات مش محفوظة") },
+            text = { Text("تقدر تكمل التعديل، أو تتجاهل التغييرات اللي لسه ما اتحفظتش.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    config = saved
+                    clearResult()
+                    showEditor = false
+                    confirmCloseEditor = false
+                }) { Text("تجاهل التغييرات") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmCloseEditor = false }) {
+                    Text("كمل التعديل")
+                }
+            }
+        )
     }
 
     if (confirmClear) {
@@ -406,7 +428,10 @@ internal fun DiceScreenV2() {
     // the gameplay stage. Drafts use the independent triple vault.
     if (showEditor && !unreadable) {
         ModalBottomSheet(
-            onDismissRequest = { showEditor = false },
+            onDismissRequest = {
+                if (config != saved) confirmCloseEditor = true
+                else showEditor = false
+            },
             containerColor = Color(0xFF120F1A),
             contentColor = Color(0xFFF8F5FA),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(
