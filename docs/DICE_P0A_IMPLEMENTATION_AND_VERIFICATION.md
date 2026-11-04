@@ -1,6 +1,6 @@
 # R2H-Play — Dice P0-A (Rounded 3D Renderer)
 
-Status: **source implemented on feature branch; NOT yet compiled or device verified**.
+Status: **source implementation of P0-A plus initial P0-C/D UI; NOT yet compiled or device verified**.
 
 ## Scope implemented
 
@@ -13,6 +13,8 @@ Status: **source implemented on feature branch; NOT yet compiled or device verif
 - Canonical selection angles shared with the existing DiceCubeProjection model: FRONT, RIGHT, BACK, LEFT, TOP, BOTTOM.
 - OpenGL work on dedicated rendering thread, request-render mode, lifecycle stop/start handling.
 - Restrained Obsidian Dice stage using Lilac/Pearl differentiation.
+- A first-pass dedicated **Face Studio** `ModalBottomSheet`: one cube and one face at a time, 2×3 face selector, live GLES2 preview, authored text/image actions, per-face weight slider, equal-weight reset, duration controls, encrypted draft save.
+- First-pass premium result cards with user-supplied images/text and an accessible primary rolling button.
 - Existing roll weighting, timing, photo storage, draft persistence, and legacy 3-cube mode remain unchanged.
 
 ## Engineering trade-offs
@@ -48,8 +50,8 @@ The prior `DiceCubeProjectionTest.kt` remains, including selection and final ori
 
 ## Still outside P0-A
 
-- Full Face Studio / sheet and per-face preview redesign (P0-C)
-- Full result cards and global Design System overhaul (P0-D)
+- Final Face Studio polish (P0-C): gesture/keyboard UX, independent draft transactions, and discard dialog.
+- Global Design System overhaul and final visual acceptance (P0-D). Initial Dice-specific result cards and CTA have been implemented.
 - Physically based reflections, optional PBR renderer comparison
 - Comprehensive device/accessibility/security acceptance (P0-E)
 
