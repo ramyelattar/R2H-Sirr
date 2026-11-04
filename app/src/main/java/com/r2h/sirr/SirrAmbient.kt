@@ -100,7 +100,7 @@ internal fun SirrCinematicSplash(
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Box(
-                Modifier.size(222.dp),
+                Modifier.size(270.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(Modifier.matchParentSize()) {
@@ -121,7 +121,7 @@ internal fun SirrCinematicSplash(
                     }
                 }
                 R2HBrandLogo(
-                    modifier = Modifier.fillMaxWidth().height(196.dp)
+                    modifier = Modifier.fillMaxWidth().height(252.dp)
                 )
             }
             androidx.compose.animation.AnimatedVisibility(
