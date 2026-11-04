@@ -28,6 +28,7 @@ import com.r2h.sirr.core.PersonalDiceFace
  * ALL 12 faces are deliberately blank until authored by the user.
  * The original three-dice experience lives in LegacyDiceScreen().
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DiceScreenV2() {
     val context = LocalContext.current
@@ -163,7 +164,7 @@ internal fun DiceScreenV2() {
         )
     }
 
-    Page("مكعباتك إنت", "مكعبين ثلاثيي الأبعاد — اكتب أو ارفع محتوى كل وجه بنفسك.") {
+    Page("مكعباتك", "مكعبان ثلاثيا الأبعاد. كل وجه بتخصصه بنفسك.") {
         if (unreadable) {
             SirrSection("!", "إعدادات قديمة مش مقروءة",
                 "مش هنكتب فوق بياناتك المحفوظة من غير اختيار واضح.")
