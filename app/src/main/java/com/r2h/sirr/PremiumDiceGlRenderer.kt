@@ -45,9 +45,15 @@ internal class PremiumDiceGlView(context: Context) : GLSurfaceView(context) {
         setPreserveEGLContextOnPause(false)
     }
 
-    fun submit(faceIndex: Int, spinProgress: Float, metallic: Boolean, tiles: List<Bitmap>) {
+    fun submit(
+        faceIndex: Int,
+        spinProgress: Float,
+        material: DiceMaterial,
+        rollStyle: Int,
+        tiles: List<Bitmap>
+    ) {
         require(faceIndex in 0..5 && tiles.size == 6)
-        queueEvent { scene.submit(faceIndex, spinProgress, metallic, tiles) }
+        queueEvent { scene.submit(faceIndex, spinProgress, material, rollStyle, tiles) }
         requestRender()
     }
 
@@ -86,7 +92,8 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
     private var needUpload = true
     private var face = 0
     private var spin = 1f
-    private var metallic = false
+    private var material = DiceMaterial.PLUM
+    private var rollStyle = 0
     private var cubeProgram = 0
     private var shadowProgram = 0
     private var positionLoc = 0
@@ -94,19 +101,20 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
     private var uvLoc = 0
     private var modelLoc = 0
     private var mvpLoc = 0
-    private var metalLoc = 0
+    private var materialLoc = 0
     private var samplerLoc = 0
     private var shadowPositionLoc = 0
     private var shadowUvLoc = 0
-    private var shadowMetalLoc = 0
+    private var shadowMaterialLoc = 0
     private val projection = FloatArray(16)
     private val view = FloatArray(16)
 
-    fun submit(newFace: Int, newSpin: Float, newMetallic: Boolean, newTiles: List<Bitmap>) {
+    fun submit(newFace: Int, newSpin: Float, newMaterial: DiceMaterial, newStyle: Int, newTiles: List<Bitmap>) {
         // Invoked ONLY through GLSurfaceView.queueEvent, never on the Compose thread.
         face = newFace
         spin = newSpin.coerceIn(0f, 1f)
-        metallic = newMetallic
+        material = newMaterial
+        rollStyle = newStyle % 3
         if (uploaded == null || uploaded!!.indices.any { uploaded!![it] !== newTiles[it] }) {
             needUpload = true
         }
@@ -121,11 +129,11 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
         uvLoc = GLES20.glGetAttribLocation(cubeProgram, "aUv")
         modelLoc = GLES20.glGetUniformLocation(cubeProgram, "uModel")
         mvpLoc = GLES20.glGetUniformLocation(cubeProgram, "uMvp")
-        metalLoc = GLES20.glGetUniformLocation(cubeProgram, "uMetal")
+        materialLoc = GLES20.glGetUniformLocation(cubeProgram, "uMaterial")
         samplerLoc = GLES20.glGetUniformLocation(cubeProgram, "uTexture")
         shadowPositionLoc = GLES20.glGetAttribLocation(shadowProgram, "aPosition")
         shadowUvLoc = GLES20.glGetAttribLocation(shadowProgram, "aUv")
-        shadowMetalLoc = GLES20.glGetUniformLocation(shadowProgram, "uMetal")
+        shadowMaterialLoc = GLES20.glGetUniformLocation(shadowProgram, "uMaterial")
         GLES20.glGenTextures(textures.size, textures, 0)
         uploaded = null
         needUpload = true
@@ -176,8 +184,10 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
         // then the deterministic orientation for the selected face.
         Matrix.rotateM(model, 0, -28f, 0f, 1f, 0f)
         Matrix.rotateM(model, 0, 23f, 1f, 0f, 0f)
-        Matrix.rotateM(model, 0, remaining * 720f, 0f, 1f, 0f)
-        Matrix.rotateM(model, 0, remaining * 1080f, 1f, 0f, 0f)
+        val spinY = when (rollStyle) { 0 -> 720f; 1 -> 1080f; else -> -1080f }
+        val spinX = when (rollStyle) { 0 -> 1080f; 1 -> -1440f; else -> 720f }
+        Matrix.rotateM(model, 0, remaining * spinY, 0f, 1f, 0f)
+        Matrix.rotateM(model, 0, remaining * spinX, 1f, 0f, 0f)
         Matrix.rotateM(model, 0, baseY, 0f, 1f, 0f)
         Matrix.rotateM(model, 0, baseX, 1f, 0f, 0f)
 
@@ -191,7 +201,7 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
         GLES20.glUseProgram(cubeProgram)
         GLES20.glUniformMatrix4fv(modelLoc, 1, false, model, 0)
         GLES20.glUniformMatrix4fv(mvpLoc, 1, false, mvp, 0)
-        GLES20.glUniform1f(metalLoc, if (metallic) 1f else 0f)
+        GLES20.glUniform1f(materialLoc, material.ordinal.toFloat())
         GLES20.glUniform1i(samplerLoc, 0)
         cubeData.position(0)
         GLES20.glEnableVertexAttribArray(positionLoc)
@@ -218,7 +228,7 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         GLES20.glUseProgram(shadowProgram)
-        GLES20.glUniform1f(shadowMetalLoc, if (metallic) 1f else 0f)
+        GLES20.glUniform1f(shadowMaterialLoc, material.ordinal.toFloat())
         shadowData.position(0)
         GLES20.glEnableVertexAttribArray(shadowPositionLoc)
         GLES20.glVertexAttribPointer(shadowPositionLoc, 2, GLES20.GL_FLOAT, false, 4 * 4, shadowData)
@@ -291,20 +301,29 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
         private const val CUBE_FRAGMENT_SHADER = """
             precision mediump float;
             uniform sampler2D uTexture;
-            uniform float uMetal;
+            uniform float uMaterial;
             varying vec3 vNormal;
             varying vec2 vUv;
             void main() {
                 vec4 texel = texture2D(uTexture, vUv);
                 vec3 normal = normalize(vNormal);
-                vec3 light = normalize(vec3(-0.53, 0.77, 0.68));
-                float diffuse = max(dot(normal, light), 0.0);
-                vec3 halfVector = normalize(light + vec3(0.0, 0.0, 1.0));
-                float shine = pow(max(dot(normal, halfVector), 0.0), mix(34.0, 68.0, uMetal));
-                float rim = pow(1.0 - abs(normal.z), 2.8);
-                vec3 color = texel.rgb * (0.64 + 0.36 * diffuse);
-                color += vec3(1.0, 0.94, 1.0) * shine * mix(0.15, 0.26, uMetal);
-                color += vec3(0.50, 0.36, 0.61) * rim * 0.11;
+                vec3 keyLight = normalize(vec3(-0.58, 0.73, 0.56));
+                vec3 fillLight = normalize(vec3(0.75, -0.25, 0.50));
+                float key = max(dot(normal, keyLight), 0.0);
+                float fill = max(dot(normal, fillLight), 0.0);
+                float rose = step(0.5, uMaterial) * (1.0 - step(1.5, uMaterial));
+                float champagne = step(1.5, uMaterial);
+                float gloss = mix(35.0, 49.0, rose);
+                gloss = mix(gloss, 76.0, champagne);
+                vec3 halfVector = normalize(keyLight + vec3(0.0, 0.0, 1.0));
+                float specular = pow(max(dot(normal, halfVector), 0.0), gloss);
+                float rim = pow(1.0 - abs(normal.z), 3.0);
+                vec3 highlight = mix(vec3(0.81, 0.58, 0.85),
+                                     vec3(1.0, 0.87, 0.93), rose);
+                highlight = mix(highlight, vec3(1.0, 0.95, 0.82), champagne);
+                vec3 color = texel.rgb * (0.42 + 0.49 * key + 0.14 * fill);
+                color += highlight * specular * mix(0.30, 0.40, champagne);
+                color += highlight * rim * 0.11;
                 gl_FragColor = vec4(color, 1.0);
             }
         """
@@ -321,12 +340,16 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
 
         private const val SHADOW_FRAGMENT_SHADER = """
             precision mediump float;
-            uniform float uMetal;
+            uniform float uMaterial;
             varying vec2 vUv;
             void main() {
                 float falloff = 1.0 - smoothstep(0.0, 1.0, dot(vUv, vUv));
-                vec3 tint = mix(vec3(0.39, 0.22, 0.47), vec3(0.57, 0.59, 0.72), uMetal);
-                gl_FragColor = vec4(tint, falloff * 0.23);
+                float rose = step(0.5, uMaterial) * (1.0 - step(1.5, uMaterial));
+                float champagne = step(1.5, uMaterial);
+                vec3 tint = mix(vec3(0.40, 0.21, 0.48),
+                                vec3(0.62, 0.31, 0.46), rose);
+                tint = mix(tint, vec3(0.61, 0.56, 0.47), champagne);
+                gl_FragColor = vec4(tint, falloff * 0.28);
             }
         """
     }
