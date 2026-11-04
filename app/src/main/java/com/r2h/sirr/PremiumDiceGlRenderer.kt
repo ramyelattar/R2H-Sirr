@@ -10,6 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewTreeLifecycleOwner
+import com.r2h.sirr.core.DiceCubeProjection
 import com.r2h.sirr.core.RoundedDiceMesh
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -167,8 +168,7 @@ private class PremiumDiceScene : GLSurfaceView.Renderer {
     }
 
     private fun drawCube() {
-        val baseX = when (face) { 4 -> 90f; 5 -> -90f; else -> 0f }
-        val baseY = when (face) { 1 -> -90f; 2 -> 180f; 3 -> 90f; else -> 0f }
+        val (baseX, baseY) = DiceCubeProjection.baseRotation(face)
         val remaining = 1f - spin
         val model = FloatArray(16)
         Matrix.setIdentityM(model, 0)
