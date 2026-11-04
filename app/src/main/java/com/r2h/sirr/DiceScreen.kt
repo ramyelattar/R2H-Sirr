@@ -188,48 +188,79 @@ internal fun DiceScreenV2() {
                 color = Color(0xFFC9A0DE),
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
+            // Three real GL surfaces in a non-overlapping triangle. No SurfaceView
+            // overlays: Android can otherwise occlude rear cubes with square buffers.
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF100D17),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp),
+                color = Color(0xFF0B0910),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
                 border = androidx.compose.foundation.BorderStroke(
-                    1.dp, Color(0xFF342C3C)
+                    1.dp, Color(0xFF4A384C)
                 )
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    val sideSize = minOf(maxWidth * 0.39f, 145.dp)
+                    val frontSize = minOf(maxWidth * 0.47f, 166.dp)
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
-                        repeat(2) { cube ->
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                PersonalCube3D(
-                                    faces = config.cubes[cube],
-                                    visibleFace = visibleIndices[cube],
-                                    spinProgress = progress.value,
-                                    metallic = cube == 1,
-                                    vault = vault,
-                                    label = "المكعب ${cube + 1}",
-                                    modifier = Modifier.fillMaxWidth().aspectRatio(1f)
-                                )
-                                Text(
-                                    if (cube == 0) "SATIN LILAC" else "PEARL SILVER",
-                                    color = if (cube == 0) Color(0xFFC9A0DE)
-                                    else Color(0xFFE2E3E8),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            repeat(2) { cube ->
+                                val material = DiceMaterial.forCube(cube)
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    PersonalCube3D(
+                                        faces = config.cubes[cube],
+                                        visibleFace = visibleIndices[cube],
+                                        spinProgress = progress[cube].value,
+                                        material = material,
+                                        rollStyle = cube,
+                                        vault = vault,
+                                        label = "المكعب ${cube + 1}",
+                                        modifier = Modifier.size(sideSize)
+                                    )
+                                    Text(
+                                        material.label,
+                                        color = Color(material.accent),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
                             }
                         }
+                        val hero = DiceMaterial.forCube(2)
+                        PersonalCube3D(
+                            faces = config.cubes[2],
+                            visibleFace = visibleIndices[2],
+                            spinProgress = progress[2].value,
+                            material = hero,
+                            rollStyle = 2,
+                            vault = vault,
+                            label = "المكعب 3",
+                            modifier = Modifier.size(frontSize)
+                        )
+                        Text(
+                            hero.label,
+                            color = Color(hero.accent),
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
+            }
+            if (migratedFromPair) {
+                Text(
+                    "تم استرجاع تخصيص أول مكعبين من النسخة السابقة. الثالث فاضي لحد ما تخصصه، والنسخة الأصلية محفوظة.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFD9CAB0)
+                )
             }
 
             val remaining = config.cubes.sumOf { cube ->
