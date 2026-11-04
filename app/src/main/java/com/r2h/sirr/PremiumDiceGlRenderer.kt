@@ -68,7 +68,6 @@ internal class PremiumDiceGlView(context: Context) : GLSurfaceView(context) {
 }
 
 private class PremiumDiceScene : GLSurfaceView.Renderer {
-    private val gl = GLES20
     private val vertexCount = RoundedDiceMesh.verticesPerFace()
     private val cubeData = buffer(RoundedDiceMesh.generate())
     private val shadowData = buffer(floatArrayOf(
