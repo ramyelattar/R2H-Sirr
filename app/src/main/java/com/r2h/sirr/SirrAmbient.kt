@@ -121,7 +121,7 @@ internal fun SirrCinematicSplash(
                     }
                 }
                 R2HBrandLogo(
-                    modifier = Modifier.fillMaxWidth().height(96.dp)
+                    modifier = Modifier.fillMaxWidth().height(196.dp)
                 )
             }
             androidx.compose.animation.AnimatedVisibility(
