@@ -169,28 +169,27 @@ private fun SirrApp() {
                             .isSuccess
                     })
                 } else Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-                    // New video has no baked-in wordmark. Do not reserve the old
-                    // 94–126dp wallpaper masthead on ANY route. System status
-                    // and navigation bar insets remain respected above.
-                    Spacer(Modifier.height(12.dp))
-                    Row(
-                        Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 3.dp, bottom = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // The brand is centered independently of the back/music
+                    // controls. Do not create a header inside every game page.
+                    Box(
+                        Modifier.fillMaxWidth().height(70.dp)
+                            .padding(horizontal = 10.dp)
                     ) {
-                        if (route == "home") {
-                            // The new owner-supplied video has no embedded brand.
-                            Text(
-                                "R2H-Play", color = Gold,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        } else {
-                            TextButton(onClick = { navigateHome() }) {
-                                Text("رجوع  ←", color = Gold, style = MaterialTheme.typography.bodyMedium)
+                        if (route != "home") {
+                            TextButton(
+                                onClick = { navigateHome() },
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            ) {
+                                Text("رجوع ←", color = Gold,
+                                    style = MaterialTheme.typography.labelMedium)
                             }
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = {
+                        R2HBrandLogo(
+                            modifier = Modifier.align(Alignment.Center)
+                                .width(146.dp).height(58.dp)
+                        )
+                        TextButton(
+                            onClick = {
                                 val current = SirrMusicPreferences.load(context)
                                 val prefs = runCatching {
                                     org.json.JSONObject(vault.readPrivate("game-effects") ?: "{}")
@@ -199,11 +198,11 @@ private fun SirrApp() {
                                 prefs.put("musicVolume", current.volume)
                                 runCatching { vault.writePrivate("game-effects", prefs.toString()) }
                                     .onSuccess { musicRevision++ }
-                            }) {
-                                Text(if (musicPrefs.enabled) "♫  إيقاف" else "♫  تشغيل",
-                                    color = Gold, style = MaterialTheme.typography.labelMedium)
-                            }
-
+                            },
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Text(if (musicPrefs.enabled) "♫ إيقاف" else "♫ تشغيل",
+                                color = Gold, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                     if (askToLeave && route in immersiveRoutes) {
