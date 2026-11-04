@@ -185,7 +185,7 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
         if (width > 0 && height > 0) {
             Matrix.perspectiveM(projection, 0, 42f, width.toFloat() / height, 0.1f, 20f)
         }
-        Matrix.setLookAtM(view, 0, 0f, 1.65f, 4.25f, 0f, -0.44f, 0f, 0f, 1f, 0f)
+        Matrix.setLookAtM(view, 0, 0f, 1.24f, TripleDiceStageGeometry.CAMERA_Z, 0f, -0.40f, 0f, 0f, 1f, 0f)
     }
 
     override fun onDrawFrame(unused: GL10?) {
@@ -368,7 +368,7 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
 
             void main() {
                 vec3 n = normalize(vNormal);
-                vec3 v = normalize(vec3(0.0, 1.65, 4.25) - vWorldPos);
+                vec3 v = normalize(vec3(0.0, 1.24, 4.60) - vWorldPos);
                 vec3 l = normalize(vec3(-0.55, 0.82, 0.63));
                 vec3 h = normalize(l + v);
                 float ndl = max(dot(n, l), 0.0);
@@ -378,10 +378,10 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
 
                 float rose = step(0.5, uMaterial) * (1.0 - step(1.5, uMaterial));
                 float champagne = step(1.5, uMaterial);
-                float roughness = mix(0.62, 0.49, rose);
-                roughness = mix(roughness, 0.43, champagne);
-                float metallic = mix(0.04, 0.10, rose);
-                metallic = mix(metallic, 0.26, champagne);
+                float roughness = mix(0.73, 0.65, rose);
+                roughness = mix(roughness, 0.68, champagne);
+                float metallic = mix(0.04, 0.08, rose);
+                metallic = mix(metallic, 0.12, champagne);
                 float a = roughness * roughness;
                 float a2 = a * a;
                 float d = ndh * ndh * (a2 - 1.0) + 1.0;
@@ -395,12 +395,15 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
                 vec3 specular = (ndf * visibility * fresnel) /
                                 max(4.0 * ndv * ndl, 0.025);
 
-                vec3 ambient = texel * 0.46;
+                // Avoid overexposure on pale faces while keeping owner text legible.
+                vec3 ambient = texel * 0.30;
                 vec3 diffuse = texel * (vec3(1.0) - fresnel) *
-                               (1.0 - metallic) * (0.61 * ndl + 0.12);
-                vec3 color = ambient + diffuse + specular * (0.62 * ndl);
-                // Keep authored text/photo values distinguishable on light faces.
-                gl_FragColor = vec4(clamp(color, 0.0, 0.98), 1.0);
+                               (1.0 - metallic) * (0.48 * ndl + 0.13);
+                vec3 color = ambient + diffuse + specular * (0.27 * ndl);
+                float satinGain = mix(0.96, 0.90, rose);
+                satinGain = mix(satinGain, 0.79, champagne);
+                color *= satinGain;
+                gl_FragColor = vec4(clamp(color, 0.0, 0.92), 1.0);
             }
         """
 
@@ -453,8 +456,12 @@ private class TripleDiceStageRenderer : GLSurfaceView.Renderer {
 
             void main() {
                 float backFade = smoothstep(-3.0, 2.2, vPlane.y);
-                vec3 base = mix(vec3(0.055, 0.048, 0.064),
-                                vec3(0.094, 0.073, 0.090), backFade);
+                vec3 base = mix(vec3(0.050, 0.045, 0.062),
+                                vec3(0.099, 0.080, 0.105), backFade);
+                float radial = length(vec2(vPlane.x * 0.62,
+                                           (vPlane.y + 0.08) * 0.65));
+                float stageLight = 1.0 - smoothstep(0.48, 2.40, radial);
+                base += vec3(0.047, 0.031, 0.047) * stageLight;
                 float ambientReflection = 0.016 *
                    (1.0 - smoothstep(0.0, 2.2, abs(vPlane.x)));
                 base += vec3(ambientReflection, ambientReflection * 0.75,

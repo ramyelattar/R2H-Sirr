@@ -58,8 +58,8 @@ private fun CardOrnament(art: R2HGameArt, accent: Color) {
         drawCircle(
             brush = Brush.radialGradient(
                 listOf(
-                    accent.copy(alpha = .25f),
-                    accent.copy(alpha = .085f),
+                    accent.copy(alpha = .14f),
+                    accent.copy(alpha = .045f),
                     Color.Transparent
                 ),
                 center = Offset(cx, cy), radius = radius
@@ -121,7 +121,7 @@ private fun ArtIndex(art: R2HGameArt, accent: Color) {
         )
         Text(
             art.caption(), color = Color(0xFFFFE2EC),
-            fontSize = 10.sp, lineHeight = 15.sp
+            fontSize = 11.sp, lineHeight = 16.sp
         )
     }
 }
@@ -147,9 +147,9 @@ internal fun R2HModeCard(
             Modifier.fillMaxWidth().background(
                 Brush.verticalGradient(
                     listOf(
-                        tint.copy(alpha = .19f),
-                        Color(0xFF171024).copy(alpha = .15f),
-                        Color(0xFF080715).copy(alpha = .30f)
+                        tint.copy(alpha = .105f),
+                        Color(0xFF171024).copy(alpha = .31f),
+                        Color(0xFF080715).copy(alpha = .45f)
                     )
                 )
             )
@@ -181,8 +181,8 @@ internal fun R2HModeCard(
                     maxLines = 1
                 )
                 Text(
-                    description, color = Color(0xFFFEE0EF),
-                    fontSize = 13.sp, lineHeight = 19.sp,
+                    description, color = Color(0xFFF2DEEA),
+                    fontSize = 14.sp, lineHeight = 20.sp,
                     maxLines = 2
                 )
             }
@@ -206,7 +206,7 @@ internal fun R2HFeaturedHomeCard(onClick: () -> Unit) {
                 drawCircle(
                     Brush.radialGradient(
                         listOf(
-                            accent.copy(alpha = .26f), accent.copy(alpha = .07f),
+                            accent.copy(alpha = .15f), accent.copy(alpha = .045f),
                             Color.Transparent
                         ),
                         center = glow, radius = size.minDimension * .54f
@@ -284,8 +284,8 @@ internal fun FeatureRow(
                         lineHeight = 24.sp
                     )
                     Text(
-                        detail, color = Color(0xFFF8DBE8),
-                        fontSize = 13.sp, lineHeight = 19.sp
+                        detail, color = Color(0xFFF2DEEA),
+                        fontSize = 14.sp, lineHeight = 20.sp
                     )
                 }
                 R2HCardChevron(Modifier.size(21.dp))

@@ -18,13 +18,15 @@ internal object TripleDiceStageGeometry {
     const val CUBE_COUNT = 3
     const val FACES_PER_CUBE = 6
     const val FLOOR_Y = -1.05f
+    const val CAMERA_Z = 4.60f
 
-    // The forward cube is larger/closer; both rear cubes share a depth.
-    // Do not change texture order when moving objects around on the stage.
+    // Projected face area is balanced: the front cube is physically smaller
+    // because perspective already magnifies it. Keep >0 sphere-gap for spins.
+    // The same face indices and 18 texture bindings remain unchanged.
     private val poses = listOf(
-        TripleCubePose(-0.92f, -0.74f, 0.89f),
-        TripleCubePose( 0.92f, -0.74f, 0.89f),
-        TripleCubePose( 0.00f,  0.86f, 1.06f)
+        TripleCubePose(-1.04f, -0.65f, 0.92f),
+        TripleCubePose( 1.04f, -0.65f, 0.92f),
+        TripleCubePose( 0.00f,  0.64f, 0.85f)
     )
 
     fun pose(cube: Int): TripleCubePose {
@@ -53,6 +55,15 @@ internal object TripleDiceStageGeometry {
         // Each cube fits within a sphere of radius scale*sqrt(3)/2.
         return hypot(p.x - q.x, p.z - q.z) -
             (p.scale + q.scale) * 0.8660254f
+    }
+
+    /**
+     * Approximate on-screen size before factoring camera pitch/yaw.
+     * Used to catch accidental front-cube over-scaling during review.
+     */
+    fun apparentScaleProxy(cube: Int): Float {
+        val p = pose(cube)
+        return p.scale / (CAMERA_Z - p.z)
     }
 
     /** Exactly 18 cube-major face textures, unchanged from P0.2. */
