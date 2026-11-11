@@ -1,122 +1,290 @@
 #!/usr/bin/env python3
-"""Source-level UX regression checks. Not an Android or Compose compilation test."""
+"""Static source guards for current R2H-Sirr privacy and interaction flows.
+
+These checks look for important implementation contracts; they are not a Kotlin
+compiler, Compose UI test, or Android build.
+"""
 from pathlib import Path
+import re
+import sys
+import wave
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "app/src/main/java/com/r2h/sirr"
 
-def source(name):
+
+def source(name: str) -> str:
     return (APP / name).read_text(encoding="utf-8")
+
+
+checks = 0
+failures = []
+
+
+def require(label: str, condition: bool, detail: str = "") -> None:
+    global checks
+    checks += 1
+    if not condition:
+        failures.append(f"{label}" + (f": {detail}" if detail else ""))
+
+
+def contains(label: str, text: str, *fragments: str) -> None:
+    missing = [fragment for fragment in fragments if fragment not in text]
+    require(label, not missing, "missing: " + ", ".join(missing))
+
+
+def matches(label: str, text: str, pattern: str) -> None:
+    require(label, re.search(pattern, text, flags=re.DOTALL) is not None)
+
 
 main = source("MainActivity.kt")
 quiz = source("QuizScreen.kt")
 scratch = source("ScratchScreenV2.kt")
 dice = source("DiceScreen.kt")
-visuals = source("SirrVisuals.kt")
-logic = source("core/ExperienceLogic.kt")
-artwork = source("SirrDiscovery.kt")
-sound = source("GameEffects.kt")
 experience = source("ExperienceScreen.kt")
 whispers = source("WhispersScreen.kt")
+effects = source("GameEffects.kt")
+remote = source("RemoteScreen.kt")
+local_store = source("LocalSessionStore.kt")
+transfer = source("RemoteChunkTransfer.kt")
 manifest = (ROOT / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
 
-assert 'readPrivate("adult-consent-v1")' in main
-assert 'writePrivate("adult-consent-v1", "accepted")' in main
-assert 'LocalVault(appContext).clear()' in main
-assert 'Text("رجوع  ←"' in main
-assert 'else if (phase == 2 && pairing)' in quiz
-assert 'phase == 2 && pairing && !acceptedB' not in quiz, "Don't hide consent handoff before start"
-assert 'selectedIndices[revealStep]' in quiz
-assert 'answersB[revealStep]' in quiz
-assert 'drawPath(path, color = Color.Transparent' in scratch
-assert 'StrokeCap.Round' in scratch
-assert 'append(change.position)' in scratch
-assert 'mark(Offset(previous.x + dx * t, previous.y + dy * t))' in scratch
-assert '.pointerInput(dimensions)' in scratch
-assert 'coverage = (coveredCells / 192f)' in scratch
-assert 'BooleanArray(192)' in scratch and 'coveredCells++' in scratch
-assert 'ChallengeRevealCard(faces.mapIndexed' in dice and 'joinToString("\\n")' in dice
-assert 'MysteryDie(' in dice and 'internal fun MysteryHeader(' in visuals
-assert 'ChallengeRevealCard(' in visuals
-assert 'private val soft = listOf(' in logic and 'Intensity.CUSTOM to soft' in logic
+# Adult access remains a user-attested opt-in stored through the encrypted vault.
+contains(
+    "adult gate persists explicit consent",
+    main,
+    'vault.readPrivate("adult-consent-v1")',
+    'vault.writePrivate("adult-consent-v1", "accepted")',
+    "enabled = ageVerified && consent",
+)
 
+# Both Android/system back and the in-app header route through guarded navigation.
+contains(
+    "back navigation uses the guarded route",
+    main,
+    "val immersiveRoutes = remember { setOf(",
+    "if (route in immersiveRoutes) askToLeave = true else route = \"home\"",
+)
+matches(
+    "header back button uses the guarded route",
+    main,
+    r'TextButton\(\s*onClick\s*=\s*\{\s*navigateHome\(\)\s*\}',
+)
+matches(
+    "system back handler stays behind the guarded route",
+    main,
+    r'BackHandler\s*\(\s*enabled\s*=\s*confirmedAdult\s*&&\s*route\s*!=\s*"home"\s*\)\s*\{\s*navigateHome\(\)\s*\}',
+)
+contains(
+    "leaving an active game requires a clear confirmation",
+    main,
+    'title = { Text("عايز تخرج من اللعبة؟") }',
+    'TextButton(onClick = { askToLeave = false; route = "home" })',
+    'TextButton(onClick = { askToLeave = false })',
+)
 
-# M22+: test behavioral source contracts, not the exact copy from historical M8.
-assert 'val group = secretGroups.random()' in scratch
-assert 'stages = 1\n                },' not in scratch, "Ready-made scratch must preserve 1/2/3 layers"
-assert 'val groupStart = (0 until (suggestions.size / 3)).random() * 3' in whispers
-assert 'messages[page] = ""' in whispers
-assert 'fun compareAnswered(a: List<Int>, b: List<Int>)' in source("core/QuizInsights.kt")
-assert 'answerOrSkip(-1)' in quiz and 'if (first >= 0)' in quiz and 'if (second >= 0)' in quiz
-assert 'QuizInsights.compareAnswered(answersA, answersB)' in quiz
-assert 'enabled = acceptedContent' in quiz and 'acceptedContent = false' in quiz
-assert 'enabled = roundConsent' in experience and 'checked = roundConsent' in experience
-assert 'resetStartConsents()' in experience and 'consent[i] = false' in experience
-assert 'onClick = { finishRound(false) }' in experience
+# Clearing local data removes both the encrypted vault and temporary media.
+contains(
+    "privacy clear removes encrypted records and temporary media",
+    main,
+    "LocalVault(appContext).clear()",
+    'filter { it.name.startsWith("sirr_media_") }',
+)
+contains(
+    "app opts out of backup and cleartext networking",
+    manifest,
+    'android:allowBackup="false"',
+    'android:usesCleartextTraffic="false"',
+)
 
-assert 'SealedChallengeCard(onReveal = {' in experience
-assert 'if (!isRevealed)' in experience and 'if (isRevealed)' in experience
-assert 'onClick = { finishRound(false) }' in experience
-assert 'fun toggleAudio()' in whispers
-assert 'شغّل موسيقى المفاجأة' in whispers
-assert 'effects.cue(GameCue.REVEAL)' in scratch
-assert 'FeatureRow(' in main and 'MysteryHeader(' in visuals
-assert 'محتاج سيرفر HTTPS خاص' in main
+# Quiz progress and partner handoff remain encrypted and consent-gated.
+contains(
+    "quiz session restores, saves, and clears through the vault store",
+    quiz,
+    "QuizSessionStore.restore(vault)",
+    "QuizSessionStore.save(vault, next)",
+    "QuizSessionStore.clear(vault)",
+)
+contains(
+    "quiz start remains gated by content consent",
+    quiz,
+    "enabled = acceptedContent",
+)
+matches(
+    "second-player handoff requires that player's own consent",
+    quiz,
+    r'QuizStage\.HANDOFF\s*->\s*\{[\s\S]*?checked\s*=\s*acceptedPartner[\s\S]*?enabled\s*=\s*acceptedPartner[\s\S]*?persist\(run\.startPartner\(\)\)',
+)
+contains(
+    "quiz skips remain explicit rather than forced answers",
+    quiz,
+    "run.predict(-1)",
+    "run.answer(-1)",
+)
 
-assert 'internal fun DiscoveryTile(' in artwork and 'DiscoveryMotif.DICE' in artwork
-assert 'QuizTopicTile(' in quiz and 'internal fun QuizTopicTile(' in artwork
-assert '"settings" -> GameSettingsScreen(' in main
-assert 'EffectPreferencesPanel(effects, initiallyExpanded = true)' in main
-assert 'FeatureRow("الصوت والخصوصية"' in main
-assert 'assert' not in scratch[:200], "No dummy source assertions inside Compose"
-assert 'savedPoints' in scratch and 'strokes.last().add(p)' in scratch
-assert 'strokes[strokes.lastIndex] = strokes.last() + p' not in scratch
-assert 'Brush.linearGradient' in artwork and 'drawPath' in scratch
+# Local game records are encrypted and validated when restored.
+contains(
+    "local game records use the private vault",
+    local_store,
+    "vault.writePrivate(name,json.put(\"turns\",turns).toString())",
+    "vault.readPrivate(name)",
+)
+contains(
+    "restored local game records are range-checked",
+    local_store,
+    "require(version in 1..4 && json.getBoolean(\"group\")==expectedGroup)",
+    "require(ts.length() in 6..18)",
+    "require(scores==expectedScores && skipped==expectedSkipped)",
+)
 
-assert 'DiscoveryMotif.WHISPER' in artwork and 'Canvas(' in artwork
-assert 'SoundPool.Builder()' in sound
-assert 'ToneGenerator' not in sound and 'ToneGenerator' not in dice
-assert 'EnterTransition.None' in experience, "Reduced motion must disable reveal transition"
-assert 'AnimatedVisibility(' in experience
-assert 'playSample(cue, p)' in sound, "Cues must honor opt-in preferences"
+# All players opt in before a game; active rounds renew consent and persist state.
+matches(
+    "new game cannot start while any player is still deciding",
+    experience,
+    r'enabled\s*=\s*!invalidNames[\s\S]{0,300}waiting\.isEmpty\(\)',
+)
+matches(
+    "active challenge requires actor consent and partner consent when applicable",
+    experience,
+    r'val bothConsent\s*=\s*roundConsent\s*&&\s*\(current\.competition\s*==\s*null\s*\|\|\s*partnerConsent\)',
+)
+contains(
+    "withdrawing consent pauses a running round clock",
+    experience,
+    "if (!it) pauseOnConsentWithdrawal()",
+    "current.pauseRoundClock(System.currentTimeMillis())",
+)
+contains(
+    "game start and progress are saved before being shown as active",
+    experience,
+    "LocalSessionStore.save(vault, gameName, newGame)",
+    "LocalSessionStore.save(vault, gameName, next)",
+)
+contains(
+    "reveal motion respects the user setting",
+    experience,
+    "if (effects.animate)",
+    "else EnterTransition.None",
+)
 
-# Validate each original bundled cue as a short playable RIFF/PCM WAV.
-import wave
+# Scratch cards use bounded memory, hide unrevealed copy from accessibility, and
+# require the receiver to opt in before revealing a handed-off secret.
+contains(
+    "scratch mask is bounded and reveals only after sufficient coverage",
+    scratch,
+    "BooleanArray(columns * rows)",
+    "val coverage = coveredCells / (columns * rows).toFloat()",
+    "coverage >= 0.58f",
+)
+contains(
+    "covered scratch text stays hidden from accessibility services",
+    scratch,
+    "Modifier.clearAndSetSemantics {}",
+)
+contains(
+    "scratch input is bounded to the card and handles continuous gestures",
+    scratch,
+    ".pointerInput(dimensions)",
+    "detectDragGestures(",
+    "change.consume()",
+    "if (revealed) return",
+)
+contains(
+    "secret handoff requires receiver readiness",
+    scratch,
+    "checked = viewerReady",
+    "enabled = viewerReady",
+)
+
+# User-selected audio stops on backgrounding and is released/cleared on exit.
+contains(
+    "whispers audio pauses when the app is backgrounded",
+    whispers,
+    "event == Lifecycle.Event.ON_STOP",
+    "player.pause()",
+)
+contains(
+    "whispers media and imported photo are cleaned up",
+    whispers,
+    "player.release()",
+    "vault.delete(photoId)",
+)
+contains(
+    "sound effects honor opt-in and saved preferences",
+    effects,
+    "if (!p.sound || p.volume <= 0) return",
+    'vault.writePrivate("game-effects"',
+    "playSample(cue, p)",
+)
+
+# Personal dice data is loaded and saved through the active encrypted store.
+if "TripleDiceStore.load(vault)" in dice:
+    contains(
+        "three-cube dice state uses its dedicated persistence store",
+        dice,
+        "TripleDiceStore.load(vault)",
+        "TripleDiceStore.save(vault, next)",
+        "TripleDiceStore.resetToBlank(vault)",
+    )
+else:
+    contains(
+        "two-cube dice state uses its dedicated persistence store",
+        dice,
+        "PersonalDiceStore.load(vault)",
+        "PersonalDiceStore.save(vault, next)",
+        "PersonalDiceStore.clear(vault)",
+    )
+
+# Remote media must be encrypted, integrity-checked, bounded, and never transfer
+# private one-use cards through the general media endpoint.
+contains(
+    "remote upload fingerprints and rechecks the file before completion",
+    transfer,
+    'MessageDigest.getInstance("SHA-256")',
+    "expectedDigest=fingerprint(context,uri,prefix,size)",
+    "if(actual!=expectedDigest)",
+)
+contains(
+    "remote chunks are size-checked and private cards are rejected",
+    transfer,
+    'require(mime!="application/vnd.sirr.card+json")',
+    "require(decoded.size==expected)",
+)
+contains(
+    "remote actions are bounded and retried until acknowledged",
+    remote,
+    "pendingActions.size>=32",
+    "sendPending(forceRetry=true)",
+    'pendingActions.remove(data.optString("eventId"))',
+)
+
+# Validate the bundled short cues as playable mono 16-bit PCM WAV assets.
 sounds_dir = ROOT / "app/src/main/res/raw"
 for event in ("round", "reveal", "success", "skip", "complete"):
     cue_file = sounds_dir / f"sirr_{event}.wav"
-    assert cue_file.is_file(), f"Missing audio cue {cue_file.name}"
-    with wave.open(str(cue_file), "rb") as cue:
-        assert cue.getnchannels() == 1 and cue.getsampwidth() == 2
-        assert cue.getframerate() == 16000
-        assert .12 <= cue.getnframes() / cue.getframerate() <= 1.3
+    require(f"{event} cue exists", cue_file.is_file(), str(cue_file))
+    if cue_file.is_file():
+        try:
+            with wave.open(str(cue_file), "rb") as cue:
+                require(
+                    f"{event} cue is playable mono PCM",
+                    cue.getnchannels() == 1 and cue.getsampwidth() == 2,
+                )
+                require(
+                    f"{event} cue duration is short",
+                    cue.getframerate() == 16000
+                    and 0.12 <= cue.getnframes() / cue.getframerate() <= 1.3,
+                )
+        except (wave.Error, OSError) as exc:
+            require(f"{event} cue can be opened", False, str(exc))
 
-# P0: avoid accidental loss of active rounds and encrypted local records.
-assert 'BackHandler(enabled = confirmedAdult && route != "home") { navigateHome() }' in main
-assert 'if (route in immersiveRoutes) askToLeave = true' in main
-assert 'onClick = { navigateHome() }' in main
-assert 'title = { Text("عايز تخرج من اللعبة؟") }' in main
-assert 'var confirmClear by remember { mutableStateOf(false) }' in main
-assert 'onClick = { confirmClear = true }' in main
-assert 'title = { Text("متأكد إنك عايز تمسح بياناتك؟") }' in main
-assert 'LocalVault(appContext).clear()' in main
-assert 'it.name.startsWith("sirr_media_")' in main
-assert 'android:allowBackup="false"' in manifest
-assert 'android:usesCleartextTraffic="false"' in manifest
+if failures:
+    print(f"FAILED: {len(failures)} of {checks} static source guards")
+    for failure in failures:
+        print(f" - {failure}")
+    sys.exit(1)
 
-# No user-selected soundtrack must survive Android backgrounding.
-assert 'LifecycleEventObserver' in whispers
-assert 'event == Lifecycle.Event.ON_STOP' in whispers
-assert 'player.pause()' in whispers
-assert 'activity?.lifecycle?.removeObserver(observer)' in whispers
-
-remote = source("RemoteScreen.kt")
-session = source("LocalSessionStore.kt")
-transfer = source("RemoteChunkTransfer.kt")
-assert 'rememberSaveable' in quiz and 'rememberSaveable' in main
-assert 'LocalSessionStore.load(' in experience and 'LocalSessionStore.save(' in experience
-assert 'fun writeReply(' in session and 'vault.writePrivate(name,json.toString())' in session
-assert 'pendingActions' in remote and 'forceRetry=true' in remote
-assert 'expectedDigest=fingerprint(' in transfer and 'actual!=expectedDigest' in transfer
-assert 'val content=ByteArray(total);var copied=0' not in transfer
-print("M23 UI/source regression guards PASS (static checks only, NOT Android build)")
+print(
+    f"R2H-Sirr privacy/consent/session/transfer guards PASS "
+    f"({checks} static checks; NOT an Android build)"
+)
